@@ -1,0 +1,47 @@
+[project]
+name = "npbeta"
+version = "0.1.0"
+description = "Rental property management (Python/Django rewrite of the legacy PHP npbeta app)"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=5.0,<5.2",
+    "psycopg[binary]>=3.1",
+    "django-environ>=0.11",
+    "django-htmx>=1.17",
+    "whitenoise>=6.6",
+    "gunicorn>=22.0",
+    "celery>=5.3",
+    "redis>=5.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "factory-boy>=3.3",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "django-stubs>=5.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+ignore_missing_imports = true
+exclude = ["migrations/"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "tests.py"]
+addopts = "-ra"

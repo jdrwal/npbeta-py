@@ -1,0 +1,8 @@
+# Dev/test dependencies.
+-r requirements.txt
+pytest>=8.0
+pytest-django>=4.8
+factory-boy>=3.3
+ruff>=0.5
+mypy>=1.10
+django-stubs>=5.0

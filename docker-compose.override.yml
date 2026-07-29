@@ -1,0 +1,28 @@
+# DEV overrides — loaded automatically by `docker compose up`.
+# Mounts source for hot-reload and runs Django's dev server.
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        INSTALL_DEV: "true"
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "True"
+
+  worker:
+    build:
+      context: .
+      args:
+        INSTALL_DEV: "true"
+    volumes:
+      - .:/app
+
+  db:
+    ports:
+      - "5432:5432"
