@@ -19,6 +19,11 @@ db.sqlite3
 .env
 !.env.example
 
+# Database dumps (contain real tenant/financial data — never commit)
+*.sql
+data-migration/*.sql
+backups/
+
 # Test / coverage
 .pytest_cache/
 .mypy_cache/

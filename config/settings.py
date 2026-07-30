@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     # Third-party
     "django_htmx",
     # Local
+    "apps.accounts",
     "apps.core",
 ]
 
@@ -121,6 +122,9 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Custom user model (replaces the legacy `users` table).
+AUTH_USER_MODEL = "accounts.User"
 
 # --- Celery ---
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://redis:6379/0")
