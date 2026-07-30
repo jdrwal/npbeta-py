@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Rooms — npbeta{% endblock %}
+{% block content %}
+<h1>Rooms <a href="{% url 'core:add_room' %}" style="font-size:.9rem;">+ Add room</a></h1>
+<table>
+    <thead>
+        <tr>
+            <th>Flat</th>
+            <th>No.</th>
+            <th>Name</th>
+            <th>Beds</th>
+            <th>Fee</th>
+            <th>Deposit</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for room in rooms %}
+        <tr>
+            <td>{{ room.flat }}</td>
+            <td>{{ room.room_no }}</td>
+            <td>{{ room.name }}</td>
+            <td>{{ room.beds }}</td>
+            <td>{{ room.fee }} PLN</td>
+            <td>{{ room.deposit }} PLN</td>
+            <td>
+                <a href="{% url 'core:edit_room' room.pk %}">edit</a>
+                · <a href="{% url 'core:delete_room' room.pk %}">delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No rooms.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

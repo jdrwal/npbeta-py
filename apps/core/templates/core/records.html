@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Records — npbeta{% endblock %}
 {% block content %}
-<h1>Records <span style="color:#666;font-size:.9rem;">(latest 100)</span></h1>
+<h1>Records <a href="{% url 'core:add_record' %}" style="font-size:.9rem;">+ Add record</a> <span style="color:#666;font-size:.9rem;">(latest 100)</span></h1>
 <table>
     <thead>
         <tr>
@@ -10,6 +10,7 @@
             <th>Description</th>
             <th>Income</th>
             <th>Expense</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -20,9 +21,13 @@
             <td>{{ e.short_desc }}{% if e.is_mortgage %} <span style="color:#666;">(mortgage)</span>{% endif %}</td>
             <td>{% if e.amount_in_taxable %}{{ e.amount_in_taxable }} PLN{% endif %}</td>
             <td>{% if e.amount_out %}{{ e.amount_out }} PLN{% endif %}</td>
+            <td>
+                <a href="{% url 'core:edit_record' e.pk %}">edit</a>
+                · <a href="{% url 'core:delete_record' e.pk %}">delete</a>
+            </td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">No records.</td></tr>
+        <tr><td colspan="6">No records.</td></tr>
         {% endfor %}
     </tbody>
 </table>

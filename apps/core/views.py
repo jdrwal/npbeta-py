@@ -1,16 +1,32 @@
 from decimal import Decimal
-from typing import cast
+from typing import Any, cast
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.views.generic import CreateView, DeleteView, UpdateView
 
 from apps.accounts.models import User
-from apps.core.forms import FlatForm, MeterReadingForm, SettlementForm
-from apps.core.models import Contract, FeeCalculation, Flat, LedgerEntry
+from apps.core.forms import (
+    ContractForm,
+    FlatForm,
+    LedgerEntryForm,
+    MeterReadingForm,
+    RoomForm,
+    SettlementForm,
+)
+from apps.core.models import (
+    Contract,
+    FeeCalculation,
+    Flat,
+    LedgerEntry,
+    Room,
+)
 from apps.core.services.fees import save_settlement
 from apps.core.services.stats import (
     RoomOccupancy,
@@ -178,3 +194,129 @@ def delete_settlement(request: HttpRequest, pk: int) -> HttpResponse:
     calc.delete()  # cascades to tenants and items
     messages.success(request, "Settlement deleted.")
     return redirect("core:calculations")
+
+
+@login_required
+def rooms(request: HttpRequest) -> HttpResponse:
+    """List of rooms across the owner's flats, with CRUD links."""
+    user = cast(User, request.user)
+    room_list = (
+        Room.objects.filter(owner=user).select_related("flat").order_by("flat", "room_no")
+    )
+    return render(request, "core/rooms.html", {"rooms": room_list})
+
+
+# --- Generic owner-scoped CRUD -------------------------------------------------
+class _OwnerQuerysetMixin(LoginRequiredMixin):
+    """Restrict object access to the logged-in owner."""
+
+    model: type
+
+    def get_queryset(self) -> Any:
+        return self.model.objects.filter(owner=self.request.user)  # type: ignore[attr-defined]
+
+
+class _UserFormMixin:
+    """Pass the current user to the form so FK choices can be scoped."""
+
+    def get_form_kwargs(self) -> dict[str, Any]:
+        kwargs = super().get_form_kwargs()  # type: ignore[misc]
+        kwargs["user"] = self.request.user  # type: ignore[attr-defined]
+        return kwargs
+
+
+class _OwnerCreate(_OwnerQuerysetMixin, _UserFormMixin, CreateView):
+    template_name = "core/form.html"
+
+    def form_valid(self, form: Any) -> HttpResponse:
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+
+class _OwnerUpdate(_OwnerQuerysetMixin, _UserFormMixin, UpdateView):
+    template_name = "core/form.html"
+
+
+class _OwnerSoftDelete(_OwnerQuerysetMixin, DeleteView):
+    template_name = "core/confirm_delete.html"
+
+    def form_valid(self, form: Any) -> HttpResponse:
+        self.object.soft_delete()
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class _OwnerHardDelete(_OwnerQuerysetMixin, DeleteView):
+    template_name = "core/confirm_delete.html"
+
+
+class FlatUpdate(_OwnerUpdate):
+    model = Flat
+    form_class = FlatForm
+    success_url = reverse_lazy("core:flats")
+    extra_context = {"title": "Edit flat"}
+
+
+class FlatDelete(_OwnerSoftDelete):
+    model = Flat
+    success_url = reverse_lazy("core:flats")
+    extra_context = {"title": "Delete flat"}
+
+
+class RoomCreate(_OwnerCreate):
+    model = Room
+    form_class = RoomForm
+    success_url = reverse_lazy("core:rooms")
+    extra_context = {"title": "Add room"}
+
+
+class RoomUpdate(_OwnerUpdate):
+    model = Room
+    form_class = RoomForm
+    success_url = reverse_lazy("core:rooms")
+    extra_context = {"title": "Edit room"}
+
+
+class RoomDelete(_OwnerSoftDelete):
+    model = Room
+    success_url = reverse_lazy("core:rooms")
+    extra_context = {"title": "Delete room"}
+
+
+class ContractCreate(_OwnerCreate):
+    model = Contract
+    form_class = ContractForm
+    success_url = reverse_lazy("core:contracts")
+    extra_context = {"title": "Add contract"}
+
+
+class ContractUpdate(_OwnerUpdate):
+    model = Contract
+    form_class = ContractForm
+    success_url = reverse_lazy("core:contracts")
+    extra_context = {"title": "Edit contract"}
+
+
+class ContractDelete(_OwnerSoftDelete):
+    model = Contract
+    success_url = reverse_lazy("core:contracts")
+    extra_context = {"title": "Delete contract"}
+
+
+class RecordCreate(_OwnerCreate):
+    model = LedgerEntry
+    form_class = LedgerEntryForm
+    success_url = reverse_lazy("core:records")
+    extra_context = {"title": "Add record"}
+
+
+class RecordUpdate(_OwnerUpdate):
+    model = LedgerEntry
+    form_class = LedgerEntryForm
+    success_url = reverse_lazy("core:records")
+    extra_context = {"title": "Edit record"}
+
+
+class RecordDelete(_OwnerHardDelete):
+    model = LedgerEntry
+    success_url = reverse_lazy("core:records")
+    extra_context = {"title": "Delete record"}

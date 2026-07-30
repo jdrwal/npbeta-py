@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Contracts — npbeta{% endblock %}
 {% block content %}
-<h1>Contracts</h1>
+<h1>Contracts <a href="{% url 'core:add_contract' %}" style="font-size:.9rem;">+ Add contract</a></h1>
 <table>
     <thead>
         <tr>
@@ -11,6 +11,7 @@
             <th>Period</th>
             <th>Rent</th>
             <th>Status</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -28,9 +29,13 @@
                     <span class="badge danger"></span> expired
                 {% endif %}
             </td>
+            <td>
+                <a href="{% url 'core:edit_contract' c.pk %}">edit</a>
+                · <a href="{% url 'core:delete_contract' c.pk %}">delete</a>
+            </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">No contracts.</td></tr>
+        <tr><td colspan="7">No contracts.</td></tr>
         {% endfor %}
     </tbody>
 </table>

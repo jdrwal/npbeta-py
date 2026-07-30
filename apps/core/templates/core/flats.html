@@ -9,6 +9,7 @@
             <th>Occupancy</th>
             <th>Rooms</th>
             <th>Expected income</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -23,6 +24,10 @@
             </td>
             <td>{{ row.total_rooms }}</td>
             <td>{{ row.income }} PLN</td>
+            <td>
+                <a href="{% url 'core:edit_flat' row.flat.pk %}">edit</a>
+                · <a href="{% url 'core:delete_flat' row.flat.pk %}">delete</a>
+            </td>
         </tr>
         {% empty %}
         <tr><td colspan="4">No flats yet.</td></tr>
