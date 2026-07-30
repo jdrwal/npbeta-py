@@ -256,7 +256,7 @@ class FeeCalculation(models.Model):
 
 
 class FeeCalculationItem(models.Model):
-    """A single line of a saved calculation (legacy `duefees`)."""
+    """A single fee line for one tenant within a calculation (legacy `duefees`)."""
 
     class FeeType(models.TextChoices):
         COUNTER = "Counter", "Counter"
@@ -266,8 +266,9 @@ class FeeCalculationItem(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calc_items"
     )
     flat = models.ForeignKey(Flat, on_delete=models.CASCADE, related_name="calc_items")
-    calculation = models.ForeignKey(
-        FeeCalculation, on_delete=models.CASCADE, related_name="items"
+    # Legacy `dtid` references duetens.id: each fee line belongs to a tenant.
+    tenant = models.ForeignKey(
+        "FeeCalculationTenant", on_delete=models.CASCADE, related_name="items"
     )
     fee_type = models.CharField(max_length=8, choices=FeeType.choices)
     name = models.CharField(max_length=64)

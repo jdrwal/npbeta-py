@@ -25,6 +25,19 @@ services:
       timeout: 3s
       retries: 5
 
+  # Legacy MariaDB — only for one-off data migration. Started via `--profile etl`.
+  legacydb:
+    image: mariadb:10.5
+    profiles: ["etl"]
+    environment:
+      MARIADB_ROOT_PASSWORD: ${LEGACY_DB_PASSWORD:-legacy}
+      MARIADB_DATABASE: ${LEGACY_DB_NAME:-np}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   web:
     build:
       context: .

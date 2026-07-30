@@ -42,14 +42,40 @@ make down           # stop everything
 
 ```
 config/           Django project (settings, urls, wsgi/asgi, celery)
-apps/core/        First app: landing page + health check
+apps/accounts/    Custom user model + legacy MD5 password hasher
+apps/core/        Domain models, admin, and the load_legacy ETL command
 tests/            Test suite (pytest)
-docker-compose.yml            base services
+data-migration/   Legacy SQL dumps (gitignored)
+docker-compose.yml            base services (+ legacydb under `etl` profile)
 docker-compose.override.yml   dev (auto-loaded): runserver + hot reload
 docker-compose.prod.yml       prod: gunicorn + migrate + collectstatic
 deploy.sh         Option-A deploy (git pull + rebuild) — run on the VPS
 .github/workflows/ci.yml      CI: lint + type-check + tests
 ```
+
+## Data migration (legacy import)
+
+One-off import of the old PHP/MariaDB data into the new models. The legacy
+MariaDB runs only for this, behind the `etl` compose profile.
+
+```bash
+# 1. Start the legacy MariaDB (+ app DB and cache)
+podman compose --profile etl up -d db redis legacydb
+
+# 2. Apply Django migrations to PostgreSQL
+podman compose run --rm web python manage.py migrate
+
+# 3. Load the legacy dump into MariaDB (dump is gitignored)
+podman compose --profile etl exec -T legacydb \
+    mariadb -uroot -plegacy np < data-migration/<dump>.sql
+
+# 4. Import into PostgreSQL (float→Decimal, FKs, soft-delete, MD5→legacy hash)
+podman compose run --rm web python manage.py load_legacy --flush
+```
+
+Use `docker compose` instead of `podman compose` if you run Docker. The
+`load_legacy` command preserves primary keys, cleans binary-float artefacts and
+skips orphaned rows; re-run with `--flush` to reset and re-import.
 
 ## Deployment (Option A)
 

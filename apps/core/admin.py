@@ -93,7 +93,15 @@ class FeeCalculationAdmin(admin.ModelAdmin):
     list_display = ("id", "flat", "period_start", "period_end", "stamp")
     list_filter = ("flat",)
     date_hierarchy = "period_start"
-    inlines = (FeeCalculationTenantInline, FeeCalculationItemInline)
+    inlines = (FeeCalculationTenantInline,)
+
+
+@admin.register(FeeCalculationTenant)
+class FeeCalculationTenantAdmin(admin.ModelAdmin):
+    list_display = ("id", "tenant_name", "contract_number", "calculation")
+    list_filter = ("flat",)
+    search_fields = ("tenant_name", "contract_number", "email")
+    inlines = (FeeCalculationItemInline,)
 
 
 @admin.register(LedgerEntry)
