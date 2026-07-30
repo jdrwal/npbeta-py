@@ -336,12 +336,11 @@ class LedgerEntry(models.Model):
 
 # --- Tax -----------------------------------------------------------------------
 class TaxMode(models.Model):
-    """Per-year tax settings (legacy `tax_mode`)."""
+    """Per-year tax settings (legacy `tax_mode`).
 
-    class Mode(models.TextChoices):
-        FLAT_RATE = "r", "Ryczałt"
-        SCALE_18 = "L18", "Skala 18%"
-        SCALE_32 = "L32", "Skala 32%"
+    Polish private rental is lump-sum (ryczałt) only since 2023, so no taxation
+    mode is stored; only the settlement period (monthly/quarterly) is kept.
+    """
 
     class Period(models.TextChoices):
         MONTHLY = "m", "Monthly"
@@ -351,12 +350,11 @@ class TaxMode(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tax_modes"
     )
     cal_year = models.PositiveIntegerField(null=True, blank=True)
-    mode = models.CharField(max_length=3, choices=Mode.choices, blank=True)
     period = models.CharField(max_length=1, choices=Period.choices, blank=True)
     reminder = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self) -> str:
-        return f"{self.cal_year}: {self.mode}"
+        return f"{self.cal_year}: {self.period}"
 
 
 class TaxDue(models.Model):

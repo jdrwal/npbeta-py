@@ -122,7 +122,7 @@ class LedgerEntryAdmin(admin.ModelAdmin):
 
 @admin.register(TaxMode)
 class TaxModeAdmin(admin.ModelAdmin):
-    list_display = ("id", "cal_year", "mode", "period", "reminder")
+    list_display = ("id", "cal_year", "period", "reminder")
 
 
 @admin.register(TaxDue)

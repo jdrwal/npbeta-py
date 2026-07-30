@@ -56,6 +56,22 @@ def test_december_deadline_is_end_of_january(owner_flat: tuple) -> None:
 
 
 @pytest.mark.django_db
+def test_threshold_switches_to_higher_rate(owner_flat: tuple) -> None:
+    user, flat = owner_flat
+    # January pushes YTD to 90k (all at 8.5%).
+    _entry(user, flat, datetime(2025, 1, 15), "90000")
+    # February adds 20k: 10k fills the 8.5% band, 10k taxed at 12.5%.
+    _entry(user, flat, datetime(2025, 2, 15), "20000")
+
+    january = monthly_tax(user, 2025, 1)
+    february = monthly_tax(user, 2025, 2)
+
+    assert january.tax == 7650  # 90000 * 0.085
+    # 10000 * 0.085 + 10000 * 0.125 = 850 + 1250 = 2100
+    assert february.tax == 2100
+
+
+@pytest.mark.django_db
 def test_paid_date_from_taxdue(owner_flat: tuple) -> None:
     user, _ = owner_flat
     TaxDue.objects.create(

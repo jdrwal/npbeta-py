@@ -1,8 +1,11 @@
 """Rental-income tax (port of legacy getTaxByMonth / getTaxDeadline / getTaxDue).
 
-Polish lump-sum tax (ryczałt) at a flat 8.5% of taxable income, computed per
-calendar month, rounded to whole PLN. Deadline is the 20th of the next month
-(31 January for December). Payment dates come from the ``taxdue`` records.
+Polish private rental income is taxed only by lump-sum (ryczałt) since 2023:
+8.5% on annual income up to 100 000 PLN and 12.5% on the surplus above it. The
+threshold is cumulative per calendar year, so a month's tax depends on the
+year-to-date taxable income. Amounts are rounded to whole PLN; the deadline is
+the 20th of the next month (31 January for December). Payment dates come from
+the ``taxdue`` records.
 """
 
 from __future__ import annotations
@@ -17,7 +20,9 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.core.models import Flat, LedgerEntry, TaxDue
 
-RATE_LUMP_SUM = Decimal("0.085")
+RATE_LOW = Decimal("0.085")  # up to the annual threshold
+RATE_HIGH = Decimal("0.125")  # on the surplus above the threshold
+ANNUAL_THRESHOLD = Decimal("100000")
 
 
 @dataclass
@@ -40,14 +45,27 @@ def _to_whole_pln(value: Decimal) -> int:
     return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
 
-def monthly_tax(user: User, year: int, month: int) -> MonthlyTax:
-    start = timezone.make_aware(datetime(year, month, 1))
-    end = timezone.make_aware(
-        datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
-    )
-    taxable = LedgerEntry.objects.filter(
+def _sum_taxable(user: User, start: datetime, end: datetime) -> Decimal:
+    return LedgerEntry.objects.filter(
         owner=user, record_date__gte=start, record_date__lt=end
     ).aggregate(total=Sum("amount_in_taxable"))["total"] or Decimal(0)
+
+
+def monthly_tax(user: User, year: int, month: int) -> MonthlyTax:
+    year_start = timezone.make_aware(datetime(year, 1, 1))
+    month_start = timezone.make_aware(datetime(year, month, 1))
+    month_end = timezone.make_aware(
+        datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
+    )
+
+    ytd_before = _sum_taxable(user, year_start, month_start)
+    month_taxable = _sum_taxable(user, month_start, month_end)
+
+    # Split this month's income across the 8.5% / 12.5% brackets by YTD position.
+    remaining_low = max(Decimal(0), ANNUAL_THRESHOLD - ytd_before)
+    low_part = min(month_taxable, remaining_low)
+    high_part = month_taxable - low_part
+    tax = _to_whole_pln(low_part * RATE_LOW + high_part * RATE_HIGH)
 
     paid = TaxDue.objects.filter(owner=user, period=f"{month:02d}/{year}").first()
     paid_date = (
@@ -57,8 +75,8 @@ def monthly_tax(user: User, year: int, month: int) -> MonthlyTax:
     return MonthlyTax(
         year=year,
         month=month,
-        taxable=taxable,
-        tax=_to_whole_pln(taxable * RATE_LUMP_SUM),
+        taxable=month_taxable,
+        tax=tax,
         deadline=_deadline(year, month),
         paid_date=paid_date,
     )

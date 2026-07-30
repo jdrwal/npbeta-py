@@ -467,7 +467,6 @@ class Command(BaseCommand):
                 id=r["id"],
                 owner_id=owner(r["uid"]),
                 cal_year=r["cal_year"],
-                mode=r["tax_mode"] or "",
                 period=r["tax_period"] or "",
                 reminder=r["tax_reminder"],
             )
