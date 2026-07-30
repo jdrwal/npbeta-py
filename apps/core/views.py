@@ -34,6 +34,7 @@ from apps.core.services.stats import (
     inventory_state,
     occupancy,
 )
+from apps.core.services.tax import tax_for_year, tax_table
 
 
 @login_required
@@ -43,7 +44,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     return render(
         request,
         "core/dashboard.html",
-        {"stats": inventory_state(user)},
+        {
+            "stats": inventory_state(user),
+            "tax_year": timezone.now().year,
+            "tax_ytd": tax_for_year(user, timezone.now().year),
+        },
     )
 
 
@@ -204,6 +209,13 @@ def rooms(request: HttpRequest) -> HttpResponse:
         Room.objects.filter(owner=user).select_related("flat").order_by("flat", "room_no")
     )
     return render(request, "core/rooms.html", {"rooms": room_list})
+
+
+@login_required
+def tax(request: HttpRequest) -> HttpResponse:
+    """Monthly lump-sum tax table (port of getTaxList/getTaxByMonth)."""
+    user = cast(User, request.user)
+    return render(request, "core/tax.html", {"table": tax_table(user)})
 
 
 # --- Generic owner-scoped CRUD -------------------------------------------------

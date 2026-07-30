@@ -35,5 +35,6 @@ urlpatterns = [
         name="delete_settlement",
     ),
     path("readings/add/", views.add_reading, name="add_reading"),
+    path("tax/", views.tax, name="tax"),
     path("healthz/", views.healthz, name="healthz"),
 ]
