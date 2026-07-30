@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
+from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -33,7 +34,7 @@ from apps.core.models import (
 )
 from apps.core.services.fees import save_settlement
 from apps.core.services.forecast import forecast_income, forecast_income_total
-from apps.core.services.mortgage import mortgage_schedule
+from apps.core.services.mortgage import is_mortgaged, mortgage_schedule
 from apps.core.services.stats import (
     RoomOccupancy,
     expected_income,
@@ -71,13 +72,19 @@ def flats(request: HttpRequest) -> HttpResponse:
     rows = []
     for flat in Flat.objects.filter(owner=user):
         occ: list[RoomOccupancy] = occupancy(flat)
+        total = len(occ)
+        occupied = sum(1 for o in occ if o.status != "danger")
+        capacity = Room.objects.filter(flat=flat).aggregate(b=Sum("beds"))["b"] or 0
         rows.append(
             {
                 "flat": flat,
                 "income": expected_income(flat),
                 "occupancy": occ,
-                "occupied": sum(1 for o in occ if o.status != "danger"),
-                "total_rooms": len(occ),
+                "occupied": occupied,
+                "total_rooms": total,
+                "occupancy_pct": int(occupied / total * 100) if total else 0,
+                "capacity": capacity,
+                "mortgaged": is_mortgaged(flat),
             }
         )
     return render(request, "core/flats.html", {"rows": rows})
