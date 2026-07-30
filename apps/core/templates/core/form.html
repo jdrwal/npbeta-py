@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — npbeta{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<form method="post" class="form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="msg">{{ form.non_field_errors }}</div>{% endif %}
+    {% for field in form %}
+    <p>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label><br>
+        {{ field }}
+        {% if field.errors %}<span style="color:#e74c3c;">{{ field.errors|striptags }}</span>{% endif %}
+    </p>
+    {% endfor %}
+    <button type="submit">Save</button>
+    <a href="{{ request.META.HTTP_REFERER|default:'/' }}">Cancel</a>
+</form>
+{% endblock %}

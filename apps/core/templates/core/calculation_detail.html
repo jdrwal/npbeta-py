@@ -2,6 +2,10 @@
 {% block title %}Settlement — npbeta{% endblock %}
 {% block content %}
 <p><a href="{% url 'core:calculations' %}">← Settlements</a></p>
+<form method="post" action="{% url 'core:delete_settlement' calc.pk %}"
+      onsubmit="return confirm('Delete this settlement?');" style="float:right;">
+    {% csrf_token %}<button type="submit">Delete</button>
+</form>
 <h1>{{ calc.flat }}</h1>
 <p style="color:#666;">
     {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}

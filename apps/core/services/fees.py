@@ -25,15 +25,20 @@ from __future__ import annotations
 
 import calendar
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
+from django.db import transaction
 from django.db.models import Sum
+from django.utils import timezone
 
 from apps.core.models import (
     AdminFee,
     AdminFeePrice,
     Contract,
+    FeeCalculation,
+    FeeCalculationItem,
+    FeeCalculationTenant,
     Flat,
     MeterDefinition,
     MeterPrice,
@@ -217,3 +222,51 @@ def calculate_fees(flat: Flat, period_start: date, period_end: date) -> list[Fee
                 )
             )
     return lines
+
+
+def _as_utc_midnight(d: date) -> datetime:
+    return timezone.make_aware(datetime.combine(d, time.min), UTC)
+
+
+@transaction.atomic
+def save_settlement(flat: Flat, period_start: date, period_end: date) -> FeeCalculation:
+    """Compute and persist a settlement (port of legacy ``saveDueCalc``).
+
+    Creates the ``FeeCalculation`` header, one ``FeeCalculationTenant`` per tenant
+    active in the period and a ``FeeCalculationItem`` per fee line.
+    """
+    lines = calculate_fees(flat, period_start, period_end)
+    calc = FeeCalculation.objects.create(
+        owner=flat.owner,
+        flat=flat,
+        stamp=timezone.now(),
+        period_start=_as_utc_midnight(period_start),
+        period_end=_as_utc_midnight(period_end),
+    )
+
+    tenants: dict[int, FeeCalculationTenant] = {}
+    for line in lines:
+        if line.contract_id not in tenants:
+            contract = Contract.all_objects.get(pk=line.contract_id)
+            tenants[line.contract_id] = FeeCalculationTenant.objects.create(
+                owner=flat.owner,
+                flat=flat,
+                calculation=calc,
+                tenant_name=contract.tenant_name,
+                contract_number=contract.contract_number,
+                email=contract.email,
+            )
+
+    FeeCalculationItem.objects.bulk_create(
+        FeeCalculationItem(
+            owner=flat.owner,
+            flat=flat,
+            tenant=tenants[line.contract_id],
+            fee_type=line.fee_type,
+            name=line.name,
+            usage=line.usage,
+            value=line.value,
+        )
+        for line in lines
+    )
+    return calc

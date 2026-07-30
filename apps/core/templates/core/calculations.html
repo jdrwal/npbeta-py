@@ -2,6 +2,11 @@
 {% block title %}Settlements — npbeta{% endblock %}
 {% block content %}
 <h1>Utility settlements</h1>
+<p>
+    <a href="{% url 'core:run_settlement' %}">+ New settlement</a>
+    &nbsp;·&nbsp;
+    <a href="{% url 'core:add_reading' %}">Add meter reading</a>
+</p>
 <table>
     <thead>
         <tr>

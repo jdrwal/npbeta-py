@@ -1,13 +1,17 @@
 from decimal import Decimal
 from typing import cast
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from apps.accounts.models import User
+from apps.core.forms import FlatForm, MeterReadingForm, SettlementForm
 from apps.core.models import Contract, FeeCalculation, Flat, LedgerEntry
+from apps.core.services.fees import save_settlement
 from apps.core.services.stats import (
     RoomOccupancy,
     expected_income,
@@ -108,3 +112,69 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
 def healthz(request: HttpRequest) -> JsonResponse:
     """Liveness probe used by Docker/monitoring."""
     return JsonResponse({"status": "ok"})
+
+
+# --- Create / action views -----------------------------------------------------
+@login_required
+def add_flat(request: HttpRequest) -> HttpResponse:
+    user = cast(User, request.user)
+    if request.method == "POST":
+        form = FlatForm(request.POST)
+        if form.is_valid():
+            flat = form.save(commit=False)
+            flat.owner = user
+            flat.save()
+            messages.success(request, "Flat added.")
+            return redirect("core:flats")
+    else:
+        form = FlatForm()
+    return render(request, "core/form.html", {"form": form, "title": "Add flat"})
+
+
+@login_required
+def add_reading(request: HttpRequest) -> HttpResponse:
+    user = cast(User, request.user)
+    if request.method == "POST":
+        form = MeterReadingForm(request.POST, user=user)
+        if form.is_valid():
+            reading = form.save(commit=False)
+            reading.owner = reading.meter.owner
+            reading.flat = reading.meter.flat
+            reading.save()
+            messages.success(request, "Meter reading added.")
+            return redirect("core:calculations")
+    else:
+        form = MeterReadingForm(user=user)
+    return render(
+        request, "core/form.html", {"form": form, "title": "Add meter reading"}
+    )
+
+
+@login_required
+def run_settlement(request: HttpRequest) -> HttpResponse:
+    user = cast(User, request.user)
+    if request.method == "POST":
+        form = SettlementForm(request.POST, user=user)
+        if form.is_valid():
+            calc = save_settlement(
+                form.cleaned_data["flat"],
+                form.cleaned_data["period_start"],
+                form.cleaned_data["period_end"],
+            )
+            messages.success(request, "Settlement computed and saved.")
+            return redirect("core:calculation_detail", pk=calc.pk)
+    else:
+        form = SettlementForm(user=user)
+    return render(
+        request, "core/form.html", {"form": form, "title": "Run settlement"}
+    )
+
+
+@login_required
+@require_POST
+def delete_settlement(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    calc = get_object_or_404(FeeCalculation, pk=pk, owner=user)
+    calc.delete()  # cascades to tenants and items
+    messages.success(request, "Settlement deleted.")
+    return redirect("core:calculations")
