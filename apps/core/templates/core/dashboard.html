@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — npbeta{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="cards">
+    <div class="card"><div class="n">{{ stats.flats }}</div><div class="l">Flats</div></div>
+    <div class="card"><div class="n">{{ stats.rooms }}</div><div class="l">Rooms</div></div>
+    <div class="card"><div class="n">{{ stats.active_contracts }}</div><div class="l">Active contracts</div></div>
+    <div class="card"><div class="n">{{ stats.contracts_ending_soon }}</div><div class="l">Ending within 2 months</div></div>
+</div>
+{% endblock %}

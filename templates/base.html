@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}npbeta{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <style>
+        :root { --fg:#1a1a1a; --muted:#666; --line:#e2e2e2; --accent:#2d6cdf; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family: system-ui, sans-serif; color:var(--fg); background:#f7f7f8; }
+        nav { display:flex; align-items:center; gap:1rem; padding:.75rem 1.25rem;
+              background:#fff; border-bottom:1px solid var(--line); }
+        nav a { text-decoration:none; color:var(--fg); font-weight:600; }
+        nav a:hover { color:var(--accent); }
+        nav .spacer { flex:1; }
+        nav form { margin:0; }
+        button { cursor:pointer; }
+        main { max-width:960px; margin:1.5rem auto; padding:0 1.25rem; }
+        h1 { font-size:1.4rem; }
+        .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1rem; }
+        .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:1rem 1.25rem; }
+        .card .n { font-size:2rem; font-weight:700; }
+        .card .l { color:var(--muted); font-size:.85rem; }
+        table { width:100%; border-collapse:collapse; background:#fff;
+                border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+        th, td { text-align:left; padding:.6rem .8rem; border-bottom:1px solid var(--line); }
+        th { background:#fafafa; font-size:.8rem; text-transform:uppercase; color:var(--muted); }
+        .badge { display:inline-block; width:.7rem; height:.7rem; border-radius:50%; }
+        .success { background:#2ecc71; } .warning { background:#f39c12; } .danger { background:#e74c3c; }
+        .msg { padding:.6rem .9rem; border-radius:6px; margin-bottom:1rem; background:#eef; }
+        .login { max-width:340px; margin:4rem auto; background:#fff;
+                 border:1px solid var(--line); border-radius:8px; padding:1.5rem; }
+        .login input { width:100%; padding:.5rem; margin:.25rem 0 .8rem; border:1px solid var(--line); border-radius:6px; }
+        .login button { width:100%; padding:.6rem; background:var(--accent); color:#fff; border:0; border-radius:6px; }
+    </style>
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav>
+        <a href="{% url 'core:dashboard' %}">Dashboard</a>
+        <a href="{% url 'core:flats' %}">Flats</a>
+        <span class="spacer"></span>
+        <span>{{ user.get_username }}</span>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}<button>Log out</button>
+        </form>
+    </nav>
+    {% endif %}
+    <main>
+        {% if messages %}
+            {% for message in messages %}<div class="msg">{{ message }}</div>{% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

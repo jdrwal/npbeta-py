@@ -128,6 +128,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Custom user model (replaces the legacy `users` table).
 AUTH_USER_MODEL = "accounts.User"
 
+# Authentication redirects.
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "core:dashboard"
+LOGOUT_REDIRECT_URL = "login"
+
 # --- Celery ---
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://redis:6379/0")
 CELERY_RESULT_BACKEND = env("REDIS_URL", default="redis://redis:6379/0")
