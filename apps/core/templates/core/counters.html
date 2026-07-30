@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Counters — npbeta{% endblock %}
+{% block content %}
+<h1>Counters
+    <a href="{% url 'core:add_meter' %}" style="font-size:.9rem;">+ Add meter</a>
+    · <a href="{% url 'core:add_reading' %}" style="font-size:.9rem;">+ Add reading</a>
+</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Flat</th>
+            <th>Meter</th>
+            <th>Unit</th>
+            <th>Latest reading</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row.meter.flat }}</td>
+            <td>{{ row.meter.name }}</td>
+            <td>{{ row.meter.unit }}</td>
+            <td>
+                {% if row.latest %}
+                    {{ row.latest.value }} <span style="color:#666;">({{ row.latest.read_date|date:"Y-m-d" }})</span>
+                {% else %}
+                    <span style="color:#666;">—</span>
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'core:meter_readings' row.meter.pk %}">readings</a>
+                · <a href="{% url 'core:edit_meter' row.meter.pk %}">edit</a>
+                · <a href="{% url 'core:delete_meter' row.meter.pk %}">delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No meters.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

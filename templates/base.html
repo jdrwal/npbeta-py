@@ -13,6 +13,7 @@
               background:#fff; border-bottom:1px solid var(--line); }
         nav a { text-decoration:none; color:var(--fg); font-weight:600; }
         nav a:hover { color:var(--accent); }
+        nav a.active { color:var(--accent); border-bottom:2px solid var(--accent); }
         nav .spacer { flex:1; }
         nav form { margin:0; }
         button { cursor:pointer; }
@@ -37,21 +38,24 @@
 </head>
 <body>
     {% if user.is_authenticated %}
+    {% with active=request.resolver_match.url_name %}
     <nav>
-        <a href="{% url 'core:dashboard' %}">Dashboard</a>
-        <a href="{% url 'core:flats' %}">Flats</a>
-        <a href="{% url 'core:rooms' %}">Rooms</a>
-        <a href="{% url 'core:contracts' %}">Contracts</a>
-        <a href="{% url 'core:records' %}">Records</a>
-        <a href="{% url 'core:tax' %}">Tax</a>
-        <a href="{% url 'core:forecast' %}">Forecast</a>
-        <a href="{% url 'core:calculations' %}">Settlements</a>
+        <a href="{% url 'core:dashboard' %}" {% if active == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+        <a href="{% url 'core:flats' %}" {% if active == 'flats' %}class="active"{% endif %}>Flats</a>
+        <a href="{% url 'core:rooms' %}" {% if active == 'rooms' %}class="active"{% endif %}>Rooms</a>
+        <a href="{% url 'core:contracts' %}" {% if active == 'contracts' %}class="active"{% endif %}>Contracts</a>
+        <a href="{% url 'core:counters' %}" {% if active == 'counters' %}class="active"{% endif %}>Counters</a>
+        <a href="{% url 'core:records' %}" {% if active == 'records' %}class="active"{% endif %}>Records</a>
+        <a href="{% url 'core:tax' %}" {% if active == 'tax' %}class="active"{% endif %}>Tax</a>
+        <a href="{% url 'core:forecast' %}" {% if active == 'forecast' %}class="active"{% endif %}>Forecast</a>
+        <a href="{% url 'core:calculations' %}" {% if active == 'calculations' %}class="active"{% endif %}>Settlements</a>
         <span class="spacer"></span>
         <span>{{ user.get_username }}</span>
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}<button>Log out</button>
         </form>
     </nav>
+    {% endwith %}
     {% endif %}
     <main>
         {% if messages %}

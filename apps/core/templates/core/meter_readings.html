@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Readings — npbeta{% endblock %}
+{% block content %}
+<p><a href="{% url 'core:counters' %}">← Counters</a></p>
+<h1>{{ meter.name }} <span style="color:#666;font-size:.9rem;">{{ meter.flat }} · {{ meter.unit }}</span></h1>
+<table>
+    <thead>
+        <tr><th>Date</th><th>Value</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for r in readings %}
+        <tr>
+            <td>{{ r.read_date|date:"Y-m-d" }}</td>
+            <td>{{ r.value }}</td>
+            <td>
+                <a href="{% url 'core:edit_reading' r.pk %}">edit</a>
+                · <a href="{% url 'core:delete_reading' r.pk %}">delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No readings.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

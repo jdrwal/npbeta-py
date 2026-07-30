@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Records — npbeta{% endblock %}
 {% block content %}
-<h1>Records <a href="{% url 'core:add_record' %}" style="font-size:.9rem;">+ Add record</a> <span style="color:#666;font-size:.9rem;">(latest 100)</span></h1>
+<h1>Records <a href="{% url 'core:add_record' %}" style="font-size:.9rem;">+ Add record</a></h1>
 <table>
     <thead>
         <tr>
@@ -14,7 +14,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for e in entries %}
+        {% for e in page %}
         <tr>
             <td>{{ e.record_date|date:"Y-m-d" }}</td>
             <td>{{ e.flat }}</td>
@@ -31,4 +31,11 @@
         {% endfor %}
     </tbody>
 </table>
+{% if page.paginator.num_pages > 1 %}
+<p style="margin-top:1rem;">
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">← Prev</a>{% endif %}
+    <span style="color:#666;">&nbsp;Page {{ page.number }} of {{ page.paginator.num_pages }}&nbsp;</span>
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next →</a>{% endif %}
+</p>
+{% endif %}
 {% endblock %}

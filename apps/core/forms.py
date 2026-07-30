@@ -121,6 +121,17 @@ class MeterReadingForm(forms.ModelForm):
             field.queryset = MeterDefinition.objects.filter(owner=user)
 
 
+class MeterDefinitionForm(forms.ModelForm):
+    class Meta:
+        model = MeterDefinition
+        fields = ["flat", "name", "unit"]
+
+    def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            _scope(self, "flat", Flat.objects.filter(owner=user))
+
+
 class SettlementForm(forms.Form):
     flat = forms.ModelChoiceField(queryset=Flat.objects.none())
     period_start = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))

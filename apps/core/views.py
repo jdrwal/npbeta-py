@@ -4,6 +4,7 @@ from typing import Any, cast
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
@@ -16,6 +17,7 @@ from apps.core.forms import (
     ContractForm,
     FlatForm,
     LedgerEntryForm,
+    MeterDefinitionForm,
     MeterReadingForm,
     RoomForm,
     SettlementForm,
@@ -25,6 +27,8 @@ from apps.core.models import (
     FeeCalculation,
     Flat,
     LedgerEntry,
+    MeterDefinition,
+    MeterReading,
     Room,
 )
 from apps.core.services.fees import save_settlement
@@ -92,14 +96,15 @@ def contracts(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def records(request: HttpRequest) -> HttpResponse:
-    """Recent financial ledger entries (port of records.php)."""
+    """Financial ledger entries (port of records.php), paginated."""
     user = cast(User, request.user)
     entries = (
         LedgerEntry.objects.filter(owner=user)
         .select_related("flat")
-        .order_by("-record_date")[:100]
+        .order_by("-record_date")
     )
-    return render(request, "core/records.html", {"entries": entries})
+    page = Paginator(entries, 50).get_page(request.GET.get("page"))
+    return render(request, "core/records.html", {"page": page})
 
 
 @login_required
@@ -242,6 +247,34 @@ def tax(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
+def counters(request: HttpRequest) -> HttpResponse:
+    """Meters grouped per flat with their latest reading (CRUD entry point)."""
+    user = cast(User, request.user)
+    rows = []
+    for meter in (
+        MeterDefinition.objects.filter(owner=user)
+        .select_related("flat")
+        .order_by("flat", "name")
+    ):
+        latest = (
+            MeterReading.objects.filter(meter=meter).order_by("-read_date").first()
+        )
+        rows.append({"meter": meter, "latest": latest})
+    return render(request, "core/counters.html", {"rows": rows})
+
+
+@login_required
+def meter_readings(request: HttpRequest, pk: int) -> HttpResponse:
+    """All readings for a single meter."""
+    user = cast(User, request.user)
+    meter = get_object_or_404(MeterDefinition, pk=pk, owner=user)
+    readings = MeterReading.objects.filter(meter=meter).order_by("-read_date")
+    return render(
+        request, "core/meter_readings.html", {"meter": meter, "readings": readings}
+    )
+
+
+@login_required
 def forecast(request: HttpRequest) -> HttpResponse:
     """Forecasted rent income for this month + estimated mortgage schedule."""
     user = cast(User, request.user)
@@ -377,3 +410,36 @@ class RecordDelete(_OwnerHardDelete):
     model = LedgerEntry
     success_url = reverse_lazy("core:records")
     extra_context = {"title": "Delete record"}
+
+
+class MeterCreate(_OwnerCreate):
+    model = MeterDefinition
+    form_class = MeterDefinitionForm
+    success_url = reverse_lazy("core:counters")
+    extra_context = {"title": "Add meter"}
+
+
+class MeterUpdate(_OwnerUpdate):
+    model = MeterDefinition
+    form_class = MeterDefinitionForm
+    success_url = reverse_lazy("core:counters")
+    extra_context = {"title": "Edit meter"}
+
+
+class MeterDelete(_OwnerHardDelete):
+    model = MeterDefinition
+    success_url = reverse_lazy("core:counters")
+    extra_context = {"title": "Delete meter"}
+
+
+class ReadingUpdate(_OwnerUpdate):
+    model = MeterReading
+    form_class = MeterReadingForm
+    success_url = reverse_lazy("core:counters")
+    extra_context = {"title": "Edit reading"}
+
+
+class ReadingDelete(_OwnerHardDelete):
+    model = MeterReading
+    success_url = reverse_lazy("core:counters")
+    extra_context = {"title": "Delete reading"}
