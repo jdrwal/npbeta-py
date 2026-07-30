@@ -34,6 +34,11 @@ urlpatterns = [
         views.delete_settlement,
         name="delete_settlement",
     ),
+    path(
+        "calculations/<int:pk>/email/",
+        views.email_settlement,
+        name="email_settlement",
+    ),
     path("readings/add/", views.add_reading, name="add_reading"),
     path("tax/", views.tax, name="tax"),
     path("forecast/", views.forecast, name="forecast"),

@@ -37,6 +37,7 @@ from apps.core.services.stats import (
     occupancy,
 )
 from apps.core.services.tax import tax_for_year, tax_table
+from apps.core.tasks import email_settlement_task
 
 
 @login_required
@@ -187,7 +188,13 @@ def run_settlement(request: HttpRequest) -> HttpResponse:
                 form.cleaned_data["period_start"],
                 form.cleaned_data["period_end"],
             )
-            messages.success(request, "Settlement computed and saved.")
+            if form.cleaned_data["email_tenants"]:
+                email_settlement_task.delay(calc.pk)
+                messages.success(
+                    request, "Settlement saved; tenant emails are being sent."
+                )
+            else:
+                messages.success(request, "Settlement computed and saved.")
             return redirect("core:calculation_detail", pk=calc.pk)
     else:
         form = SettlementForm(user=user)
@@ -204,6 +211,17 @@ def delete_settlement(request: HttpRequest, pk: int) -> HttpResponse:
     calc.delete()  # cascades to tenants and items
     messages.success(request, "Settlement deleted.")
     return redirect("core:calculations")
+
+
+@login_required
+@require_POST
+def email_settlement(request: HttpRequest, pk: int) -> HttpResponse:
+    """Queue tenant settlement emails to run in the background."""
+    user = cast(User, request.user)
+    calc = get_object_or_404(FeeCalculation, pk=pk, owner=user)
+    email_settlement_task.delay(calc.pk)
+    messages.success(request, "Tenant emails are being sent in the background.")
+    return redirect("core:calculation_detail", pk=calc.pk)
 
 
 @login_required

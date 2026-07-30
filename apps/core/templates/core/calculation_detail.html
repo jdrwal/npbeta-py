@@ -6,6 +6,10 @@
       onsubmit="return confirm('Delete this settlement?');" style="float:right;">
     {% csrf_token %}<button type="submit">Delete</button>
 </form>
+<form method="post" action="{% url 'core:email_settlement' calc.pk %}"
+      style="float:right;margin-right:.5rem;">
+    {% csrf_token %}<button type="submit">Email tenants</button>
+</form>
 <h1>{{ calc.flat }}</h1>
 <p style="color:#666;">
     {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}

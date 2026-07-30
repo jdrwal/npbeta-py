@@ -125,6 +125,9 @@ class SettlementForm(forms.Form):
     flat = forms.ModelChoiceField(queryset=Flat.objects.none())
     period_start = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
     period_end = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    email_tenants = forms.BooleanField(
+        required=False, label="Email the breakdown to tenants (in the background)"
+    )
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
