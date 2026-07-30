@@ -38,6 +38,7 @@ from apps.core.services.stats import (
     RoomOccupancy,
     expected_income,
     inventory_state,
+    monthly_income_series,
     occupancy,
 )
 from apps.core.services.tax import tax_for_year, tax_table
@@ -58,6 +59,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "forecast_income": forecast_income_total(
                 user, timezone.now().year, timezone.now().month
             ),
+            "income_series": monthly_income_series(user, months=6),
         },
     )
 

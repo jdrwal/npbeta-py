@@ -5,15 +5,16 @@ Mirrors ``getInvState``, ``getExpIncomeByFlatId`` and ``getOccRoomsByFlatId``.
 
 from __future__ import annotations
 
+import calendar
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from django.db.models import F, Sum
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.core.models import Contract, Flat, Room
+from apps.core.models import Contract, Flat, LedgerEntry, Room
 
 
 def _add_months(d: date, months: int) -> date:
@@ -84,3 +85,44 @@ def occupancy(flat: Flat) -> list[RoomOccupancy]:
             RoomOccupancy(room, status, contract.tenant_name, contract.contract_end)
         )
     return result
+
+
+@dataclass
+class MonthPoint:
+    label: str
+    value: Decimal
+    pct: int
+
+
+def monthly_income_series(user: User, months: int = 6) -> list[MonthPoint]:
+    """Taxable income per month for the last ``months`` months (oldest first)."""
+    today = timezone.now().date()
+    periods: list[tuple[int, int]] = []
+    for offset in range(months - 1, -1, -1):
+        month = today.month - offset
+        year = today.year
+        while month <= 0:
+            month += 12
+            year -= 1
+        periods.append((year, month))
+
+    values: list[tuple[int, Decimal]] = []
+    for year, month in periods:
+        start = timezone.make_aware(datetime(year, month, 1))
+        end = timezone.make_aware(
+            datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
+        )
+        total = LedgerEntry.objects.filter(
+            owner=user, record_date__gte=start, record_date__lt=end
+        ).aggregate(t=Sum("amount_in_taxable"))["t"] or Decimal(0)
+        values.append((month, total))
+
+    peak = max((v for _, v in values), default=Decimal(0))
+    return [
+        MonthPoint(
+            label=calendar.month_abbr[month],
+            value=value,
+            pct=int(value / peak * 100) if peak > 0 else 0,
+        )
+        for month, value in values
+    ]
