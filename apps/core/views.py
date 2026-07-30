@@ -28,6 +28,8 @@ from apps.core.models import (
     Room,
 )
 from apps.core.services.fees import save_settlement
+from apps.core.services.forecast import forecast_income, forecast_income_total
+from apps.core.services.mortgage import mortgage_schedule
 from apps.core.services.stats import (
     RoomOccupancy,
     expected_income,
@@ -48,6 +50,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "stats": inventory_state(user),
             "tax_year": timezone.now().year,
             "tax_ytd": tax_for_year(user, timezone.now().year),
+            "forecast_income": forecast_income_total(
+                user, timezone.now().year, timezone.now().month
+            ),
         },
     )
 
@@ -216,6 +221,28 @@ def tax(request: HttpRequest) -> HttpResponse:
     """Monthly lump-sum tax table (port of getTaxList/getTaxByMonth)."""
     user = cast(User, request.user)
     return render(request, "core/tax.html", {"table": tax_table(user)})
+
+
+@login_required
+def forecast(request: HttpRequest) -> HttpResponse:
+    """Forecasted rent income for this month + estimated mortgage schedule."""
+    user = cast(User, request.user)
+    today = timezone.now().date()
+    rows = [
+        {"flat": flat, "income": forecast_income(flat, today.year, today.month)}
+        for flat in Flat.objects.filter(owner=user)
+    ]
+    return render(
+        request,
+        "core/forecast.html",
+        {
+            "year": today.year,
+            "month": today.month,
+            "rows": rows,
+            "total": forecast_income_total(user, today.year, today.month),
+            "schedule": mortgage_schedule(user, months=12),
+        },
+    )
 
 
 # --- Generic owner-scoped CRUD -------------------------------------------------

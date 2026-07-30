@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Forecast — npbeta{% endblock %}
+{% block content %}
+<h1>Forecast <span style="color:#666;font-size:.9rem;">({{ year }}-{{ month|stringformat:"02d" }})</span></h1>
+
+<h2 style="font-size:1.1rem;">Expected rent income</h2>
+<table>
+    <thead>
+        <tr><th>Flat</th><th>Forecast income</th></tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row.flat }}</td>
+            <td>{{ row.income }} PLN</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="2">No flats.</td></tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr><th>Total</th><th>{{ total }} PLN</th></tr>
+    </tfoot>
+</table>
+
+<h2 style="font-size:1.1rem;margin-top:1.5rem;">Mortgage schedule (next 12 months)</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Flat</th>
+            <th>Month</th>
+            <th>Installment</th>
+            <th>Interest</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in schedule %}
+        <tr>
+            <td>{{ m.flat }}</td>
+            <td>{{ m.year }}-{{ m.month|stringformat:"02d" }}</td>
+            <td>{{ m.amount }} PLN</td>
+            <td>{{ m.interest }} PLN</td>
+            <td>
+                {% if m.recorded %}
+                    <span class="badge success"></span> recorded
+                {% else %}
+                    <span class="badge warning"></span> estimated
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">No mortgaged flats.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

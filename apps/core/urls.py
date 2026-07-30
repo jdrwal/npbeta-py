@@ -36,5 +36,6 @@ urlpatterns = [
     ),
     path("readings/add/", views.add_reading, name="add_reading"),
     path("tax/", views.tax, name="tax"),
+    path("forecast/", views.forecast, name="forecast"),
     path("healthz/", views.healthz, name="healthz"),
 ]
