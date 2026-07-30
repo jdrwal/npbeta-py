@@ -1,20 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Settlement — npbeta{% endblock %}
 {% block content %}
-<p><a href="{% url 'core:calculations' %}">← Settlements</a></p>
-<form method="post" action="{% url 'core:delete_settlement' calc.pk %}"
-      onsubmit="return confirm('Delete this settlement?');" style="float:right;">
-    {% csrf_token %}<button type="submit">Delete</button>
-</form>
-<form method="post" action="{% url 'core:email_settlement' calc.pk %}"
-      style="float:right;margin-right:.5rem;">
-    {% csrf_token %}<button type="submit">Email tenants</button>
-</form>
-<h1>{{ calc.flat }}</h1>
-<p style="color:#666;">
-    {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}
-    · computed {{ calc.stamp|date:"Y-m-d H:i" }}
-</p>
+<p class="mb-4"><a href="{% url 'core:calculations' %}">← Settlements</a></p>
+<div class="mb-6 flex items-start justify-between gap-4">
+    <div>
+        <h1>{{ calc.flat }}</h1>
+        <p class="mt-1 text-sm text-gray-500">
+            {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}
+            · computed {{ calc.stamp|date:"Y-m-d H:i" }}
+        </p>
+    </div>
+    <div class="flex shrink-0 gap-2">
+        <form method="post" action="{% url 'core:email_settlement' calc.pk %}">
+            {% csrf_token %}<button type="submit" class="btn-ghost">Email tenants</button>
+        </form>
+        <form method="post" action="{% url 'core:delete_settlement' calc.pk %}"
+              onsubmit="return confirm('Delete this settlement?');">
+            {% csrf_token %}<button type="submit" class="btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
 
 {% for row in tenants %}
 <h2 style="font-size:1.1rem;margin-top:1.5rem;">

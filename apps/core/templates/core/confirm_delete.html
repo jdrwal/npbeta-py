@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block title %}{{ title }} — npbeta{% endblock %}
 {% block content %}
-<h1>{{ title }}</h1>
-<p>Are you sure you want to delete <strong>{{ object }}</strong>?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Delete</button>
-    <a href="{{ request.META.HTTP_REFERER|default:'/' }}">Cancel</a>
-</form>
+<h1 class="mb-4">{{ title }}</h1>
+<div class="card max-w-lg">
+    <p class="mb-5">Are you sure you want to delete <strong>{{ object }}</strong>?</p>
+    <form method="post" class="flex items-center gap-3">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">Delete</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Cancel</a>
+    </form>
+</div>
 {% endblock %}

@@ -54,3 +54,16 @@ fmt: ## Auto-format with ruff
 .PHONY: pytest
 pytest: ## Run pytest only
 	$(COMPOSE) run --rm web pytest
+
+TAILWIND_URL = https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
+
+bin/tailwindcss: ## Download the Tailwind standalone CLI (macOS arm64)
+	mkdir -p bin && curl -sL -o bin/tailwindcss $(TAILWIND_URL) && chmod +x bin/tailwindcss
+
+.PHONY: css
+css: bin/tailwindcss ## Build the Tailwind CSS bundle
+	./bin/tailwindcss -i static/src/input.css -o static/css/app.css --minify
+
+.PHONY: css-watch
+css-watch: bin/tailwindcss ## Rebuild CSS on template changes
+	./bin/tailwindcss -i static/src/input.css -o static/css/app.css --watch

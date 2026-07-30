@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 {% block title %}{{ title }} — npbeta{% endblock %}
 {% block content %}
-<h1>{{ title }}</h1>
-<form method="post" class="form">
+<h1 class="mb-5">{{ title }}</h1>
+<form method="post" class="card max-w-lg space-y-4">
     {% csrf_token %}
-    {% if form.non_field_errors %}<div class="msg">{{ form.non_field_errors }}</div>{% endif %}
+    {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ form.non_field_errors }}</div>{% endif %}
     {% for field in form %}
-    <p>
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label><br>
+    <div>
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
         {{ field }}
-        {% if field.errors %}<span style="color:#e74c3c;">{{ field.errors|striptags }}</span>{% endif %}
-    </p>
+        {% if field.errors %}<span class="mt-1 block text-sm text-rose-600">{{ field.errors|striptags }}</span>{% endif %}
+    </div>
     {% endfor %}
-    <button type="submit">Save</button>
-    <a href="{{ request.META.HTTP_REFERER|default:'/' }}">Cancel</a>
+    <div class="flex items-center gap-3 pt-2">
+        <button type="submit">Save</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Cancel</a>
+    </div>
 </form>
 {% endblock %}

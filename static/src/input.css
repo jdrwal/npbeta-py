@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/* Scan Django templates for class usage (paths relative to this file). */
+@source "../../templates";
+@source "../../apps";
+
+/* Design system — component + element styles so existing markup (tables, cards,
+   badges) picks up the modern look without rewriting every template. */
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-800 antialiased;
+  }
+  h1 {
+    @apply text-2xl font-bold tracking-tight text-gray-900;
+  }
+  h2 {
+    @apply text-lg font-semibold text-gray-900;
+  }
+  main a {
+    @apply font-medium text-indigo-600 transition hover:text-indigo-800 hover:underline;
+  }
+  main table {
+    @apply w-full border-collapse overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-sm;
+  }
+  main thead th {
+    @apply border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500;
+  }
+  main tbody td {
+    @apply border-b border-gray-100 px-4 py-3 align-middle;
+  }
+  main tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  main tbody tr:hover {
+    @apply bg-gray-50/70;
+  }
+  main tfoot th {
+    @apply border-t border-gray-200 px-4 py-2.5 text-left text-sm font-semibold;
+  }
+  label {
+    @apply mb-1 block text-sm font-medium text-gray-700;
+  }
+  input:not([type="checkbox"]),
+  select,
+  textarea {
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200;
+  }
+  button {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-gray-200 bg-white p-5 shadow-sm;
+  }
+  .cards {
+    @apply mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+  .card .n {
+    @apply text-3xl font-bold tracking-tight text-gray-900;
+  }
+  .card .l {
+    @apply mt-1 text-sm text-gray-500;
+  }
+  .badge {
+    @apply inline-block h-2.5 w-2.5 rounded-full align-middle;
+  }
+  .badge.success {
+    @apply bg-emerald-500;
+  }
+  .badge.warning {
+    @apply bg-amber-500;
+  }
+  .badge.danger {
+    @apply bg-rose-500;
+  }
+  .msg {
+    @apply mb-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm text-indigo-800;
+  }
+  .btn-danger {
+    @apply bg-rose-600 hover:bg-rose-700;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-gray-700 shadow-none hover:bg-gray-100;
+  }
+  .sidebar-link {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900;
+  }
+  .sidebar-link.active {
+    @apply bg-indigo-50 text-indigo-700;
+  }
+  .sidebar-link svg {
+    @apply h-[18px] w-[18px] shrink-0;
+  }
+  .sidebar-group {
+    @apply px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-gray-400;
+  }
+  .login-card {
+    @apply mx-auto mt-24 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-lg;
+  }
+}

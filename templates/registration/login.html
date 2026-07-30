@@ -1,15 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Sign in — npbeta{% endblock %}
 {% block content %}
-<form class="login" method="post">
-    {% csrf_token %}
-    <h1>Sign in</h1>
-    {% if form.errors %}<div class="msg">Invalid email or password.</div>{% endif %}
-    <label for="id_username">Email</label>
-    {{ form.username }}
-    <label for="id_password">Password</label>
-    {{ form.password }}
-    <button type="submit">Sign in</button>
-    <input type="hidden" name="next" value="{{ next }}">
-</form>
+<div class="login-card">
+    <div class="mb-6 flex items-center gap-2.5">
+        <div class="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">nP</div>
+        <span class="text-lg font-semibold tracking-tight">npbeta</span>
+    </div>
+    <h1 class="mb-1 text-xl">Sign in</h1>
+    <p class="mb-5 text-sm text-gray-500">Rental management</p>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">Invalid email or password.</div>{% endif %}
+        <label for="id_username">Email</label>
+        {{ form.username }}
+        <label for="id_password" class="mt-3">Password</label>
+        {{ form.password }}
+        <button type="submit" class="mt-5 w-full justify-center">Sign in</button>
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+</div>
 {% endblock %}

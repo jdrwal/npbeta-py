@@ -36,3 +36,6 @@ coverage.xml
 .DS_Store
 .idea/
 .vscode/
+
+# Tailwind standalone binary (downloaded per-machine; CSS output is committed)
+/bin/
