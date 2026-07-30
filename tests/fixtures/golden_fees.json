@@ -1,0 +1,1372 @@
+[
+{
+ "model": "accounts.user",
+ "pk": 1,
+ "fields": {
+  "password": "!",
+  "last_login": null,
+  "is_superuser": false,
+  "username": "owner",
+  "first_name": "",
+  "last_name": "",
+  "email": "",
+  "is_staff": false,
+  "is_active": true,
+  "date_joined": "2019-07-01T00:00:00Z",
+  "forecast_start_day": 20,
+  "groups": [],
+  "user_permissions": []
+ }
+},
+{
+ "model": "core.flat",
+ "pk": 1,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "city": "Wroclaw",
+  "street": "Ladna",
+  "building_no": "11",
+  "flat_no": "4",
+  "flat_size": 64,
+  "code": "50-353",
+  "room_count": 4,
+  "created": "2019-07-16T18:23:26Z",
+  "rental_start": "2019-03-15T00:00:00Z",
+  "color": "0,190,0",
+  "mortgage_start": null,
+  "mortgage_amount": null,
+  "mortgage_capital": null,
+  "mortgage_interest": null
+ }
+},
+{
+ "model": "core.room",
+ "pk": 1,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room_no": 1,
+  "name": "Pokoj numer 1",
+  "size": 10,
+  "beds": 1,
+  "fee": "1000.00",
+  "deposit": "1500.00"
+ }
+},
+{
+ "model": "core.room",
+ "pk": 2,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room_no": 2,
+  "name": "Pokoj numer 2",
+  "size": 10,
+  "beds": 1,
+  "fee": "1000.00",
+  "deposit": "1500.00"
+ }
+},
+{
+ "model": "core.room",
+ "pk": 3,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room_no": 3,
+  "name": "Pokoj numer 3",
+  "size": 10,
+  "beds": 1,
+  "fee": "1000.00",
+  "deposit": "1500.00"
+ }
+},
+{
+ "model": "core.room",
+ "pk": 4,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room_no": 4,
+  "name": "Pokoj numer 4",
+  "size": 14,
+  "beds": 1,
+  "fee": "1200.00",
+  "deposit": "1500.00"
+ }
+},
+{
+ "model": "core.contract",
+ "pk": 52,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room": 4,
+  "contract_number": "L114/2026/01",
+  "tenant_name": "Tenant 52",
+  "email": "",
+  "phone": "",
+  "price": "1200.00",
+  "deposit": "1500.00",
+  "contract_date": "2026-03-07",
+  "contract_start": "2026-04-01",
+  "contract_end": "2026-08-31",
+  "payment_day": 10
+ }
+},
+{
+ "model": "core.contract",
+ "pk": 49,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room": 1,
+  "contract_number": "L114/2025/01",
+  "tenant_name": "Tenant 49",
+  "email": "",
+  "phone": "",
+  "price": "1000.00",
+  "deposit": "1500.00",
+  "contract_date": "2025-07-17",
+  "contract_start": "2025-09-01",
+  "contract_end": "2026-08-31",
+  "payment_day": 10
+ }
+},
+{
+ "model": "core.contract",
+ "pk": 39,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room": 2,
+  "contract_number": "L114/2023/02",
+  "tenant_name": "Tenant 39",
+  "email": "",
+  "phone": "",
+  "price": "1000.00",
+  "deposit": "1500.00",
+  "contract_date": "2023-09-01",
+  "contract_start": "2023-09-25",
+  "contract_end": "2026-08-31",
+  "payment_day": 10
+ }
+},
+{
+ "model": "core.contract",
+ "pk": 35,
+ "fields": {
+  "is_deleted": false,
+  "owner": 1,
+  "flat": 1,
+  "room": 3,
+  "contract_number": "L114/2022/02",
+  "tenant_name": "Tenant 35",
+  "email": "",
+  "phone": "",
+  "price": "1000.00",
+  "deposit": "1000.00",
+  "contract_date": "2022-07-11",
+  "contract_start": "2022-07-15",
+  "contract_end": "2026-08-31",
+  "payment_day": 10
+ }
+},
+{
+ "model": "core.meterdefinition",
+ "pk": 1,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "name": "Prad",
+  "unit": "kWh"
+ }
+},
+{
+ "model": "core.meterdefinition",
+ "pk": 2,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "name": "Gaz",
+  "unit": "m³"
+ }
+},
+{
+ "model": "core.meterdefinition",
+ "pk": 3,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "name": "Zimna woda",
+  "unit": "m³"
+ }
+},
+{
+ "model": "core.meterdefinition",
+ "pk": 4,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "name": "Ciepla woda",
+  "unit": "m³"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 911,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "read_date": "2026-03-31",
+  "value": "4640.700"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 919,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "read_date": "2026-04-30",
+  "value": "4732.700"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 927,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "read_date": "2026-05-31",
+  "value": "4830.600"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 943,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "read_date": "2026-06-30",
+  "value": "4935.700"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 912,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "read_date": "2026-03-31",
+  "value": "273.171"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 920,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "read_date": "2026-04-30",
+  "value": "275.319"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 928,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "read_date": "2026-05-31",
+  "value": "276.793"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 944,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "read_date": "2026-06-30",
+  "value": "278.308"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 913,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "read_date": "2026-03-31",
+  "value": "54.144"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 921,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "read_date": "2026-04-30",
+  "value": "57.636"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 929,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "read_date": "2026-05-31",
+  "value": "61.272"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 945,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "read_date": "2026-06-30",
+  "value": "65.543"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 914,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "read_date": "2026-03-31",
+  "value": "59.504"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 922,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "read_date": "2026-04-30",
+  "value": "62.802"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 930,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "read_date": "2026-05-31",
+  "value": "65.630"
+ }
+},
+{
+ "model": "core.meterreading",
+ "pk": 946,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "read_date": "2026-06-30",
+  "value": "68.593"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 26,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "price_date": "2022-07-01",
+  "price": "0.9000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 40,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "price_date": "2023-01-01",
+  "price": "0.9000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 44,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "price_date": "2024-11-01",
+  "price": "0.8600"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 1,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 1,
+  "price_date": null,
+  "price": "0.9000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 27,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "price_date": "2022-07-01",
+  "price": "5.0000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 41,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "price_date": "2023-01-01",
+  "price": "5.0000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 45,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "price_date": "2024-11-01",
+  "price": "5.3800"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 2,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 2,
+  "price_date": null,
+  "price": "5.0000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 28,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "price_date": "2022-07-01",
+  "price": "11.8000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 43,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "price_date": "2023-01-01",
+  "price": "40.5700"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 46,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "price_date": "2024-11-01",
+  "price": "14.1000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 3,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 3,
+  "price_date": null,
+  "price": "11.1100"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 29,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "price_date": "2022-07-01",
+  "price": "27.2000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 42,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "price_date": "2023-01-01",
+  "price": "11.8000"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 47,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "price_date": "2024-11-01",
+  "price": "42.8700"
+ }
+},
+{
+ "model": "core.meterprice",
+ "pk": 4,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "meter": 4,
+  "price_date": null,
+  "price": "21.8600"
+ }
+},
+{
+ "model": "core.adminfee",
+ "pk": 1,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "title": "Internet",
+  "is_individual": false
+ }
+},
+{
+ "model": "core.adminfee",
+ "pk": 3,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "title": "Eksploatacja",
+  "is_individual": false
+ }
+},
+{
+ "model": "core.adminfee",
+ "pk": 4,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "title": "Ogrzewanie",
+  "is_individual": false
+ }
+},
+{
+ "model": "core.adminfee",
+ "pk": 5,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "title": "Wywoz smieci",
+  "is_individual": false
+ }
+},
+{
+ "model": "core.adminfee",
+ "pk": 6,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "title": "Fundusz remontowy",
+  "is_individual": false
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 16,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 1,
+  "price_date": "2022-07-01T00:00:00Z",
+  "price": "44.99"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 28,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 1,
+  "price_date": "2023-01-01T00:00:00Z",
+  "price": "44.99"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 33,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 1,
+  "price_date": "2024-11-01T00:00:00Z",
+  "price": "44.99"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 1,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 1,
+  "price_date": null,
+  "price": "40.77"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 18,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 3,
+  "price_date": "2022-07-01T00:00:00Z",
+  "price": "100.00"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 31,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 3,
+  "price_date": "2023-01-01T00:00:00Z",
+  "price": "179.27"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 36,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 3,
+  "price_date": "2024-11-01T00:00:00Z",
+  "price": "284.46"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 2,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 3,
+  "price_date": null,
+  "price": "128.95"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 19,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 4,
+  "price_date": "2022-07-01T00:00:00Z",
+  "price": "200.00"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 32,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 4,
+  "price_date": "2023-01-01T00:00:00Z",
+  "price": "425.83"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 37,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 4,
+  "price_date": "2024-11-01T00:00:00Z",
+  "price": "395.64"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 3,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 4,
+  "price_date": null,
+  "price": "191.85"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 20,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 5,
+  "price_date": "2022-07-01T00:00:00Z",
+  "price": "102.00"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 29,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 5,
+  "price_date": "2023-01-01T00:00:00Z",
+  "price": "164.96"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 34,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 5,
+  "price_date": "2024-11-01T00:00:00Z",
+  "price": "123.72"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 4,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 5,
+  "price_date": null,
+  "price": "19.00"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 21,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 6,
+  "price_date": "2022-07-01T00:00:00Z",
+  "price": "125.80"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 30,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 6,
+  "price_date": "2023-01-01T00:00:00Z",
+  "price": "125.80"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 35,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 6,
+  "price_date": "2024-11-01T00:00:00Z",
+  "price": "188.70"
+ }
+},
+{
+ "model": "core.adminfeeprice",
+ "pk": 5,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "admin_fee": 6,
+  "price_date": null,
+  "price": "0.00"
+ }
+},
+{
+ "model": "core.feecalculation",
+ "pk": 302,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "stamp": "2026-07-05T12:05:17Z",
+  "period_start": "2026-06-01T00:00:00Z",
+  "period_end": "2026-06-30T00:00:00Z"
+ }
+},
+{
+ "model": "core.feecalculationtenant",
+ "pk": 1174,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "calculation": 302,
+  "tenant_name": "Tenant 1174",
+  "contract_number": "L114/2022/02",
+  "email": ""
+ }
+},
+{
+ "model": "core.feecalculationtenant",
+ "pk": 1175,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "calculation": 302,
+  "tenant_name": "Tenant 1175",
+  "contract_number": "L114/2023/02",
+  "email": ""
+ }
+},
+{
+ "model": "core.feecalculationtenant",
+ "pk": 1176,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "calculation": 302,
+  "tenant_name": "Tenant 1176",
+  "contract_number": "L114/2025/01",
+  "email": ""
+ }
+},
+{
+ "model": "core.feecalculationtenant",
+ "pk": 1177,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "calculation": 302,
+  "tenant_name": "Tenant 1177",
+  "contract_number": "L114/2026/01",
+  "email": ""
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10522,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Counter",
+  "name": "Prad",
+  "usage": "26.2750",
+  "value": "22.60"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10523,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Counter",
+  "name": "Gaz",
+  "usage": "0.3790",
+  "value": "2.04"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10524,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Counter",
+  "name": "Zimna woda",
+  "usage": "1.0680",
+  "value": "15.06"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10525,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Counter",
+  "name": "Ciepla woda",
+  "usage": "0.7410",
+  "value": "31.76"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10526,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Admin",
+  "name": "Internet",
+  "usage": "0.2500",
+  "value": "11.25"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10527,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Admin",
+  "name": "Eksploatacja",
+  "usage": "0.2500",
+  "value": "71.12"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10528,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Admin",
+  "name": "Ogrzewanie",
+  "usage": "0.2500",
+  "value": "98.91"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10529,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Admin",
+  "name": "Wywoz smieci",
+  "usage": "0.2500",
+  "value": "30.93"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10530,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1174,
+  "fee_type": "Admin",
+  "name": "Fundusz remontowy",
+  "usage": "0.2500",
+  "value": "47.18"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10531,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Counter",
+  "name": "Prad",
+  "usage": "26.2750",
+  "value": "22.60"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10532,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Counter",
+  "name": "Gaz",
+  "usage": "0.3790",
+  "value": "2.04"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10533,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Counter",
+  "name": "Zimna woda",
+  "usage": "1.0680",
+  "value": "15.06"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10534,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Counter",
+  "name": "Ciepla woda",
+  "usage": "0.7410",
+  "value": "31.76"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10535,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Admin",
+  "name": "Internet",
+  "usage": "0.2500",
+  "value": "11.25"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10536,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Admin",
+  "name": "Eksploatacja",
+  "usage": "0.2500",
+  "value": "71.12"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10537,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Admin",
+  "name": "Ogrzewanie",
+  "usage": "0.2500",
+  "value": "98.91"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10538,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Admin",
+  "name": "Wywoz smieci",
+  "usage": "0.2500",
+  "value": "30.93"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10539,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1175,
+  "fee_type": "Admin",
+  "name": "Fundusz remontowy",
+  "usage": "0.2500",
+  "value": "47.18"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10540,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Counter",
+  "name": "Prad",
+  "usage": "26.2750",
+  "value": "22.60"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10541,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Counter",
+  "name": "Gaz",
+  "usage": "0.3790",
+  "value": "2.04"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10542,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Counter",
+  "name": "Zimna woda",
+  "usage": "1.0680",
+  "value": "15.06"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10543,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Counter",
+  "name": "Ciepla woda",
+  "usage": "0.7410",
+  "value": "31.76"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10544,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Admin",
+  "name": "Internet",
+  "usage": "0.2500",
+  "value": "11.25"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10545,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Admin",
+  "name": "Eksploatacja",
+  "usage": "0.2500",
+  "value": "71.12"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10546,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Admin",
+  "name": "Ogrzewanie",
+  "usage": "0.2500",
+  "value": "98.91"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10547,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Admin",
+  "name": "Wywoz smieci",
+  "usage": "0.2500",
+  "value": "30.93"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10548,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1176,
+  "fee_type": "Admin",
+  "name": "Fundusz remontowy",
+  "usage": "0.2500",
+  "value": "47.18"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10549,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Counter",
+  "name": "Prad",
+  "usage": "26.2750",
+  "value": "22.60"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10550,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Counter",
+  "name": "Gaz",
+  "usage": "0.3790",
+  "value": "2.04"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10551,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Counter",
+  "name": "Zimna woda",
+  "usage": "1.0680",
+  "value": "15.06"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10552,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Counter",
+  "name": "Ciepla woda",
+  "usage": "0.7410",
+  "value": "31.76"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10553,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Admin",
+  "name": "Internet",
+  "usage": "0.2500",
+  "value": "11.25"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10554,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Admin",
+  "name": "Eksploatacja",
+  "usage": "0.2500",
+  "value": "71.12"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10555,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Admin",
+  "name": "Ogrzewanie",
+  "usage": "0.2500",
+  "value": "98.91"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10556,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Admin",
+  "name": "Wywoz smieci",
+  "usage": "0.2500",
+  "value": "30.93"
+ }
+},
+{
+ "model": "core.feecalculationitem",
+ "pk": 10557,
+ "fields": {
+  "owner": 1,
+  "flat": 1,
+  "tenant": 1177,
+  "fee_type": "Admin",
+  "name": "Fundusz remontowy",
+  "usage": "0.2500",
+  "value": "47.18"
+ }
+}
+]
