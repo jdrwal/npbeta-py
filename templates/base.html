@@ -40,6 +40,9 @@
     <nav>
         <a href="{% url 'core:dashboard' %}">Dashboard</a>
         <a href="{% url 'core:flats' %}">Flats</a>
+        <a href="{% url 'core:contracts' %}">Contracts</a>
+        <a href="{% url 'core:records' %}">Records</a>
+        <a href="{% url 'core:calculations' %}">Settlements</a>
         <span class="spacer"></span>
         <span>{{ user.get_username }}</span>
         <form method="post" action="{% url 'logout' %}">

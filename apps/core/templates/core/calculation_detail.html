@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Settlement — npbeta{% endblock %}
+{% block content %}
+<p><a href="{% url 'core:calculations' %}">← Settlements</a></p>
+<h1>{{ calc.flat }}</h1>
+<p style="color:#666;">
+    {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}
+    · computed {{ calc.stamp|date:"Y-m-d H:i" }}
+</p>
+
+{% for row in tenants %}
+<h2 style="font-size:1.1rem;margin-top:1.5rem;">
+    {{ row.tenant.tenant_name }}
+    <span style="color:#666;font-weight:400;">— {{ row.tenant.contract_number }} · total {{ row.total }} PLN</span>
+</h2>
+<table>
+    <thead>
+        <tr><th>Type</th><th>Item</th><th>Usage</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+        {% for item in row.items %}
+        <tr>
+            <td>{{ item.fee_type }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.usage }}</td>
+            <td>{{ item.value }} PLN</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+{% endblock %}

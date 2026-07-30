@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Contracts — npbeta{% endblock %}
+{% block content %}
+<h1>Contracts</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Number</th>
+            <th>Tenant</th>
+            <th>Flat / Room</th>
+            <th>Period</th>
+            <th>Rent</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in contracts %}
+        <tr>
+            <td>{{ c.contract_number }}</td>
+            <td>{{ c.tenant_name }}</td>
+            <td>{{ c.flat }} — {{ c.room.name|default:c.room.room_no }}</td>
+            <td>{{ c.contract_start|date:"Y-m-d" }} → {{ c.contract_end|date:"Y-m-d" }}</td>
+            <td>{{ c.price }} PLN</td>
+            <td>
+                {% if c.contract_start <= today and c.contract_end >= today %}
+                    <span class="badge success"></span> active
+                {% else %}
+                    <span class="badge danger"></span> expired
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No contracts.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
