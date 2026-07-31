@@ -2,8 +2,13 @@
 {% load humanize %}
 {% block title %}Pulpit — npbeta{% endblock %}
 {% block content %}
-<h1 class="mb-1">Pulpit</h1>
-<p class="mb-6 text-sm text-gray-500">Przegląd Twojego portfela najmu</p>
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
+    <div>
+        <h1>Pulpit</h1>
+        <p class="text-sm text-gray-500">Przegląd Twojego portfela najmu</p>
+    </div>
+</div>
 
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     <div class="card flex items-start gap-4">
@@ -50,14 +55,27 @@
         </div>
     </div>
 
-    <div class="card flex items-start gap-4">
+    <div class="card relative flex items-start gap-4">
         <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
         </div>
+        {% if tax_status == "paid" %}
+        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-emerald-100 text-emerald-600" title="Zapłacony">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        {% elif tax_status == "overdue" %}
+        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-rose-100 text-rose-600" title="Po terminie ({{ tax_month.deadline|date:'Y-m-d' }})">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
+        </span>
+        {% else %}
+        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-amber-100 text-amber-600" title="Do zapłaty do {{ tax_month.deadline|date:'Y-m-d' }}">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 15 14"/></svg>
+        </span>
+        {% endif %}
         <div>
             <div class="text-sm font-medium text-gray-500">Podatek {{ period_label }}</div>
             <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ tax_month.tax|intcomma }} <span class="text-base font-medium text-gray-400">zł</span></div>
-            <div class="text-xs text-gray-400">ryczałt narastająco {{ tax_year }}: {{ tax_ytd|intcomma }} zł</div>
+            <div class="text-xs text-gray-400">narastająco {{ tax_year }}: {{ tax_ytd|intcomma }} zł</div>
         </div>
     </div>
 
@@ -86,8 +104,8 @@
     <div class="flex h-44 gap-3">
         {% for p in income_series %}
         <div class="group flex flex-1 flex-col">
-            <div class="mb-1 text-center text-xs font-semibold text-gray-600">{{ p.value|floatformat:0|intcomma }}</div>
-            <div class="flex flex-1 items-end">
+            <div class="flex flex-1 flex-col justify-end">
+                <div class="mb-1 text-center text-xs font-semibold text-gray-600">{{ p.value|floatformat:0|intcomma }}</div>
                 <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value|floatformat:2|intcomma }} zł"></div>
             </div>
             <div class="pt-2 text-center text-xs font-medium text-gray-500">{{ p.label }}</div>

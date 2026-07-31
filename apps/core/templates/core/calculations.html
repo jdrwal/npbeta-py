@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Rozliczenia — npbeta{% endblock %}
 {% block content %}
-<h1>Rozliczenia mediów</h1>
+<h1 class="flex items-center gap-2"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2M8 18h2M14 18h2"/></svg></span> Rozliczenia mediów</h1>
 <p>
     <a href="{% url 'core:run_settlement' %}">+ Nowe rozliczenie</a>
     &nbsp;·&nbsp;

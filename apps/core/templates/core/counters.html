@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Liczniki — npbeta{% endblock %}
 {% block content %}
-<h1>Liczniki
+<h1 class="flex items-center gap-2"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14 8 10"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5"/></svg></span> Liczniki
     <a href="{% url 'core:add_meter' %}" style="font-size:.9rem;">+ Dodaj licznik</a>
     · <a href="{% url 'core:add_reading' %}" style="font-size:.9rem;">+ Dodaj odczyt</a>
 </h1>

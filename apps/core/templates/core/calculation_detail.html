@@ -3,12 +3,15 @@
 {% block content %}
 <p class="mb-4"><a href="{% url 'core:calculations' %}">← Rozliczenia</a></p>
 <div class="mb-6 flex items-start justify-between gap-4">
-    <div>
-        <h1>{{ calc.flat }}</h1>
-        <p class="mt-1 text-sm text-gray-500">
-            {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}
-            · obliczono {{ calc.stamp|date:"Y-m-d H:i" }}
-        </p>
+    <div class="flex items-center gap-3">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2M8 18h2M14 18h2"/></svg></span>
+        <div>
+            <h1>{{ calc.flat }}</h1>
+            <p class="mt-1 text-sm text-gray-500">
+                {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}
+                · obliczono {{ calc.stamp|date:"Y-m-d H:i" }}
+            </p>
+        </div>
     </div>
     <div class="flex shrink-0 gap-2">
         <form method="post" action="{% url 'core:email_settlement' calc.pk %}">

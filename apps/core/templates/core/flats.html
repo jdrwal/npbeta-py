@@ -2,9 +2,12 @@
 {% block title %}Mieszkania — npbeta{% endblock %}
 {% block content %}
 <div class="mb-6 flex items-center justify-between">
-    <div>
-        <h1>Mieszkania</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ rows|length }} nieruchomo{{ rows|length|pluralize:"ść,ści,ści" }}</p>
+    <div class="flex items-center gap-3">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg></span>
+        <div>
+            <h1>Mieszkania</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ rows|length }} nieruchomo{{ rows|length|pluralize:"ść,ści,ści" }}</p>
+        </div>
     </div>
     <a href="{% url 'core:add_flat' %}" class="btn">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>

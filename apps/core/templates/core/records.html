@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Ewidencja — npbeta{% endblock %}
 {% block content %}
-<h1>Ewidencja <a href="{% url 'core:add_record' %}" style="font-size:.9rem;">+ Dodaj wpis</a></h1>
+<h1 class="flex items-center gap-2"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span> Ewidencja <a href="{% url 'core:add_record' %}" style="font-size:.9rem;">+ Dodaj wpis</a></h1>
 <table>
     <thead>
         <tr>

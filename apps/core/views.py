@@ -59,6 +59,14 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     tax_month = monthly_tax(user, prev_year, prev_month)
     tax_ytd = tax_for_year(user, prev_year)
 
+    # Payment status drives the badge on the tax card.
+    if tax_month.paid_date is not None:
+        tax_status = "paid"
+    elif now.date() > tax_month.deadline:
+        tax_status = "overdue"
+    else:
+        tax_status = "pending"
+
     # Income: same completed month as the headline, year-to-date as fine print.
     income_month = forecast_income_total(user, prev_year, prev_month)
     income_ytd = sum(
@@ -71,10 +79,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "core/dashboard.html",
         {
             "stats": inventory_state(user),
-            "tax_year": year,
+            "tax_year": prev_year,
             "period_label": period_label,
             "tax_month": tax_month,
             "tax_ytd": tax_ytd,
+            "tax_status": tax_status,
             "income_month": income_month,
             "income_ytd": income_ytd,
             "income_series": monthly_income_series(user, months=6),

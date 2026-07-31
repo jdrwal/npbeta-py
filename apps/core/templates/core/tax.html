@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Podatek — npbeta{% endblock %}
 {% block content %}
-<h1>Podatek od najmu <span style="color:#666;font-size:.9rem;">(ryczałt 8,5% do 100 000 zł/rok, 12,5% powyżej)</span></h1>
+<h1 class="flex items-center gap-2"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span> Podatek od najmu <span style="color:#666;font-size:.9rem;">(ryczałt 8,5% do 100 000 zł/rok, 12,5% powyżej)</span></h1>
 {% for year, months in table.items %}
 <h2 style="font-size:1.1rem;margin-top:1.5rem;">{{ year }}</h2>
 <table>
