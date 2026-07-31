@@ -1,42 +1,100 @@
 {% extends "base.html" %}
 {% block title %}Umowy — npbeta{% endblock %}
 {% block content %}
-<h1>Umowy <a href="{% url 'core:add_contract' %}" style="font-size:.9rem;">+ Dodaj umowę</a></h1>
-<table>
-    <thead>
-        <tr>
-            <th>Numer</th>
-            <th>Najemca</th>
-            <th>Mieszkanie / Pokój</th>
-            <th>Okres</th>
-            <th>Czynsz</th>
-            <th>Status</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for c in contracts %}
-        <tr>
-            <td>{{ c.contract_number }}</td>
-            <td>{{ c.tenant_name }}</td>
-            <td>{{ c.flat }} — {{ c.room.name|default:c.room.room_no }}</td>
-            <td>{{ c.contract_start|date:"Y-m-d" }} → {{ c.contract_end|date:"Y-m-d" }}</td>
-            <td>{{ c.price }} zł</td>
-            <td>
-                {% if c.contract_start <= today and c.contract_end >= today %}
-                    <span class="badge success"></span> aktywna
-                {% else %}
-                    <span class="badge danger"></span> wygasła
-                {% endif %}
-            </td>
-            <td>
-                <a href="{% url 'core:edit_contract' c.pk %}">edytuj</a>
-                · <a href="{% url 'core:delete_contract' c.pk %}">usuń</a>
-            </td>
-        </tr>
+<div class="mb-6 flex items-center justify-between">
+    <div>
+        <h1>Umowy</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ active|length }} aktywnych · {{ past|length }} archiwalnych</p>
+    </div>
+    <a href="{% url 'core:add_contract' %}" class="btn">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
+        Dodaj umowę
+    </a>
+</div>
+
+<section class="mb-8">
+    <div class="mb-3 flex items-center gap-2">
+        <span class="badge success"></span>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Umowy aktywne</h2>
+        <span class="text-xs text-gray-400">({{ active|length }})</span>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {% for c in active %}
+        <div class="card flex flex-col">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="truncate font-semibold text-gray-900">{{ c.tenant_name }}</div>
+                    <div class="truncate text-xs text-gray-400">Umowa {{ c.contract_number }}</div>
+                </div>
+                <span class="pill bg-emerald-100 text-emerald-700">Aktywna</span>
+            </div>
+            <div class="mt-3 flex items-center gap-2 text-sm text-gray-600">
+                <svg class="h-4 w-4 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
+                <span class="truncate">{{ c.flat }}{% if c.room %} · {{ c.room.name|default:c.room.room_no }}{% endif %}</span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-y-3 border-t border-gray-100 pt-3 text-sm">
+                <div>
+                    <div class="text-xs text-gray-400">Okres</div>
+                    <div class="font-medium text-gray-800">{{ c.contract_start|date:"Y-m-d" }}</div>
+                    <div class="text-xs text-gray-500">→ {{ c.contract_end|date:"Y-m-d" }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400">Czynsz</div>
+                    <div class="font-semibold text-indigo-600">{{ c.price }} zł</div>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+                <a href="{% url 'core:edit_contract' c.pk %}" class="act">Edytuj</a>
+                <a href="{% url 'core:delete_contract' c.pk %}" class="act act-danger ml-auto">Usuń</a>
+            </div>
+        </div>
         {% empty %}
-        <tr><td colspan="7">Brak umów.</td></tr>
+        <p class="text-sm text-gray-400">Brak aktywnych umów.</p>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+</section>
+
+<section>
+    <div class="mb-3 flex items-center gap-2">
+        <span class="badge danger"></span>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Umowy archiwalne</h2>
+        <span class="text-xs text-gray-400">({{ past|length }})</span>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {% for c in past %}
+        <div class="card flex flex-col opacity-90">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="truncate font-semibold text-gray-900">{{ c.tenant_name }}</div>
+                    <div class="truncate text-xs text-gray-400">Umowa {{ c.contract_number }}</div>
+                </div>
+                <span class="pill bg-gray-100 text-gray-500">
+                    {% if c.contract_start > today %}Przyszła{% else %}Wygasła{% endif %}
+                </span>
+            </div>
+            <div class="mt-3 flex items-center gap-2 text-sm text-gray-600">
+                <svg class="h-4 w-4 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
+                <span class="truncate">{{ c.flat }}{% if c.room %} · {{ c.room.name|default:c.room.room_no }}{% endif %}</span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-y-3 border-t border-gray-100 pt-3 text-sm">
+                <div>
+                    <div class="text-xs text-gray-400">Okres</div>
+                    <div class="font-medium text-gray-800">{{ c.contract_start|date:"Y-m-d" }}</div>
+                    <div class="text-xs text-gray-500">→ {{ c.contract_end|date:"Y-m-d" }}</div>
+                </div>
+                <div>
+                    <div class="text-xs text-gray-400">Czynsz</div>
+                    <div class="font-semibold text-gray-700">{{ c.price }} zł</div>
+                </div>
+            </div>
+            <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3">
+                <a href="{% url 'core:edit_contract' c.pk %}" class="act">Edytuj</a>
+                <a href="{% url 'core:delete_contract' c.pk %}" class="act act-danger ml-auto">Usuń</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-gray-400">Brak archiwalnych umów.</p>
+        {% endfor %}
+    </div>
+</section>
 {% endblock %}

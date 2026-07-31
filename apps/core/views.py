@@ -92,7 +92,7 @@ def flats(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def contracts(request: HttpRequest) -> HttpResponse:
-    """All tenancy contracts with active/expired status (port of contr.php)."""
+    """Tenancy contracts split into active and past (port of contr.php)."""
     user = cast(User, request.user)
     today = timezone.now().date()
     rows = (
@@ -100,7 +100,20 @@ def contracts(request: HttpRequest) -> HttpResponse:
         .select_related("flat", "room")
         .order_by("-contract_start")
     )
-    return render(request, "core/contracts.html", {"contracts": rows, "today": today})
+    active: list[Contract] = []
+    past: list[Contract] = []
+    for c in rows:
+        is_active = bool(
+            c.contract_start
+            and c.contract_end
+            and c.contract_start <= today <= c.contract_end
+        )
+        (active if is_active else past).append(c)
+    return render(
+        request,
+        "core/contracts.html",
+        {"active": active, "past": past, "today": today},
+    )
 
 
 @login_required
