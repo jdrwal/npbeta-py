@@ -12,8 +12,8 @@
     </a>
 </div>
 
-<section class="mb-8">
-    <div class="mb-3 flex items-center gap-2">
+<section class="mb-12">
+    <div class="mb-4 flex items-center gap-2">
         <span class="badge success"></span>
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Umowy aktywne</h2>
         <span class="text-xs text-gray-400">({{ active|length }})</span>
@@ -54,8 +54,17 @@
     </div>
 </section>
 
+<div class="my-10 flex items-center gap-4">
+    <div class="h-px flex-1 bg-gray-200"></div>
+    <span class="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Archiwum
+    </span>
+    <div class="h-px flex-1 bg-gray-200"></div>
+</div>
+
 <section>
-    <div class="mb-3 flex items-center gap-2">
+    <div class="mb-4 flex items-center gap-2">
         <span class="badge danger"></span>
         <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Umowy archiwalne</h2>
         <span class="text-xs text-gray-400">({{ past|length }})</span>
