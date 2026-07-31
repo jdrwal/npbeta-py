@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Pulpit — npbeta{% endblock %}
 {% block content %}
 <h1 class="mb-1">Pulpit</h1>
@@ -54,9 +55,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Podatek {{ tax_month_label }}</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ tax_month.tax }} <span class="text-base font-medium text-gray-400">zł</span></div>
-            <div class="text-xs text-gray-400">ryczałt narastająco {{ tax_year }}: {{ tax_ytd }} zł</div>
+            <div class="text-sm font-medium text-gray-500">Podatek {{ period_label }}</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ tax_month.tax|intcomma }} <span class="text-base font-medium text-gray-400">zł</span></div>
+            <div class="text-xs text-gray-400">ryczałt narastająco {{ tax_year }}: {{ tax_ytd|intcomma }} zł</div>
         </div>
     </div>
 
@@ -65,9 +66,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Prognoza przychodu</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ forecast_month }} <span class="text-base font-medium text-gray-400">zł</span></div>
-            <div class="text-xs text-gray-400">w tym miesiącu · rok {{ tax_year }}: {{ forecast_year }} zł</div>
+            <div class="text-sm font-medium text-gray-500">Przychód {{ period_label }}</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ income_month|floatformat:2|intcomma }} <span class="text-base font-medium text-gray-400">zł</span></div>
+            <div class="text-xs text-gray-400">narastająco {{ tax_year }}: {{ income_ytd|floatformat:2|intcomma }} zł</div>
         </div>
     </div>
 </div>
@@ -85,9 +86,9 @@
     <div class="flex h-44 gap-3">
         {% for p in income_series %}
         <div class="group flex flex-1 flex-col">
-            <div class="mb-1 text-center text-xs font-semibold text-gray-600">{{ p.value }}</div>
+            <div class="mb-1 text-center text-xs font-semibold text-gray-600">{{ p.value|floatformat:0|intcomma }}</div>
             <div class="flex flex-1 items-end">
-                <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value }} zł"></div>
+                <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value|floatformat:2|intcomma }} zł"></div>
             </div>
             <div class="pt-2 text-center text-xs font-medium text-gray-500">{{ p.label }}</div>
         </div>

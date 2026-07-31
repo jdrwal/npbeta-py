@@ -55,13 +55,14 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     # Tax: last completed month as the headline, year-to-date as fine print.
     prev_year, prev_month = (year - 1, 12) if month == 1 else (year, month - 1)
+    period_label = f"{prev_month:02d}/{prev_year}"
     tax_month = monthly_tax(user, prev_year, prev_month)
-    tax_ytd = tax_for_year(user, year)
+    tax_ytd = tax_for_year(user, prev_year)
 
-    # Forecast: this month as the headline, full-year projection as fine print.
-    forecast_month = forecast_income_total(user, year, month)
-    forecast_year = sum(
-        (forecast_income_total(user, year, m) for m in range(1, 13)),
+    # Income: same completed month as the headline, year-to-date as fine print.
+    income_month = forecast_income_total(user, prev_year, prev_month)
+    income_ytd = sum(
+        (forecast_income_total(user, prev_year, m) for m in range(1, prev_month + 1)),
         Decimal(0),
     )
 
@@ -71,11 +72,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         {
             "stats": inventory_state(user),
             "tax_year": year,
+            "period_label": period_label,
             "tax_month": tax_month,
-            "tax_month_label": f"{prev_month:02d}/{prev_year}",
             "tax_ytd": tax_ytd,
-            "forecast_month": forecast_month,
-            "forecast_year": forecast_year,
+            "income_month": income_month,
+            "income_ytd": income_ytd,
             "income_series": monthly_income_series(user, months=6),
         },
     )
