@@ -42,7 +42,7 @@ from apps.core.services.stats import (
     monthly_income_series,
     occupancy,
 )
-from apps.core.services.tax import tax_for_year, tax_table
+from apps.core.services.tax import monthly_tax, tax_for_year, tax_table
 from apps.core.tasks import email_settlement_task
 
 
@@ -50,16 +50,32 @@ from apps.core.tasks import email_settlement_task
 def dashboard(request: HttpRequest) -> HttpResponse:
     """Inventory overview (port of the legacy dashboard/getInvState)."""
     user = cast(User, request.user)
+    now = timezone.now()
+    year, month = now.year, now.month
+
+    # Tax: last completed month as the headline, year-to-date as fine print.
+    prev_year, prev_month = (year - 1, 12) if month == 1 else (year, month - 1)
+    tax_month = monthly_tax(user, prev_year, prev_month)
+    tax_ytd = tax_for_year(user, year)
+
+    # Forecast: this month as the headline, full-year projection as fine print.
+    forecast_month = forecast_income_total(user, year, month)
+    forecast_year = sum(
+        (forecast_income_total(user, year, m) for m in range(1, 13)),
+        Decimal(0),
+    )
+
     return render(
         request,
         "core/dashboard.html",
         {
             "stats": inventory_state(user),
-            "tax_year": timezone.now().year,
-            "tax_ytd": tax_for_year(user, timezone.now().year),
-            "forecast_income": forecast_income_total(
-                user, timezone.now().year, timezone.now().month
-            ),
+            "tax_year": year,
+            "tax_month": tax_month,
+            "tax_month_label": f"{prev_month:02d}/{prev_year}",
+            "tax_ytd": tax_ytd,
+            "forecast_month": forecast_month,
+            "forecast_year": forecast_year,
             "income_series": monthly_income_series(user, months=6),
         },
     )
