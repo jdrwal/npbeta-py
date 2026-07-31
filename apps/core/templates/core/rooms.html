@@ -21,13 +21,13 @@
 <section class="mb-12">
     <div class="mb-5 flex items-center gap-3">
         <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg>
         </div>
         <div>
             <div class="font-semibold text-gray-900">
                 {{ g.flat.street }} {{ g.flat.building_no }}{% if g.flat.flat_no %}/{{ g.flat.flat_no }}{% endif %}
             </div>
-            <div class="text-xs text-gray-400">{{ g.flat.code }} · {{ g.flat.city }} · {{ g.rooms|length }} poko{{ g.rooms|length|pluralize:"j,je,i" }}</div>
+            <div class="text-xs text-gray-400">{{ g.flat.code }} {{ g.flat.city }} · {{ g.rooms|length }} poko{{ g.rooms|length|pluralize:"j,je,i" }}</div>
         </div>
     </div>
 

@@ -1,38 +1,98 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Podatek — npbeta{% endblock %}
 {% block content %}
-<h1 class="flex items-center gap-2"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span> Podatek od najmu <span style="color:#666;font-size:.9rem;">(ryczałt 8,5% do 100 000 zł/rok, 12,5% powyżej)</span></h1>
-{% for year, months in table.items %}
-<h2 style="font-size:1.1rem;margin-top:1.5rem;">{{ year }}</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Miesiąc</th>
-            <th>Dochód do opodatkowania</th>
-            <th>Podatek</th>
-            <th>Termin</th>
-            <th>Zapłacono</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for m in months %}
-        <tr>
-            <td>{{ m.year }}-{{ m.month|stringformat:"02d" }}</td>
-            <td>{{ m.taxable }} zł</td>
-            <td>{{ m.tax }} zł</td>
-            <td>{{ m.deadline|date:"Y-m-d" }}</td>
-            <td>
-                {% if m.paid_date %}
-                    <span class="badge success"></span> {{ m.paid_date|date:"Y-m-d" }}
-                {% else %}
-                    <span class="badge danger"></span> niezapłacony
-                {% endif %}
-            </td>
-        </tr>
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></span>
+    <div>
+        <h1>Podatek od najmu</h1>
+        <p class="mt-1 text-sm text-gray-500">Ryczałt 8,5% do 100 000 zł/rok, 12,5% powyżej — w podziale na miesiące</p>
+    </div>
+</div>
+
+{% if years %}
+<div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-wrap gap-2" role="tablist">
+        {% for y in years %}
+        <a href="?year={{ y }}"
+           class="rounded-lg border px-4 py-2 text-sm font-semibold transition-colors {% if y == year %}border-indigo-500 bg-indigo-50 text-indigo-700{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800{% endif %}">
+            {{ y }}
+        </a>
         {% endfor %}
-    </tbody>
-</table>
-{% empty %}
-<p>Brak okresów podatkowych.</p>
-{% endfor %}
+    </div>
+    <div class="flex gap-2">
+        {% if older_year %}
+        <a href="?year={{ older_year }}" class="btn-ghost">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            {{ older_year }}
+        </a>
+        {% endif %}
+        {% if newer_year %}
+        <a href="?year={{ newer_year }}" class="btn-ghost">
+            {{ newer_year }}
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+    <table class="w-full border-collapse text-right text-sm">
+        <thead>
+            <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500">
+                <th class="px-3 py-2 text-left">Miesiąc</th>
+                <th class="border-l border-gray-200 px-3 py-2">Przychód</th>
+                <th class="border-l border-gray-200 px-3 py-2">Podatek</th>
+                <th class="border-l border-gray-200 px-3 py-2 text-left">Termin</th>
+                <th class="border-l border-gray-200 px-3 py-2 text-left">Zapłacono</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-700">
+            {% for m in months %}
+            <tr class="border-t border-gray-200">
+                <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800">{{ m.year }}-{{ m.month|stringformat:"02d" }}</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono">{{ m.taxable|floatformat:2|intcomma }} zł</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono">{{ m.tax|intcomma }} zł</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 text-left text-gray-500">{{ m.deadline|date:"Y-m-d" }}</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 text-left">
+                    {% if m.paid_date %}
+                    <div class="inline-flex items-center gap-2">
+                        <span class="pill {% if m.paid_pct >= 100 %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}" title="Zapłacono {{ m.paid_amount|intcomma }} zł z {{ m.tax|intcomma }} zł">{{ m.paid_pct }}%</span>
+                        <span class="text-gray-500">{{ m.paid_date|date:"Y-m-d" }}</span>
+                        <form method="post" action="{% url 'core:delete_tax_payment' m.paid_pk %}" onsubmit="return confirm('Usunąć zapłatę podatku za {{ m.year }}-{{ m.month|stringformat:'02d' }}?');" class="inline-flex">
+                            {% csrf_token %}
+                            <button type="submit" class="text-gray-400 hover:text-rose-600" title="Usuń zapłatę">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                    {% elif m.tax == 0 %}
+                    <span class="inline-flex items-center gap-1.5 text-emerald-600"><span class="badge success"></span> brak podatku</span>
+                    {% else %}
+                    <div class="inline-flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-rose-600"><span class="badge danger"></span> niezapłacony</span>
+                        <form method="post" action="{% url 'core:confirm_tax_payment' m.year m.month %}" class="inline-flex">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-ghost !px-2 !py-1 text-xs" title="Zapisz zapłatę podatku">Zatwierdź</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            <tr class="border-t-2 border-gray-300 bg-gray-100/70 font-semibold text-gray-900">
+                <td class="px-3 py-2.5 text-left">Razem {{ year }}</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono">{{ year_taxable|floatformat:2|intcomma }} zł</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono">{{ year_tax|intcomma }} zł</td>
+                <td class="border-l border-gray-200 px-3 py-2.5"></td>
+                <td class="border-l border-gray-200 px-3 py-2.5"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+    <p class="text-gray-500">Brak okresów podatkowych.</p>
+</div>
+{% endif %}
 {% endblock %}

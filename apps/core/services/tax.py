@@ -33,6 +33,9 @@ class MonthlyTax:
     tax: int
     deadline: date
     paid_date: date | None
+    paid_amount: int | None = None
+    paid_pct: int | None = None
+    paid_pk: int | None = None
 
 
 def _deadline(year: int, month: int) -> date:
@@ -47,7 +50,10 @@ def _to_whole_pln(value: Decimal) -> int:
 
 def _sum_taxable(user: User, start: datetime, end: datetime) -> Decimal:
     return LedgerEntry.objects.filter(
-        owner=user, record_date__gte=start, record_date__lt=end
+        owner=user,
+        record_date__gte=start,
+        record_date__lt=end,
+        kind=LedgerEntry.Kind.RENT,
     ).aggregate(total=Sum("amount_in_taxable"))["total"] or Decimal(0)
 
 
@@ -71,6 +77,13 @@ def monthly_tax(user: User, year: int, month: int) -> MonthlyTax:
     paid_date = (
         timezone.localtime(paid.tax_date).date() if paid and paid.tax_date else None
     )
+    paid_amount = paid.tax_amount if paid else None
+    if paid is None:
+        paid_pct = None
+    elif tax > 0:
+        paid_pct = round(paid.tax_amount / tax * 100)
+    else:
+        paid_pct = 100
 
     return MonthlyTax(
         year=year,
@@ -79,6 +92,9 @@ def monthly_tax(user: User, year: int, month: int) -> MonthlyTax:
         tax=tax,
         deadline=_deadline(year, month),
         paid_date=paid_date,
+        paid_amount=paid_amount,
+        paid_pct=paid_pct,
+        paid_pk=paid.pk if paid else None,
     )
 
 

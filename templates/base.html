@@ -41,7 +41,7 @@
                 Pulpit
             </a>
             <a href="{% url 'core:flats' %}" class="sidebar-link {% if active == 'flats' %}active{% endif %}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg>
                 Mieszkania
             </a>
             <a href="{% url 'core:rooms' %}" class="sidebar-link {% if active == 'rooms' %}active{% endif %}">
@@ -66,7 +66,7 @@
             <p class="sidebar-group">Finanse</p>
             <a href="{% url 'core:records' %}" class="sidebar-link {% if active == 'records' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
-                Ewidencja
+                Wpłaty
             </a>
             <a href="{% url 'core:tax' %}" class="sidebar-link {% if active == 'tax' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
@@ -76,12 +76,19 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
                 Prognoza
             </a>
+
+            <p class="sidebar-group">Konto</p>
+            <a href="{% url 'core:settings' %}" class="sidebar-link {% if active == 'settings' %}active{% endif %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+                Ustawienia
+            </a>
         </aside>
         {% endwith %}
         {% endif %}
 
-        <main class="flex-1 overflow-y-auto bg-gray-50">
-            <div class="mx-auto {% if user.is_authenticated %}max-w-6xl px-6 py-8{% else %}max-w-md{% endif %}">
+        <main class="flex-1 overflow-y-auto {% if user.is_authenticated %}bg-gray-50{% else %}relative flex items-center justify-center bg-white{% endif %}">
+            {% block banner %}{% endblock %}
+            <div class="{% if user.is_authenticated %}mx-auto max-w-6xl px-6 py-8{% else %}relative z-10 w-full max-w-md px-4 py-10{% endif %}">
                 {% if messages %}
                     {% for message in messages %}<div class="msg">{{ message }}</div>{% endfor %}
                 {% endif %}
@@ -90,5 +97,30 @@
         </main>
     </div>
 </div>
+{% if not user.is_authenticated %}
+<div id="cookie-note" class="fixed inset-x-0 bottom-0 z-50 hidden">
+    <div class="pointer-events-none bg-gradient-to-t from-white via-white/80 to-transparent px-4 pb-4 pt-10">
+        <div class="pointer-events-auto mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+            <p class="flex-1 text-sm text-gray-600">
+                Używamy wyłącznie plików cookie niezbędnych do działania serwisu (logowanie, bezpieczeństwo).
+                Nie stosujemy analityki ani śledzenia. Szczegóły w
+                <a href="{% url 'privacy' %}" class="font-medium text-indigo-600 underline">polityce prywatności</a>.
+            </p>
+            <button type="button" id="cookie-ok" class="btn-ghost shrink-0">Rozumiem</button>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        var note = document.getElementById('cookie-note');
+        if (!note) return;
+        if (!localStorage.getItem('cookieNote')) note.classList.remove('hidden');
+        document.getElementById('cookie-ok').addEventListener('click', function () {
+            localStorage.setItem('cookieNote', '1');
+            note.remove();
+        });
+    })();
+</script>
+{% endif %}
 </body>
 </html>

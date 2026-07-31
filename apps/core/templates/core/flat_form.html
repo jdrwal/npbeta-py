@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg>
+    </span>
+    <div>
+        <h1>{{ title }}</h1>
+        {% if subtitle %}<p class="mt-1 text-sm text-gray-500">{{ subtitle }}</p>{% endif %}
+    </div>
+</div>
+
+<form method="post" class="max-w-3xl space-y-5">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ form.non_field_errors }}</div>{% endif %}
+
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Adres</h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+            {% include "core/_field.html" with field=form.street %}
+            <div class="grid grid-cols-2 gap-4">
+                {% include "core/_field.html" with field=form.building_no %}
+                {% include "core/_field.html" with field=form.flat_no %}
+            </div>
+            {% include "core/_field.html" with field=form.code %}
+            {% include "core/_field.html" with field=form.city %}
+        </div>
+    </section>
+
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Szczegóły</h2>
+        <div class="grid gap-4 sm:grid-cols-3">
+            {% include "core/_field.html" with field=form.flat_size %}
+            {% include "core/_field.html" with field=form.room_count %}
+            {% include "core/_field.html" with field=form.color %}
+        </div>
+    </section>
+
+    <div class="flex items-center gap-3">
+        <button type="submit">Zapisz</button>
+        <a href="{% url 'core:flats' %}" class="text-sm">Anuluj</a>
+        {% if secondary_link %}<a href="{{ secondary_link }}" class="ml-auto text-sm font-medium text-indigo-600 hover:underline">{{ secondary_label }}</a>{% endif %}
+    </div>
+</form>
+{% endblock %}

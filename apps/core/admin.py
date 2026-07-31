@@ -109,10 +109,10 @@ class LedgerEntryAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "record_date",
+        "billing_period",
         "flat",
         "short_desc",
         "amount_in_taxable",
-        "amount_out",
         "is_mortgage",
     )
     list_filter = ("flat", "is_mortgage")

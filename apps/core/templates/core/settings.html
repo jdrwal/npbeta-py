@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Ustawienia — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+    </span>
+    <div>
+        <h1>Ustawienia</h1>
+        <p class="mt-1 text-sm text-gray-500">Konto, hasło i konfiguracja poczty do mailingu</p>
+    </div>
+</div>
+
+<div class="grid max-w-3xl gap-6">
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Zmiana hasła</h2>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% if pwd_form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ pwd_form.non_field_errors }}</div>{% endif %}
+            {% include "core/_field.html" with field=pwd_form.old_password %}
+            <div class="grid gap-4 sm:grid-cols-2">
+                {% include "core/_field.html" with field=pwd_form.new_password1 %}
+                {% include "core/_field.html" with field=pwd_form.new_password2 %}
+            </div>
+            <button type="submit" name="save_password" value="1">Zmień hasło</button>
+        </form>
+    </section>
+
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Poczta wychodząca (SMTP)</h2>
+        <p class="text-sm text-gray-500">Używana do wysyłki rozliczeń do najemców.</p>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% if mail_form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ mail_form.non_field_errors }}</div>{% endif %}
+            <div class="flex flex-col gap-2">
+                {% for radio in mail_form.mail_mode %}
+                <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                    {{ radio.tag }} {{ radio.choice_label }}
+                </label>
+                {% endfor %}
+            </div>
+            <div id="smtp-fields" class="space-y-4 border-t border-gray-100 pt-4">
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div class="sm:col-span-2">{% include "core/_field.html" with field=mail_form.smtp_host %}</div>
+                    {% include "core/_field.html" with field=mail_form.smtp_port %}
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    {% include "core/_field.html" with field=mail_form.smtp_user %}
+                    {% include "core/_field.html" with field=mail_form.smtp_password %}
+                </div>
+                {% include "core/_field.html" with field=mail_form.from_email %}
+                <div class="flex flex-wrap gap-6">
+                    <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                        {{ mail_form.use_tls }} {{ mail_form.use_tls.label }}
+                    </label>
+                    <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+                        {{ mail_form.use_ssl }} {{ mail_form.use_ssl.label }}
+                    </label>
+                </div>
+            </div>
+            <button type="submit" name="save_mail" value="1">Zapisz ustawienia poczty</button>
+        </form>
+    </section>
+</div>
+<script>
+    (function () {
+        const radios = document.querySelectorAll('input[name="mail_mode"]');
+        const block = document.getElementById('smtp-fields');
+        function sync() {
+            const custom = document.querySelector('input[name="mail_mode"]:checked');
+            const show = custom && custom.value === 'custom';
+            block.style.display = show ? '' : 'none';
+        }
+        radios.forEach(function (r) { r.addEventListener('change', sync); });
+        sync();
+    })();
+</script>
+{% endblock %}

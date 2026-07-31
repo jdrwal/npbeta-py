@@ -1,0 +1,7 @@
+{% comment %}Renders one bound form field with label, help text and errors.{% endcomment %}
+<div>
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% if field.help_text %}<p class="mt-1 text-xs text-gray-400">{{ field.help_text }}</p>{% endif %}
+    {% if field.errors %}<span class="mt-1 block text-sm text-rose-600">{{ field.errors|striptags }}</span>{% endif %}
+</div>

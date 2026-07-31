@@ -6,6 +6,7 @@ password hashes are re-hashed to Argon2 on first successful login (handled in
 the auth backend, added in a later phase).
 """
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -19,3 +20,33 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.get_username()
+
+
+class MailSettings(models.Model):
+    """Per-user outgoing SMTP configuration used for tenant mailings."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="mail_settings",
+    )
+    smtp_host = models.CharField(max_length=255, blank=True)
+    smtp_port = models.PositiveIntegerField(default=587)
+    smtp_user = models.CharField(max_length=255, blank=True)
+    smtp_password = models.CharField(max_length=255, blank=True)
+    from_email = models.EmailField(max_length=255, blank=True)
+    use_tls = models.BooleanField(default=True)
+    use_ssl = models.BooleanField(default=False)
+    # When True, fall back to the project's default mail backend instead of the
+    # custom SMTP fields above.
+    use_default = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name_plural = "mail settings"
+
+    def __str__(self) -> str:
+        return f"Mail settings for {self.user}"
+
+    @property
+    def use_custom(self) -> bool:
+        return not self.use_default and bool(self.smtp_host)

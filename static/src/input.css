@@ -24,7 +24,7 @@
     @apply w-full border-collapse overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-sm;
   }
   main thead th {
-    @apply border-b border-gray-200 bg-gray-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500;
+    @apply border-b border-gray-200 bg-gray-100 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500;
   }
   main tbody td {
     @apply border-b border-gray-100 px-4 py-3 align-middle;
@@ -86,7 +86,7 @@
     @apply bg-rose-600 hover:bg-rose-700;
   }
   .btn-ghost {
-    @apply bg-transparent text-gray-700 shadow-none hover:bg-gray-100;
+    @apply inline-flex items-center gap-1.5 rounded-lg bg-transparent px-3.5 py-2 text-sm font-medium !text-gray-700 !no-underline shadow-none transition hover:bg-gray-100;
   }
   .act {
     @apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium !text-gray-700 !no-underline transition hover:!bg-gray-50;
@@ -110,6 +110,6 @@
     @apply px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-gray-400;
   }
   .login-card {
-    @apply mx-auto mt-24 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-lg;
+    @apply mx-auto w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-xl;
   }
 }

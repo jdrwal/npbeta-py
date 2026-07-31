@@ -449,10 +449,7 @@ class Command(BaseCommand):
                 record_date=_dt(r["record_date"]),
                 created=_dt(r["created"]),
                 modified=_dt(r["modified"]),
-                amount_in_not_taxable=_dec(r["amount_in_not_taxable"], 2),
                 amount_in_taxable=_dec(r["amount_in_taxable"], 2),
-                amount_out=_dec(r["amount_out"], 2),
-                cost=_dec(r["cost"], 2),
                 is_mortgage=None if r["mort"] is None else bool(r["mort"]),
             )
             for r in self._rows(cur, "records")

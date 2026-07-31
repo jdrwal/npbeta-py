@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Polityka prywatności — npbeta{% endblock %}
+{% block content %}
+<div class="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+    <h1 class="text-xl font-semibold tracking-tight">Polityka prywatności</h1>
+    <p class="mt-1 text-sm text-gray-500">Ostatnia aktualizacja: {% now "j E Y" %}</p>
+
+    <h2 class="mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">Administrator danych</h2>
+    <p class="mt-2 text-sm text-gray-700">
+        Administratorem danych przetwarzanych w serwisie npbeta jest [Imię i nazwisko / firma],
+        kontakt: [adres e-mail]. Serwis służy do prywatnego zarządzania najmem.
+    </p>
+
+    <h2 class="mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">Pliki cookie</h2>
+    <p class="mt-2 text-sm text-gray-700">
+        Serwis wykorzystuje wyłącznie <strong>niezbędne pliki cookie</strong>, konieczne do jego
+        prawidłowego działania. Nie stosujemy plików analitycznych, marketingowych ani narzędzi
+        śledzących, nie przekazujemy danych podmiotom trzecim w celach reklamowych.
+    </p>
+    <div class="mt-3 overflow-hidden rounded-lg border border-gray-200">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-gray-100 text-xs uppercase text-gray-500">
+                <tr>
+                    <th class="px-3 py-2">Cookie</th>
+                    <th class="px-3 py-2">Cel</th>
+                    <th class="px-3 py-2">Czas życia</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                <tr>
+                    <td class="px-3 py-2 font-mono">sessionid</td>
+                    <td class="px-3 py-2">Utrzymanie sesji zalogowanego użytkownika.</td>
+                    <td class="px-3 py-2">30 min od aktywności</td>
+                </tr>
+                <tr>
+                    <td class="px-3 py-2 font-mono">csrftoken</td>
+                    <td class="px-3 py-2">Ochrona przed atakami CSRF (bezpieczeństwo formularzy).</td>
+                    <td class="px-3 py-2">Sesja / do 1 roku</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="mt-3 text-sm text-gray-700">
+        Ponieważ używamy jedynie cookies niezbędnych, ich stosowanie nie wymaga Twojej zgody
+        (art. 173 ust. 3 Prawa telekomunikacyjnego). Możesz je w każdej chwili usunąć lub
+        zablokować w ustawieniach przeglądarki — może to jednak uniemożliwić logowanie.
+    </p>
+
+    <h2 class="mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">Podstawa prawna i cel</h2>
+    <p class="mt-2 text-sm text-gray-700">
+        Dane (adres e-mail, dane dotyczące najmu wprowadzone przez użytkownika) przetwarzamy na
+        podstawie art. 6 ust. 1 lit. b i f RODO — w celu świadczenia usługi oraz zapewnienia
+        bezpieczeństwa serwisu. Dane przechowujemy przez okres korzystania z konta.
+    </p>
+
+    <h2 class="mt-6 text-sm font-semibold uppercase tracking-wide text-gray-500">Twoje prawa</h2>
+    <p class="mt-2 text-sm text-gray-700">
+        Masz prawo dostępu do swoich danych, ich sprostowania, usunięcia, ograniczenia
+        przetwarzania oraz przenoszenia, a także prawo wniesienia skargi do Prezesa UODO. W celu
+        realizacji praw skontaktuj się pod adresem [adres e-mail].
+    </p>
+
+    <p class="mt-8">
+        <a href="{% url 'login' %}" class="text-sm text-indigo-600 underline">← Powrót do logowania</a>
+    </p>
+</div>
+{% endblock %}

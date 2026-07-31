@@ -301,6 +301,10 @@ class FeeCalculationTenant(models.Model):
 class LedgerEntry(models.Model):
     """Income/expense record (legacy `records`)."""
 
+    class Kind(models.TextChoices):
+        RENT = "rent", "Czynsz najmu"
+        FEE = "fee", "Pozostałe opłaty"
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="ledger_entries"
     )
@@ -317,14 +321,20 @@ class LedgerEntry(models.Model):
     )
     short_desc = models.CharField(max_length=64, blank=True)
     notes = models.TextField(blank=True)
+    # Data wpłaty — when the money was received (drives the ryczałt tax point).
     record_date = models.DateTimeField(null=True, blank=True)
+    # Miesiąc rozliczeniowy — which month the payment settles (first of month).
+    # Independent of record_date: a tenant may pay early or late for a month.
+    billing_period = models.DateField(null=True, blank=True)
     created = models.DateTimeField(null=True, blank=True)
     modified = models.DateTimeField(null=True, blank=True)
-    amount_in_not_taxable = _money(null=True, blank=True)
     amount_in_taxable = _money(null=True, blank=True)
-    amount_out = _money(null=True, blank=True)
-    cost = _money(null=True, blank=True)
     is_mortgage = models.BooleanField(null=True, blank=True)
+    # Distinguishes rent income (taxable) from other reimbursed fees (utilities,
+    # admin) so that only rent counts towards income/ryczalt.
+    kind = models.CharField(
+        max_length=8, choices=Kind.choices, default=Kind.RENT, db_index=True
+    )
 
     class Meta:
         ordering = ["-record_date"]

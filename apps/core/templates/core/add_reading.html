@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg></span>
+    <div>
+        <h1>Dodaj odczyt</h1>
+        <p class="mt-1 text-sm text-gray-500">Wpisz stany wszystkich liczników wybranego mieszkania na jeden dzień</p>
+    </div>
+</div>
+
+{% if flat_data %}
+<form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    <section>
+        <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">1. Mieszkanie</h2>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {% for fd in flat_data %}
+            <label class="relative flex cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-gray-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:ring-2 has-[:checked]:ring-indigo-200">
+                <input type="radio" name="flat" value="{{ fd.flat.pk }}" class="sr-only" {% if fd.flat.pk == selected_flat_id %}checked{% endif %}>
+                <span class="flex items-center justify-between gap-2">
+                    <span class="font-semibold text-gray-900">{{ fd.flat.street }} {{ fd.flat.building_no }}{% if fd.flat.flat_no %}/{{ fd.flat.flat_no }}{% endif %}</span>
+                    <span class="pill bg-gray-100 text-gray-500">{{ fd.rows|length }} licz.</span>
+                </span>
+                <span class="mt-1 text-xs text-gray-400">{{ fd.flat.code }} {{ fd.flat.city }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="flex flex-wrap items-end gap-4">
+        <div>
+            <h2 class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">2. Data odczytu</h2>
+            <p class="text-xs text-gray-400">Dotyczy wszystkich liczników poniżej</p>
+        </div>
+        <div class="relative w-52">
+            <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+            <input type="date" name="read_date" value="{{ read_date_value }}" class="!pl-9 font-medium">
+        </div>
+    </section>
+
+    <section>
+        <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">3. Liczniki</h2>
+        <p id="no-flat-hint" class="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-400 {% if selected_flat_id %}hidden{% endif %}">
+            Najpierw wybierz mieszkanie powyżej.
+        </p>
+        {% for fd in flat_data %}
+        <div id="panel-{{ fd.flat.pk }}" class="reading-panel {% if fd.flat.pk != selected_flat_id %}hidden{% endif %}">
+            <div class="card">
+                {% if fd.rows %}
+                <div class="divide-y divide-gray-100">
+                    {% for row in fd.rows %}
+                    <div class="py-3">
+                        <div class="grid grid-cols-[1fr_12rem] items-center gap-3">
+                            <label class="!mb-0 font-medium text-gray-800" for="value_{{ row.meter.pk }}">{{ row.meter.name }}</label>
+                            <div class="relative">
+                                <input type="text" inputmode="decimal" id="value_{{ row.meter.pk }}" name="value_{{ row.meter.pk }}" value="{{ row.value }}" placeholder="Wartość" class="!pr-14 text-right font-mono">
+                                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ row.meter.unit }}</span>
+                            </div>
+                        </div>
+                        {% if row.last %}
+                        <p class="mt-1.5 text-right text-xs text-gray-400">
+                            Poprzedni stan: <span class="font-mono font-medium text-gray-600">{{ row.last.value|floatformat:3 }}</span> {{ row.meter.unit }}
+                            <span class="text-gray-300">· {{ row.last.read_date|date:"Y-m-d" }}</span>
+                        </p>
+                        {% else %}
+                        <p class="mt-1.5 text-right text-xs text-gray-300">Brak wcześniejszych odczytów</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-500">To mieszkanie nie ma jeszcze liczników. <a href="{% url 'core:add_meter' %}">Dodaj licznik</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+
+    <div class="flex items-center gap-3">
+        <button type="submit">Zapisz odczyty</button>
+        <a href="{% url 'core:counters' %}" class="text-sm">Anuluj</a>
+    </div>
+</form>
+
+<script>
+    (function () {
+        const radios = document.querySelectorAll('input[name="flat"]');
+        const panels = document.querySelectorAll('.reading-panel');
+        const hint = document.getElementById('no-flat-hint');
+        function show(flatId) {
+            if (hint) hint.classList.add('hidden');
+            panels.forEach(function (p) {
+                p.classList.toggle('hidden', p.id !== 'panel-' + flatId);
+            });
+        }
+        radios.forEach(function (r) {
+            r.addEventListener('change', function () { if (r.checked) show(r.value); });
+        });
+        const checked = document.querySelector('input[name="flat"]:checked');
+        if (checked) show(checked.value);
+    })();
+</script>
+{% else %}
+<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+    <p class="text-gray-500">Brak mieszkań. Dodaj mieszkanie i liczniki, aby wprowadzać odczyty.</p>
+    <a href="{% url 'core:add_flat' %}" class="btn mt-4">Dodaj mieszkanie</a>
+</div>
+{% endif %}
+{% endblock %}

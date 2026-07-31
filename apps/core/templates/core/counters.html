@@ -15,72 +15,72 @@
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
             Dodaj odczyt
         </a>
-        <a href="{% url 'core:add_meter' %}" class="btn-ghost">Dodaj licznik</a>
     </div>
 </div>
 
 {% if flats %}
-<div class="mb-5 flex flex-wrap gap-1 border-b border-gray-200" role="tablist">
+<div class="mb-5 flex flex-wrap gap-2" role="tablist">
     {% for f in flats %}
     <button type="button" data-tab="flat-{{ f.flat.pk }}"
-            class="tab-btn -mb-px rounded-t-lg border-b-2 px-4 py-2.5 text-left text-sm transition-colors {% if forloop.first %}border-indigo-500 text-indigo-600{% else %}border-transparent text-gray-500 hover:text-gray-700{% endif %}">
-        <span class="font-semibold">{{ f.flat.code }} {{ f.flat.city }}</span><br>
-        <span class="text-xs text-gray-400">{{ f.flat.street }} {{ f.flat.building_no }}{% if f.flat.flat_no %}/{{ f.flat.flat_no }}{% endif %}</span>
+            class="tab-btn rounded-lg border px-4 py-2 text-left text-sm leading-tight transition-colors {% if forloop.first %}border-indigo-500 bg-indigo-50 text-indigo-700{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800{% endif %}">
+        <span class="font-semibold">{{ f.flat.street }} {{ f.flat.building_no }}{% if f.flat.flat_no %}/{{ f.flat.flat_no }}{% endif %}</span>
+        <span class="block text-xs text-gray-400">{{ f.flat.code }} {{ f.flat.city }}</span>
     </button>
     {% endfor %}
 </div>
 
 {% for f in flats %}
 <section id="flat-{{ f.flat.pk }}" class="tab-panel {% if not forloop.first %}hidden{% endif %}">
-    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-        <table class="w-full border-collapse text-right text-sm">
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <table class="w-full table-fixed border-collapse text-right text-sm">
             <thead>
-                <tr class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-                    <th rowspan="2" class="border-b border-gray-200 px-3 py-2 text-left">Data odczytu</th>
-                    <th colspan="{{ f.meters|length }}" class="border-b border-l border-gray-200 px-3 py-2 text-center">Odczyt</th>
-                    <th colspan="{{ f.meters|length }}" class="border-b border-l border-gray-200 px-3 py-2 text-center">Zużycie</th>
-                    <th colspan="{{ f.meters|length }}" class="border-b border-l border-gray-200 px-3 py-2 text-center">Koszt</th>
-                    <th rowspan="2" class="border-b border-l border-gray-200 px-3 py-2 text-right">Suma</th>
-                    <th rowspan="2" class="border-b border-gray-200 px-2 py-2"></th>
-                </tr>
-                <tr class="bg-gray-50 text-xs font-medium text-gray-500">
-                    {% for m in f.meters %}<th class="border-b border-gray-200 px-3 py-1.5 {% if forloop.first %}border-l{% endif %}">{{ m.name }}</th>{% endfor %}
-                    {% for m in f.meters %}<th class="border-b border-gray-200 px-3 py-1.5 {% if forloop.first %}border-l{% endif %}">{{ m.name }}</th>{% endfor %}
-                    {% for m in f.meters %}<th class="border-b border-gray-200 px-3 py-1.5 {% if forloop.first %}border-l{% endif %}">{{ m.name }}</th>{% endfor %}
+                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500">
+                    <th class="w-28 border-b border-gray-200 px-3 py-2 text-left">Data</th>
+                    <th class="w-20 border-b border-l border-gray-200 px-3 py-2 text-left"></th>
+                    {% for m in f.meters %}<th class="border-b border-l border-gray-200 px-3 py-2 text-right">{{ m.name }}</th>{% endfor %}
+                    <th class="w-24 border-b border-l border-gray-200 px-3 py-2 text-right">Suma</th>
+                    <th class="w-12 border-b border-l border-gray-200 px-1 py-2"></th>
                 </tr>
             </thead>
             <tbody class="font-mono text-xs text-gray-700">
                 {% for row in f.rows %}
-                <tr class="border-b border-gray-100 hover:bg-indigo-50/40">
-                    <th scope="row" class="whitespace-nowrap px-3 py-2 text-left font-semibold text-gray-800">{{ row.date|date:"Y-m-d" }}</th>
+                <tr class="border-t-2 border-gray-200 hover:bg-indigo-50/40">
+                    <th rowspan="3" scope="rowgroup" class="whitespace-nowrap border-t-2 border-gray-200 px-3 py-2 text-left align-top font-semibold text-gray-800">{{ row.date|date:"Y-m-d" }}</th>
+                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400">Odczyt</td>
                     {% for c in row.cells %}
-                    <td class="whitespace-nowrap px-3 py-2 {% if forloop.first %}border-l border-gray-200{% endif %}">
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5">
                         {% if c.reading is not None %}{{ c.reading|floatformat:3|intcomma }} <span class="text-gray-400">{{ c.unit }}</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
                     </td>
                     {% endfor %}
-                    {% for c in row.cells %}
-                    <td class="whitespace-nowrap px-3 py-2 {% if forloop.first %}border-l border-gray-200{% endif %}">
-                        {% if c.usage is not None %}{{ c.usage|floatformat:3|intcomma }} <span class="text-gray-400">{{ c.unit }}</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
-                    </td>
-                    {% endfor %}
-                    {% for c in row.cells %}
-                    <td class="whitespace-nowrap px-3 py-2 {% if forloop.first %}border-l border-gray-200{% endif %}">
-                        {% if c.cost is not None %}{{ c.cost|floatformat:2|intcomma }} <span class="text-gray-400">zł</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
-                    </td>
-                    {% endfor %}
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-semibold text-gray-900">
+                    <td rowspan="3" class="whitespace-nowrap border-l border-gray-200 px-3 py-2 align-middle font-semibold text-gray-900">
                         {% if row.total is not None %}{{ row.total|floatformat:2|intcomma }} <span class="text-gray-400">zł</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
                     </td>
-                    <td class="px-2 py-2 text-center">
+                    <td rowspan="3" class="border-l border-gray-200 px-1 py-2 text-center align-middle">
                         <form method="post" action="{% url 'core:delete_readings_on_date' f.flat.pk %}"
                               onsubmit="return confirm('Usunąć wszystkie odczyty z dnia {{ row.date|date:'Y-m-d' }}?');">
                             {% csrf_token %}
                             <input type="hidden" name="date" value="{{ row.date|date:'Y-m-d' }}">
-                            <button type="submit" class="text-rose-500 hover:text-rose-700" title="Usuń odczyty z tego dnia">
+                            <button type="submit" class="mx-auto grid h-8 w-8 place-items-center !rounded-lg !bg-transparent !p-0 !text-rose-500 !shadow-none transition hover:!bg-rose-50 hover:!text-rose-700" title="Usuń odczyty z tego dnia">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
                             </button>
                         </form>
                     </td>
+                </tr>
+                <tr class="hover:bg-indigo-50/40">
+                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400">Zużycie</td>
+                    {% for c in row.cells %}
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5">
+                        {% if c.usage is not None %}{{ c.usage|floatformat:3|intcomma }} <span class="text-gray-400">{{ c.unit }}</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="hover:bg-indigo-50/40">
+                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400">Koszt</td>
+                    {% for c in row.cells %}
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5">
+                        {% if c.cost is not None %}{{ c.cost|floatformat:2|intcomma }} <span class="text-gray-400">zł</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    </td>
+                    {% endfor %}
                 </tr>
                 {% empty %}
                 <tr><td colspan="99" class="px-3 py-6 text-center text-gray-400">Brak odczytów dla tego mieszkania.</td></tr>
@@ -100,11 +100,11 @@
                 panels.forEach(p => p.classList.add('hidden'));
                 document.getElementById(btn.dataset.tab).classList.remove('hidden');
                 buttons.forEach(function (b) {
-                    b.classList.remove('border-indigo-500', 'text-indigo-600');
-                    b.classList.add('border-transparent', 'text-gray-500');
+                    b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
+                    b.classList.add('border-gray-200', 'bg-white', 'text-gray-600');
                 });
-                btn.classList.add('border-indigo-500', 'text-indigo-600');
-                btn.classList.remove('border-transparent', 'text-gray-500');
+                btn.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
+                btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-600');
             });
         });
     })();

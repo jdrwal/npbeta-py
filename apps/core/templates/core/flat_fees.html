@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Opłaty — {{ flat }} — npbeta{% endblock %}
+{% block content %}
+<p class="mb-4"><a href="{% url 'core:flats' %}" class="text-sm">← Mieszkania</a></p>
+
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.8 9a2.5 2.5 0 0 0-2.3-1.5h-.8a2.2 2.2 0 0 0 0 4.4h1.6a2.2 2.2 0 0 1 0 4.4h-1a2.5 2.5 0 0 1-2.3-1.5M12 6v1.5M12 16.5V18"/></svg></span>
+        <div>
+            <h1>Opłaty</h1>
+            <p class="mt-1 text-sm text-gray-500">{{ flat.street }} {{ flat.building_no }}{% if flat.flat_no %}/{{ flat.flat_no }}{% endif %} · {{ flat.code }} {{ flat.city }} — comiesięczne rachunki</p>
+        </div>
+    </div>
+    <a href="{% url 'core:fee_add' %}?flat={{ flat.pk }}" class="btn">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
+        Dodaj opłatę
+    </a>
+</div>
+
+<section class="mb-8">
+    <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Opłaty stałe (administracyjne)</h2>
+    <div class="space-y-4">
+        {% for item in fees %}
+        <div class="card space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <form method="post" action="{% url 'core:edit_fee' flat.pk item.fee.pk %}" class="flex flex-wrap items-center gap-2">
+                    {% csrf_token %}
+                    <div class="w-52"><input type="text" name="title" value="{{ item.fee.title }}" placeholder="Nazwa opłaty" aria-label="Nazwa opłaty"></div>
+                    <label class="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600">
+                        <input type="checkbox" name="is_individual" class="!w-auto" {% if item.fee.is_individual %}checked{% endif %}> na osobę
+                    </label>
+                    <button type="submit" class="btn-ghost">Zapisz</button>
+                </form>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs text-gray-400">Aktualna stawka</div>
+                        <div class="font-mono text-lg font-semibold text-gray-900">{% if item.current %}{{ item.current.price|floatformat:2|intcomma }} zł{% else %}<span class="text-gray-300">— brak —</span>{% endif %}</div>
+                    </div>
+                    <form method="post" action="{% url 'core:delete_fee' flat.pk item.fee.pk %}" onsubmit="return confirm('Usunąć opłatę „{{ item.fee.title }}” wraz z historią?');">
+                        {% csrf_token %}
+                        <button type="submit" class="grid h-9 w-9 place-items-center !bg-transparent !p-0 !text-gray-400 !shadow-none transition hover:!bg-rose-50 hover:!text-rose-600" title="Usuń opłatę"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                    </form>
+                </div>
+            </div>
+            <form method="post" action="{% url 'core:add_fee_price' flat.pk item.fee.pk %}" class="flex flex-wrap items-end gap-3 border-t border-gray-100 pt-4">
+                {% csrf_token %}
+                <div class="w-40"><label class="text-xs">Nowa kwota (zł / mies.)</label><input type="text" inputmode="decimal" name="price" placeholder="0,00" class="text-right font-mono"></div>
+                <div class="w-44"><label class="text-xs">Obowiązuje od</label><input type="date" name="price_date"></div>
+                <button type="submit" class="btn-ghost">Zapisz stawkę</button>
+            </form>
+            {% include "core/_price_history.html" with prices=item.prices delete_url="core:delete_fee_price" decimals=2 flat=flat %}
+        </div>
+        {% empty %}
+        <div class="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500">Brak opłat stałych. Użyj „Dodaj opłatę".</div>
+        {% endfor %}
+    </div>
+</section>
+
+<section>
+    <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Liczniki (rozliczane wg zużycia)</h2>
+    <div class="space-y-4">
+        {% for item in meters %}
+        <div class="card space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <form method="post" action="{% url 'core:flat_meter_edit' flat.pk item.meter.pk %}" class="flex flex-wrap items-center gap-2">
+                    {% csrf_token %}
+                    <div class="w-44"><input type="text" name="name" value="{{ item.meter.name }}" placeholder="Nazwa licznika" aria-label="Nazwa licznika"></div>
+                    <div class="w-24"><select name="unit" aria-label="Jednostka">{% for u_val, u_label in units %}<option value="{{ u_val }}" {% if u_val == item.meter.unit %}selected{% endif %}>{{ u_label }}</option>{% endfor %}</select></div>
+                    <button type="submit" class="btn-ghost">Zapisz</button>
+                </form>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs text-gray-400">Aktualna stawka</div>
+                        <div class="font-mono text-lg font-semibold text-gray-900">{% if item.current %}{{ item.current.price|floatformat:4|intcomma }} zł<span class="text-sm text-gray-400">/{{ item.meter.unit }}</span>{% else %}<span class="text-gray-300">— brak —</span>{% endif %}</div>
+                    </div>
+                    <form method="post" action="{% url 'core:flat_meter_delete' flat.pk item.meter.pk %}" onsubmit="return confirm('Usunąć licznik „{{ item.meter.name }}” wraz z historią i odczytami?');">
+                        {% csrf_token %}
+                        <button type="submit" class="grid h-9 w-9 place-items-center !bg-transparent !p-0 !text-gray-400 !shadow-none transition hover:!bg-rose-50 hover:!text-rose-600" title="Usuń licznik"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                    </form>
+                </div>
+            </div>
+            <form method="post" action="{% url 'core:add_meter_price' flat.pk item.meter.pk %}" class="flex flex-wrap items-end gap-3 border-t border-gray-100 pt-4">
+                {% csrf_token %}
+                <div class="w-40"><label class="text-xs">Nowa stawka (zł / {{ item.meter.unit|default:"jedn." }})</label><input type="text" inputmode="decimal" name="price" placeholder="0,0000" class="text-right font-mono"></div>
+                <div class="w-44"><label class="text-xs">Obowiązuje od</label><input type="date" name="price_date"></div>
+                <button type="submit" class="btn-ghost">Zapisz stawkę</button>
+            </form>
+            {% include "core/_price_history.html" with prices=item.prices delete_url="core:delete_meter_price" decimals=4 flat=flat unit=item.meter.unit %}
+        </div>
+        {% empty %}
+        <div class="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500">Brak liczników. Użyj „Dodaj opłatę" i wybierz rodzaj „Licznik".</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -128,7 +128,10 @@ def monthly_income_series(user: User, months: int = 6) -> list[MonthPoint]:
             datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
         )
         total = LedgerEntry.objects.filter(
-            owner=user, record_date__gte=start, record_date__lt=end
+            owner=user,
+            record_date__gte=start,
+            record_date__lt=end,
+            kind=LedgerEntry.Kind.RENT,
         ).aggregate(t=Sum("amount_in_taxable"))["t"] or Decimal(0)
         values.append((month, total))
 

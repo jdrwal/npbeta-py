@@ -9,7 +9,14 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.core.models import Flat, LedgerEntry, MeterDefinition, MeterReading
+from apps.core.models import (
+    Flat,
+    LedgerEntry,
+    MeterDefinition,
+    MeterPrice,
+    MeterReading,
+)
+from apps.core.services.fees import _counter_price
 
 
 @pytest.fixture
@@ -58,15 +65,43 @@ def test_reading_delete(meter_setup: tuple) -> None:
 
 
 @pytest.mark.django_db
-def test_records_pagination(meter_setup: tuple) -> None:
+def test_records_monthly_summary(meter_setup: tuple) -> None:
     user, client, flat, _, _ = meter_setup
-    for i in range(60):
+    for i in range(5):
         LedgerEntry.objects.create(
             owner=user,
             flat=flat,
             short_desc=f"Rec {i}",
-            record_date=timezone.make_aware(datetime(2026, 1, 1)),
+            amount_in_taxable=Decimal("1000"),
+            record_date=timezone.make_aware(datetime(2026, 1, 10)),
+            billing_period=date(2026, 1, 1),
         )
-    response = client.get(reverse("core:records"), {"page": 2})
+    response = client.get(reverse("core:records"), {"year": 2026, "month": 1})
     assert response.status_code == 200
-    assert len(response.context["page"]) == 10  # 60 total, 50 per page
+    assert len(response.context["rent_entries"]) == 5
+    assert response.context["totals"]["income"] == Decimal("5000")
+    # No entries in a different month.
+    other = client.get(reverse("core:records"), {"year": 2026, "month": 2})
+    assert len(other.context["rent_entries"]) == 0
+
+
+@pytest.mark.django_db
+def test_counter_price_is_per_meter(meter_setup: tuple) -> None:
+    """Each meter uses its OWN latest price by date — no shared 'oldest date'."""
+    user, _, flat, meter, _ = meter_setup
+    m2 = MeterDefinition.objects.create(owner=user, flat=flat, name="Gaz", unit="m³")
+    MeterPrice.objects.create(
+        owner=user, flat=flat, meter=meter, price=Decimal("0.80"), price_date=date(2026, 1, 1)
+    )
+    MeterPrice.objects.create(
+        owner=user, flat=flat, meter=meter, price=Decimal("0.90"), price_date=date(2026, 6, 1)
+    )
+    MeterPrice.objects.create(
+        owner=user, flat=flat, meter=m2, price=Decimal("3.00"), price_date=date(2026, 3, 1)
+    )
+    # Each meter picks its own most recent price effective before the day.
+    assert _counter_price(meter, date(2026, 7, 1)) == Decimal("0.90")
+    assert _counter_price(m2, date(2026, 7, 1)) == Decimal("3.00")
+    # An earlier day sees the earlier price for meter 1, and none yet for meter 2.
+    assert _counter_price(meter, date(2026, 3, 1)) == Decimal("0.80")
+    assert _counter_price(m2, date(2026, 2, 1)) is None

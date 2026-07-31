@@ -3,7 +3,7 @@
 {% block content %}
 <div class="mb-6 flex items-center justify-between">
     <div class="flex items-center gap-3">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg></span>
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg></span>
         <div>
             <h1>Mieszkania</h1>
             <p class="mt-1 text-sm text-gray-500">{{ rows|length }} nieruchomo{{ rows|length|pluralize:"ść,ści,ści" }}</p>
@@ -23,7 +23,7 @@
                 <div class="truncate font-semibold text-gray-900">
                     {{ row.flat.street }} {{ row.flat.building_no }}{% if row.flat.flat_no %}/{{ row.flat.flat_no }}{% endif %}
                 </div>
-                <div class="truncate text-xs text-gray-400">{{ row.flat.code }} · {{ row.flat.city }}</div>
+                <div class="truncate text-xs text-gray-400">{{ row.flat.code }} {{ row.flat.city }}</div>
             </div>
             {% if row.mortgaged %}
             <span class="pill bg-amber-100 text-amber-700">Kredyt</span>
@@ -74,6 +74,7 @@
 
         <div class="mt-auto flex items-center gap-2 border-t border-gray-100 bg-gray-50 px-5 py-3">
             <a href="{% url 'core:rooms' %}?flat={{ row.flat.pk }}" class="act">Pokoje</a>
+            <a href="{% url 'core:flat_fees' row.flat.pk %}" class="act">Opłaty</a>
             <a href="{% url 'core:edit_flat' row.flat.pk %}" class="act">Edytuj</a>
             <a href="{% url 'core:delete_flat' row.flat.pk %}" class="act act-danger ml-auto">Usuń</a>
         </div>

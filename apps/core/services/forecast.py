@@ -8,13 +8,94 @@ boundary days), rounded to the grosz.
 from __future__ import annotations
 
 import calendar
-from datetime import date
+from dataclasses import dataclass
+from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
+from django.utils import timezone
+
 from apps.accounts.models import User
-from apps.core.models import Contract, Flat
+from apps.core.models import Contract, Flat, LedgerEntry
 
 _CENT = Decimal("0.01")
+
+
+def rent_due_status(
+    first: date, last: date, payment_day: int | None, today: date
+) -> str | None:
+    """Rent due-date status (port of verifyForeDeadline): GRN/AMB/RED/EXC.
+
+    GRN = before the deadline, AMB = due date, RED = past deadline but still in
+    month, EXC = the whole month has passed (a real debt).
+    """
+    if not payment_day:
+        return None
+    dline = first + timedelta(days=payment_day)
+    if today < dline - timedelta(days=1):
+        return "GRN"
+    if today < dline:
+        return "AMB"
+    if today <= last:
+        return "RED"
+    return "EXC"
+
+
+@dataclass
+class RentArrear:
+    contract: Contract
+    period: str
+    amount: Decimal
+    status: str
+
+
+def rent_arrears(user: User, months: int = 12) -> list[RentArrear]:
+    """Overdue rent (RED/EXC) with no recorded payment over the last ``months``."""
+    today = timezone.now().date()
+    periods: list[tuple[int, int]] = []
+    for offset in range(months - 1, -1, -1):
+        m = today.month - offset
+        y = today.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        periods.append((y, m))
+
+    window_start = date(periods[0][0], periods[0][1], 1)
+    paid: set[tuple[int, int, int]] = set()
+    for cid, bp in LedgerEntry.objects.filter(
+        owner=user,
+        contract__isnull=False,
+        billing_period__gte=window_start,
+        kind=LedgerEntry.Kind.RENT,
+    ).values_list("contract_id", "billing_period"):
+        if bp:
+            paid.add((cid, bp.year, bp.month))
+
+    contracts = list(
+        Contract.objects.filter(owner=user).select_related("flat", "room")
+    )
+    items: list[RentArrear] = []
+    for year, month in periods:
+        first = date(year, month, 1)
+        last = date(year, month, calendar.monthrange(year, month)[1])
+        for ct in contracts:
+            if ct.price is None:
+                continue
+            if ct.contract_start and ct.contract_start > last:
+                continue
+            if ct.contract_end and ct.contract_end < first:
+                continue
+            if (ct.pk, year, month) in paid:
+                continue
+            status = rent_due_status(first, last, ct.payment_day, today)
+            if status not in ("RED", "EXC"):
+                continue
+            amount = (ct.price * contract_ratio(ct, year, month)).quantize(
+                _CENT, rounding=ROUND_HALF_UP
+            )
+            items.append(RentArrear(ct, f"{month:02d}/{year}", amount, status))
+    items.sort(key=lambda x: x.period, reverse=True)
+    return items
 
 
 def contract_ratio(contract: Contract, year: int, month: int) -> Decimal:

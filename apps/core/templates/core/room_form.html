@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M4 18v2M20 18v2M12 4v5"/></svg>
+    </span>
+    <div>
+        <h1>{{ title }}</h1>
+        {% if subtitle %}<p class="mt-1 text-sm text-gray-500">{{ subtitle }}</p>{% endif %}
+    </div>
+</div>
+
+<form method="post" class="max-w-3xl space-y-5">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ form.non_field_errors }}</div>{% endif %}
+
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Mieszkanie</h2>
+        {% include "core/_field.html" with field=form.flat %}
+    </section>
+
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Pokój</h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+            {% include "core/_field.html" with field=form.room_no %}
+            {% include "core/_field.html" with field=form.name %}
+            {% include "core/_field.html" with field=form.size %}
+            {% include "core/_field.html" with field=form.beds %}
+        </div>
+    </section>
+
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Finanse</h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+            {% include "core/_field.html" with field=form.fee %}
+            {% include "core/_field.html" with field=form.deposit %}
+        </div>
+    </section>
+
+    <div class="flex items-center gap-3">
+        <button type="submit">Zapisz</button>
+        <a href="{% url 'core:rooms' %}" class="text-sm">Anuluj</a>
+    </div>
+</form>
+{% endblock %}

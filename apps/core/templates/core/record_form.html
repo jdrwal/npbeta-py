@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+    </span>
+    <div>
+        <h1>{{ title }}</h1>
+        {% if subtitle %}<p class="mt-1 text-sm text-gray-500">{{ subtitle }}</p>{% endif %}
+    </div>
+</div>
+
+<form method="post" class="max-w-3xl space-y-5">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ form.non_field_errors }}</div>{% endif %}
+
+    <section class="card space-y-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Mieszkanie</h2>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {% for f in form.flat.field.queryset %}
+            <label class="relative flex cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-gray-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:ring-2 has-[:checked]:ring-indigo-200">
+                <input type="radio" name="flat" value="{{ f.pk }}" class="sr-only flat-radio" {% if form.flat.value|stringformat:'s' == f.pk|stringformat:'s' %}checked{% endif %}>
+                <span class="font-semibold text-gray-900">{{ f.street }} {{ f.building_no }}{% if f.flat_no %}/{{ f.flat_no }}{% endif %}</span>
+                <span class="text-xs text-gray-400">{{ f.code }} {{ f.city }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        {% if form.flat.errors %}<span class="block text-sm text-rose-600">{{ form.flat.errors|striptags }}</span>{% endif %}
+    </section>
+
+    <section class="needs-flat card space-y-4">
+        <div class="flex items-center justify-between gap-2">
+            <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Szczegóły</h2>
+            <span class="flat-hint text-xs text-gray-400">Najpierw wybierz mieszkanie</span>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+            {% include "core/_field.html" with field=form.room %}
+            {% include "core/_field.html" with field=form.contract %}
+            {% include "core/_field.html" with field=form.record_date %}
+            {% include "core/_field.html" with field=form.billing_period %}
+            {% include "core/_field.html" with field=form.kind %}
+            {% include "core/_field.html" with field=form.short_desc %}
+        </div>
+        {% include "core/_field.html" with field=form.notes %}
+    </section>
+
+    <section class="needs-flat card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Kwoty</h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+            {% include "core/_field.html" with field=form.amount_in_taxable %}
+        </div>
+        <label class="flex cursor-pointer items-center gap-2 !mb-0 text-sm font-medium text-gray-700">
+            {{ form.is_mortgage }}
+            {{ form.is_mortgage.label }}
+        </label>
+        {% if form.is_mortgage.errors %}<span class="block text-sm text-rose-600">{{ form.is_mortgage.errors|striptags }}</span>{% endif %}
+    </section>
+
+    <div class="flex items-center gap-3">
+        <button type="submit">Zapisz</button>
+        <a href="{% url 'core:records' %}" class="text-sm">Anuluj</a>
+    </div>
+</form>
+
+<script>
+    (function () {
+        const form = document.querySelector('form');
+        const radios = document.querySelectorAll('.flat-radio');
+        const roomSel = document.getElementById('id_room');
+        const contractSel = document.getElementById('id_contract');
+
+        // Snapshot every option with its flat id so we can rebuild the list down
+        // to just the chosen flat (hiding options is unreliable in native selects).
+        function snapshot(sel) {
+            if (!sel) return null;
+            const opts = Array.from(sel.options);
+            const placeholder = opts.find(function (o) { return !o.value; });
+            return {
+                placeholder: placeholder ? placeholder.cloneNode(true) : null,
+                options: opts
+                    .filter(function (o) { return o.value; })
+                    .map(function (o) { return { el: o.cloneNode(true), flat: o.dataset.flat }; }),
+            };
+        }
+        const roomSnap = snapshot(roomSel);
+        const contractSnap = snapshot(contractSel);
+
+        function rebuild(sel, snap, flat) {
+            if (!sel || !snap) return;
+            const prev = sel.value;
+            sel.innerHTML = '';
+            if (snap.placeholder) sel.appendChild(snap.placeholder.cloneNode(true));
+            snap.options.forEach(function (o) {
+                if (o.flat === flat) sel.appendChild(o.el.cloneNode(true));
+            });
+            sel.value = Array.from(sel.options).some(function (o) { return o.value === prev; })
+                ? prev : '';
+        }
+
+        // Everything except the flat radios and hidden inputs (e.g. CSRF token).
+        const controls = Array.from(form.querySelectorAll('input, select, textarea, button'))
+            .filter(function (el) {
+                return !el.classList.contains('flat-radio') && el.type !== 'hidden';
+            });
+        const dimmed = document.querySelectorAll('.needs-flat');
+        const hints = document.querySelectorAll('.flat-hint');
+
+        function setEnabled(on) {
+            controls.forEach(function (el) { el.disabled = !on; });
+            dimmed.forEach(function (s) {
+                s.classList.toggle('opacity-50', !on);
+                s.classList.toggle('pointer-events-none', !on);
+            });
+            hints.forEach(function (h) { h.classList.toggle('hidden', on); });
+        }
+
+        function selectFlat(flat) {
+            setEnabled(true);
+            rebuild(roomSel, roomSnap, flat);
+            rebuild(contractSel, contractSnap, flat);
+        }
+
+        radios.forEach(function (r) {
+            r.addEventListener('change', function () { if (r.checked) selectFlat(r.value); });
+        });
+        const checked = document.querySelector('.flat-radio:checked');
+        if (checked) selectFlat(checked.value);
+        else setEnabled(false);
+    })();
+</script>
+{% endblock %}

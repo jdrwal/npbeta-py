@@ -10,6 +10,40 @@ urlpatterns = [
     path("flats/add/", views.add_flat, name="add_flat"),
     path("flats/<int:pk>/edit/", views.FlatUpdate.as_view(), name="edit_flat"),
     path("flats/<int:pk>/delete/", views.FlatDelete.as_view(), name="delete_flat"),
+    path("fees/add/", views.fee_add, name="fee_add"),
+    path("flats/<int:pk>/fees/", views.flat_fees, name="flat_fees"),
+    path("flats/<int:pk>/fees/<int:fee_id>/edit/", views.edit_fee, name="edit_fee"),
+    path("flats/<int:pk>/fees/<int:fee_id>/delete/", views.delete_fee, name="delete_fee"),
+    path(
+        "flats/<int:pk>/fees/<int:fee_id>/price/",
+        views.add_fee_price,
+        name="add_fee_price",
+    ),
+    path(
+        "flats/<int:pk>/fees/price/<int:price_id>/delete/",
+        views.delete_fee_price,
+        name="delete_fee_price",
+    ),
+    path(
+        "flats/<int:pk>/meters/<int:meter_id>/edit/",
+        views.flat_meter_edit,
+        name="flat_meter_edit",
+    ),
+    path(
+        "flats/<int:pk>/meters/<int:meter_id>/delete/",
+        views.flat_meter_delete,
+        name="flat_meter_delete",
+    ),
+    path(
+        "flats/<int:pk>/meters/<int:meter_id>/price/",
+        views.add_meter_price,
+        name="add_meter_price",
+    ),
+    path(
+        "flats/<int:pk>/meters/price/<int:price_id>/delete/",
+        views.delete_meter_price,
+        name="delete_meter_price",
+    ),
     path("rooms/", views.rooms, name="rooms"),
     path("rooms/add/", views.RoomCreate.as_view(), name="add_room"),
     path("rooms/<int:pk>/edit/", views.RoomUpdate.as_view(), name="edit_room"),
@@ -57,6 +91,17 @@ urlpatterns = [
     path("counters/<int:pk>/delete/", views.MeterDelete.as_view(), name="delete_meter"),
     path("counters/<int:pk>/readings/", views.meter_readings, name="meter_readings"),
     path("tax/", views.tax, name="tax"),
+    path(
+        "tax/pay/<int:year>/<int:month>/",
+        views.confirm_tax_payment,
+        name="confirm_tax_payment",
+    ),
+    path(
+        "tax/payment/<int:pk>/delete/",
+        views.delete_tax_payment,
+        name="delete_tax_payment",
+    ),
     path("forecast/", views.forecast, name="forecast"),
+    path("settings/", views.user_settings, name="settings"),
     path("healthz/", views.healthz, name="healthz"),
 ]
