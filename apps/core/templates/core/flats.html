@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Flats — npbeta{% endblock %}
+{% block title %}Mieszkania — npbeta{% endblock %}
 {% block content %}
 <div class="mb-6 flex items-center justify-between">
     <div>
-        <h1>Flats</h1>
-        <p class="mt-1 text-sm text-gray-500">{{ rows|length }} propert{{ rows|length|pluralize:"y,ies" }}</p>
+        <h1>Mieszkania</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ rows|length }} nieruchomo{{ rows|length|pluralize:"ść,ści,ści" }}</p>
     </div>
     <a href="{% url 'core:add_flat' %}" class="btn">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
-        Add flat
+        Dodaj mieszkanie
     </a>
 </div>
 
@@ -23,14 +23,14 @@
                 <div class="truncate text-xs text-gray-400">{{ row.flat.code }} · {{ row.flat.city }}</div>
             </div>
             {% if row.mortgaged %}
-            <span class="pill bg-amber-100 text-amber-700">Mortgaged</span>
+            <span class="pill bg-amber-100 text-amber-700">Kredyt</span>
             {% endif %}
         </div>
 
         <div class="px-5">
             <div class="mb-1.5 flex items-center justify-between text-xs">
-                <span class="font-medium text-gray-500">Occupancy</span>
-                <span class="text-gray-400">{{ row.occupied }}/{{ row.total_rooms }} rooms</span>
+                <span class="font-medium text-gray-500">Obłożenie</span>
+                <span class="text-gray-400">{{ row.occupied }}/{{ row.total_rooms }} pokoi</span>
             </div>
             <div class="h-2 overflow-hidden rounded-full bg-gray-100">
                 <div class="h-full rounded-full {% if row.occupancy_pct == 100 %}bg-emerald-500{% elif row.occupancy_pct >= 50 %}bg-amber-500{% else %}bg-rose-500{% endif %}" style="width: {{ row.occupancy_pct }}%"></div>
@@ -41,44 +41,44 @@
                     <span class="badge {{ o.status }}"></span>
                     <span class="text-gray-600">{{ o.room.name|default:o.room.room_no }}</span>
                     <span class="ml-auto truncate text-right text-gray-400">
-                        {% if o.tenant_name %}{{ o.tenant_name }}{% else %}<span class="text-rose-400">vacant</span>{% endif %}
+                        {% if o.tenant_name %}{{ o.tenant_name }}{% else %}<span class="text-rose-400">wolny</span>{% endif %}
                     </span>
                 </div>
                 {% empty %}
-                <div class="text-sm text-gray-400">No rooms defined.</div>
+                <div class="text-sm text-gray-400">Brak zdefiniowanych pokoi.</div>
                 {% endfor %}
             </div>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-y-3 border-t border-gray-100 px-5 py-4 text-sm">
             <div>
-                <div class="text-xs text-gray-400">Size</div>
+                <div class="text-xs text-gray-400">Powierzchnia</div>
                 <div class="font-medium text-gray-800">{% if row.flat.flat_size %}{{ row.flat.flat_size }} m²{% else %}—{% endif %}</div>
             </div>
             <div>
-                <div class="text-xs text-gray-400">Capacity</div>
-                <div class="font-medium text-gray-800">{{ row.capacity }} bed{{ row.capacity|pluralize }}</div>
+                <div class="text-xs text-gray-400">Pojemność</div>
+                <div class="font-medium text-gray-800">{{ row.capacity }} miejsc</div>
             </div>
             <div>
-                <div class="text-xs text-gray-400">Rental start</div>
+                <div class="text-xs text-gray-400">Start najmu</div>
                 <div class="font-medium text-gray-800">{{ row.flat.rental_start|date:"Y-m-d"|default:"—" }}</div>
             </div>
             <div>
-                <div class="text-xs text-gray-400">Est. income</div>
-                <div class="font-semibold text-indigo-600">{{ row.income }} PLN</div>
+                <div class="text-xs text-gray-400">Szac. przychód</div>
+                <div class="font-semibold text-indigo-600">{{ row.income }} zł</div>
             </div>
         </div>
 
         <div class="mt-auto flex items-center gap-2 border-t border-gray-100 bg-gray-50 px-5 py-3">
-            <a href="{% url 'core:rooms' %}" class="act">Rooms</a>
-            <a href="{% url 'core:edit_flat' row.flat.pk %}" class="act">Edit</a>
-            <a href="{% url 'core:delete_flat' row.flat.pk %}" class="act act-danger ml-auto">Delete</a>
+            <a href="{% url 'core:rooms' %}?flat={{ row.flat.pk }}" class="act">Pokoje</a>
+            <a href="{% url 'core:edit_flat' row.flat.pk %}" class="act">Edytuj</a>
+            <a href="{% url 'core:delete_flat' row.flat.pk %}" class="act act-danger ml-auto">Usuń</a>
         </div>
     </div>
     {% empty %}
     <div class="col-span-full rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-        <p class="text-gray-500">No flats yet.</p>
-        <a href="{% url 'core:add_flat' %}" class="btn mt-4">Add your first flat</a>
+        <p class="text-gray-500">Brak mieszkań.</p>
+        <a href="{% url 'core:add_flat' %}" class="btn mt-4">Dodaj pierwsze mieszkanie</a>
     </div>
     {% endfor %}
 </div>

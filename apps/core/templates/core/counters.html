@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Counters — npbeta{% endblock %}
+{% block title %}Liczniki — npbeta{% endblock %}
 {% block content %}
-<h1>Counters
-    <a href="{% url 'core:add_meter' %}" style="font-size:.9rem;">+ Add meter</a>
-    · <a href="{% url 'core:add_reading' %}" style="font-size:.9rem;">+ Add reading</a>
+<h1>Liczniki
+    <a href="{% url 'core:add_meter' %}" style="font-size:.9rem;">+ Dodaj licznik</a>
+    · <a href="{% url 'core:add_reading' %}" style="font-size:.9rem;">+ Dodaj odczyt</a>
 </h1>
 <table>
     <thead>
         <tr>
-            <th>Flat</th>
-            <th>Meter</th>
-            <th>Unit</th>
-            <th>Latest reading</th>
+            <th>Mieszkanie</th>
+            <th>Licznik</th>
+            <th>Jednostka</th>
+            <th>Ostatni odczyt</th>
             <th></th>
         </tr>
     </thead>
@@ -29,13 +29,13 @@
                 {% endif %}
             </td>
             <td>
-                <a href="{% url 'core:meter_readings' row.meter.pk %}">readings</a>
-                · <a href="{% url 'core:edit_meter' row.meter.pk %}">edit</a>
-                · <a href="{% url 'core:delete_meter' row.meter.pk %}">delete</a>
+                <a href="{% url 'core:meter_readings' row.meter.pk %}">odczyty</a>
+                · <a href="{% url 'core:edit_meter' row.meter.pk %}">edytuj</a>
+                · <a href="{% url 'core:delete_meter' row.meter.pk %}">usuń</a>
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">No meters.</td></tr>
+        <tr><td colspan="5">Brak liczników.</td></tr>
         {% endfor %}
     </tbody>
 </table>

@@ -19,13 +19,13 @@
         <div class="flex items-center gap-3">
             <div class="text-right leading-tight">
                 <div class="text-sm font-medium text-gray-800">{{ user.get_username }}</div>
-                <div class="text-xs text-gray-400">Signed in</div>
+                <div class="text-xs text-gray-400">Zalogowano</div>
             </div>
             <div class="grid h-9 w-9 place-items-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
                 {{ user.get_username|first|upper }}
             </div>
             <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}<button class="btn-ghost">Log out</button>
+                {% csrf_token %}<button class="btn-ghost">Wyloguj</button>
             </form>
         </div>
     </header>
@@ -35,46 +35,46 @@
         {% if user.is_authenticated %}
         {% with active=request.resolver_match.url_name %}
         <aside class="flex w-60 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white px-3 py-4">
-            <p class="sidebar-group">Properties</p>
+            <p class="sidebar-group">Nieruchomości</p>
             <a href="{% url 'core:dashboard' %}" class="sidebar-link {% if active == 'dashboard' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-                Dashboard
+                Pulpit
             </a>
             <a href="{% url 'core:flats' %}" class="sidebar-link {% if active == 'flats' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
-                Flats
+                Mieszkania
             </a>
             <a href="{% url 'core:rooms' %}" class="sidebar-link {% if active == 'rooms' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M4 18v2M20 18v2M12 4v5"/></svg>
-                Rooms
+                Pokoje
             </a>
             <a href="{% url 'core:contracts' %}" class="sidebar-link {% if active == 'contracts' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M8 13h5M8 17h3"/></svg>
-                Contracts
+                Umowy
             </a>
 
-            <p class="sidebar-group">Utilities</p>
+            <p class="sidebar-group">Media</p>
             <a href="{% url 'core:counters' %}" class="sidebar-link {% if active == 'counters' or active == 'meter_readings' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14 8 10"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5"/></svg>
-                Counters
+                Liczniki
             </a>
             <a href="{% url 'core:calculations' %}" class="sidebar-link {% if active == 'calculations' or active == 'calculation_detail' or active == 'run_settlement' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2M8 18h2M14 18h2"/></svg>
-                Settlements
+                Rozliczenia
             </a>
 
-            <p class="sidebar-group">Finance</p>
+            <p class="sidebar-group">Finanse</p>
             <a href="{% url 'core:records' %}" class="sidebar-link {% if active == 'records' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
-                Records
+                Ewidencja
             </a>
             <a href="{% url 'core:tax' %}" class="sidebar-link {% if active == 'tax' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-                Tax
+                Podatek
             </a>
             <a href="{% url 'core:forecast' %}" class="sidebar-link {% if active == 'forecast' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                Forecast
+                Prognoza
             </a>
         </aside>
         {% endwith %}

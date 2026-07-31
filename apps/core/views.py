@@ -165,11 +165,11 @@ def add_flat(request: HttpRequest) -> HttpResponse:
             flat = form.save(commit=False)
             flat.owner = user
             flat.save()
-            messages.success(request, "Flat added.")
+            messages.success(request, "Mieszkanie dodane.")
             return redirect("core:flats")
     else:
         form = FlatForm()
-    return render(request, "core/form.html", {"form": form, "title": "Add flat"})
+    return render(request, "core/form.html", {"form": form, "title": "Dodaj mieszkanie"})
 
 
 @login_required
@@ -182,12 +182,12 @@ def add_reading(request: HttpRequest) -> HttpResponse:
             reading.owner = reading.meter.owner
             reading.flat = reading.meter.flat
             reading.save()
-            messages.success(request, "Meter reading added.")
+            messages.success(request, "Odczyt licznika dodany.")
             return redirect("core:calculations")
     else:
         form = MeterReadingForm(user=user)
     return render(
-        request, "core/form.html", {"form": form, "title": "Add meter reading"}
+        request, "core/form.html", {"form": form, "title": "Dodaj odczyt licznika"}
     )
 
 
@@ -205,15 +205,15 @@ def run_settlement(request: HttpRequest) -> HttpResponse:
             if form.cleaned_data["email_tenants"]:
                 email_settlement_task.delay(calc.pk)
                 messages.success(
-                    request, "Settlement saved; tenant emails are being sent."
+                    request, "Rozliczenie zapisane; e-maile do najemców są wysyłane."
                 )
             else:
-                messages.success(request, "Settlement computed and saved.")
+                messages.success(request, "Rozliczenie obliczone i zapisane.")
             return redirect("core:calculation_detail", pk=calc.pk)
     else:
         form = SettlementForm(user=user)
     return render(
-        request, "core/form.html", {"form": form, "title": "Run settlement"}
+        request, "core/form.html", {"form": form, "title": "Nowe rozliczenie"}
     )
 
 
@@ -223,7 +223,7 @@ def delete_settlement(request: HttpRequest, pk: int) -> HttpResponse:
     user = cast(User, request.user)
     calc = get_object_or_404(FeeCalculation, pk=pk, owner=user)
     calc.delete()  # cascades to tenants and items
-    messages.success(request, "Settlement deleted.")
+    messages.success(request, "Rozliczenie usunięte.")
     return redirect("core:calculations")
 
 
@@ -234,18 +234,37 @@ def email_settlement(request: HttpRequest, pk: int) -> HttpResponse:
     user = cast(User, request.user)
     calc = get_object_or_404(FeeCalculation, pk=pk, owner=user)
     email_settlement_task.delay(calc.pk)
-    messages.success(request, "Tenant emails are being sent in the background.")
+    messages.success(request, "E-maile do najemców są wysyłane w tle.")
     return redirect("core:calculation_detail", pk=calc.pk)
 
 
 @login_required
 def rooms(request: HttpRequest) -> HttpResponse:
-    """List of rooms across the owner's flats, with CRUD links."""
+    """Rooms grouped by flat. ``?flat=<id>`` narrows to a single flat."""
     user = cast(User, request.user)
-    room_list = (
-        Room.objects.filter(owner=user).select_related("flat").order_by("flat", "room_no")
+    flats = Flat.objects.filter(owner=user)
+    flat_id = request.GET.get("flat")
+    if flat_id:
+        flats = flats.filter(pk=flat_id)
+
+    groups = []
+    for flat in flats:
+        occ = {o.room.id: o for o in occupancy(flat)}
+        room_rows = []
+        for room in Room.objects.filter(flat=flat).order_by("room_no"):
+            match = occ.get(room.id)
+            room_rows.append(
+                {
+                    "room": room,
+                    "status": match.status if match else "danger",
+                    "tenant": match.tenant_name if match else "",
+                }
+            )
+        groups.append({"flat": flat, "rooms": room_rows})
+
+    return render(
+        request, "core/rooms.html", {"groups": groups, "single": bool(flat_id)}
     )
-    return render(request, "core/rooms.html", {"rooms": room_list})
 
 
 @login_required
@@ -352,103 +371,103 @@ class FlatUpdate(_OwnerUpdate):
     model = Flat
     form_class = FlatForm
     success_url = reverse_lazy("core:flats")
-    extra_context = {"title": "Edit flat"}
+    extra_context = {"title": "Edytuj mieszkanie"}
 
 
 class FlatDelete(_OwnerSoftDelete):
     model = Flat
     success_url = reverse_lazy("core:flats")
-    extra_context = {"title": "Delete flat"}
+    extra_context = {"title": "Usuń mieszkanie"}
 
 
 class RoomCreate(_OwnerCreate):
     model = Room
     form_class = RoomForm
     success_url = reverse_lazy("core:rooms")
-    extra_context = {"title": "Add room"}
+    extra_context = {"title": "Dodaj pokój"}
 
 
 class RoomUpdate(_OwnerUpdate):
     model = Room
     form_class = RoomForm
     success_url = reverse_lazy("core:rooms")
-    extra_context = {"title": "Edit room"}
+    extra_context = {"title": "Edytuj pokój"}
 
 
 class RoomDelete(_OwnerSoftDelete):
     model = Room
     success_url = reverse_lazy("core:rooms")
-    extra_context = {"title": "Delete room"}
+    extra_context = {"title": "Usuń pokój"}
 
 
 class ContractCreate(_OwnerCreate):
     model = Contract
     form_class = ContractForm
     success_url = reverse_lazy("core:contracts")
-    extra_context = {"title": "Add contract"}
+    extra_context = {"title": "Dodaj umowę"}
 
 
 class ContractUpdate(_OwnerUpdate):
     model = Contract
     form_class = ContractForm
     success_url = reverse_lazy("core:contracts")
-    extra_context = {"title": "Edit contract"}
+    extra_context = {"title": "Edytuj umowę"}
 
 
 class ContractDelete(_OwnerSoftDelete):
     model = Contract
     success_url = reverse_lazy("core:contracts")
-    extra_context = {"title": "Delete contract"}
+    extra_context = {"title": "Usuń umowę"}
 
 
 class RecordCreate(_OwnerCreate):
     model = LedgerEntry
     form_class = LedgerEntryForm
     success_url = reverse_lazy("core:records")
-    extra_context = {"title": "Add record"}
+    extra_context = {"title": "Dodaj wpis"}
 
 
 class RecordUpdate(_OwnerUpdate):
     model = LedgerEntry
     form_class = LedgerEntryForm
     success_url = reverse_lazy("core:records")
-    extra_context = {"title": "Edit record"}
+    extra_context = {"title": "Edytuj wpis"}
 
 
 class RecordDelete(_OwnerHardDelete):
     model = LedgerEntry
     success_url = reverse_lazy("core:records")
-    extra_context = {"title": "Delete record"}
+    extra_context = {"title": "Usuń wpis"}
 
 
 class MeterCreate(_OwnerCreate):
     model = MeterDefinition
     form_class = MeterDefinitionForm
     success_url = reverse_lazy("core:counters")
-    extra_context = {"title": "Add meter"}
+    extra_context = {"title": "Dodaj licznik"}
 
 
 class MeterUpdate(_OwnerUpdate):
     model = MeterDefinition
     form_class = MeterDefinitionForm
     success_url = reverse_lazy("core:counters")
-    extra_context = {"title": "Edit meter"}
+    extra_context = {"title": "Edytuj licznik"}
 
 
 class MeterDelete(_OwnerHardDelete):
     model = MeterDefinition
     success_url = reverse_lazy("core:counters")
-    extra_context = {"title": "Delete meter"}
+    extra_context = {"title": "Usuń licznik"}
 
 
 class ReadingUpdate(_OwnerUpdate):
     model = MeterReading
     form_class = MeterReadingForm
     success_url = reverse_lazy("core:counters")
-    extra_context = {"title": "Edit reading"}
+    extra_context = {"title": "Edytuj odczyt"}
 
 
 class ReadingDelete(_OwnerHardDelete):
     model = MeterReading
     success_url = reverse_lazy("core:counters")
-    extra_context = {"title": "Delete reading"}
+    extra_context = {"title": "Usuń odczyt"}

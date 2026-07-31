@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Sign in — npbeta{% endblock %}
+{% block title %}Zaloguj się — npbeta{% endblock %}
 {% block content %}
 <div class="login-card">
     <div class="mb-6 flex items-center gap-2.5">
         <div class="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">nP</div>
         <span class="text-lg font-semibold tracking-tight">npbeta</span>
     </div>
-    <h1 class="mb-1 text-xl">Sign in</h1>
-    <p class="mb-5 text-sm text-gray-500">Rental management</p>
+    <h1 class="mb-1 text-xl">Zaloguj się</h1>
+    <p class="mb-5 text-sm text-gray-500">Zarządzanie najmem</p>
     <form method="post">
         {% csrf_token %}
-        {% if form.errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">Invalid email or password.</div>{% endif %}
-        <label for="id_username">Email</label>
+        {% if form.errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">Nieprawidłowy e-mail lub hasło.</div>{% endif %}
+        <label for="id_username">E-mail</label>
         {{ form.username }}
-        <label for="id_password" class="mt-3">Password</label>
+        <label for="id_password" class="mt-3">Hasło</label>
         {{ form.password }}
-        <button type="submit" class="mt-5 w-full justify-center">Sign in</button>
+        <button type="submit" class="mt-5 w-full justify-center">Zaloguj się</button>
         <input type="hidden" name="next" value="{{ next }}">
     </form>
 </div>

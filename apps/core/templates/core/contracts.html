@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Contracts — npbeta{% endblock %}
+{% block title %}Umowy — npbeta{% endblock %}
 {% block content %}
-<h1>Contracts <a href="{% url 'core:add_contract' %}" style="font-size:.9rem;">+ Add contract</a></h1>
+<h1>Umowy <a href="{% url 'core:add_contract' %}" style="font-size:.9rem;">+ Dodaj umowę</a></h1>
 <table>
     <thead>
         <tr>
-            <th>Number</th>
-            <th>Tenant</th>
-            <th>Flat / Room</th>
-            <th>Period</th>
-            <th>Rent</th>
+            <th>Numer</th>
+            <th>Najemca</th>
+            <th>Mieszkanie / Pokój</th>
+            <th>Okres</th>
+            <th>Czynsz</th>
             <th>Status</th>
             <th></th>
         </tr>
@@ -21,21 +21,21 @@
             <td>{{ c.tenant_name }}</td>
             <td>{{ c.flat }} — {{ c.room.name|default:c.room.room_no }}</td>
             <td>{{ c.contract_start|date:"Y-m-d" }} → {{ c.contract_end|date:"Y-m-d" }}</td>
-            <td>{{ c.price }} PLN</td>
+            <td>{{ c.price }} zł</td>
             <td>
                 {% if c.contract_start <= today and c.contract_end >= today %}
-                    <span class="badge success"></span> active
+                    <span class="badge success"></span> aktywna
                 {% else %}
-                    <span class="badge danger"></span> expired
+                    <span class="badge danger"></span> wygasła
                 {% endif %}
             </td>
             <td>
-                <a href="{% url 'core:edit_contract' c.pk %}">edit</a>
-                · <a href="{% url 'core:delete_contract' c.pk %}">delete</a>
+                <a href="{% url 'core:edit_contract' c.pk %}">edytuj</a>
+                · <a href="{% url 'core:delete_contract' c.pk %}">usuń</a>
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="7">No contracts.</td></tr>
+        <tr><td colspan="7">Brak umów.</td></tr>
         {% endfor %}
     </tbody>
 </table>

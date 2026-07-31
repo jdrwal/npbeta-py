@@ -3,11 +3,11 @@
 {% block content %}
 <h1 class="mb-4">{{ title }}</h1>
 <div class="card max-w-lg">
-    <p class="mb-5">Are you sure you want to delete <strong>{{ object }}</strong>?</p>
+    <p class="mb-5">Czy na pewno chcesz usunąć <strong>{{ object }}</strong>?</p>
     <form method="post" class="flex items-center gap-3">
         {% csrf_token %}
-        <button type="submit" class="btn-danger">Delete</button>
-        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Cancel</a>
+        <button type="submit" class="btn-danger">Usuń</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Anuluj</a>
     </form>
 </div>
 {% endblock %}

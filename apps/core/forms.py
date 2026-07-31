@@ -36,6 +36,16 @@ class FlatForm(forms.ModelForm):
             "room_count",
             "color",
         ]
+        labels = {
+            "city": "Miasto",
+            "street": "Ulica",
+            "building_no": "Nr budynku",
+            "flat_no": "Nr mieszkania",
+            "flat_size": "Powierzchnia (m²)",
+            "code": "Kod",
+            "room_count": "Liczba pokoi",
+            "color": "Kolor",
+        }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -45,6 +55,15 @@ class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
         fields = ["flat", "room_no", "name", "size", "beds", "fee", "deposit"]
+        labels = {
+            "flat": "Mieszkanie",
+            "room_no": "Nr pokoju",
+            "name": "Nazwa",
+            "size": "Powierzchnia (m²)",
+            "beds": "Liczba miejsc",
+            "fee": "Czynsz",
+            "deposit": "Kaucja",
+        }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -74,6 +93,20 @@ class ContractForm(forms.ModelForm):
             "contract_start": _DATE,
             "contract_end": _DATE,
         }
+        labels = {
+            "flat": "Mieszkanie",
+            "room": "Pokój",
+            "contract_number": "Numer umowy",
+            "tenant_name": "Najemca",
+            "email": "E-mail",
+            "phone": "Telefon",
+            "price": "Czynsz",
+            "deposit": "Kaucja",
+            "contract_date": "Data umowy",
+            "contract_start": "Początek najmu",
+            "contract_end": "Koniec najmu",
+            "payment_day": "Dzień płatności",
+        }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -99,6 +132,19 @@ class LedgerEntryForm(forms.ModelForm):
             "is_mortgage",
         ]
         widgets = {"record_date": _DATE}
+        labels = {
+            "flat": "Mieszkanie",
+            "room": "Pokój",
+            "contract": "Umowa",
+            "short_desc": "Opis",
+            "notes": "Notatki",
+            "record_date": "Data",
+            "amount_in_taxable": "Przychód opodatkowany",
+            "amount_in_not_taxable": "Przychód nieopodatkowany",
+            "amount_out": "Wydatek",
+            "cost": "Koszt",
+            "is_mortgage": "Kredyt",
+        }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -113,6 +159,11 @@ class MeterReadingForm(forms.ModelForm):
         model = MeterReading
         fields = ["meter", "read_date", "value"]
         widgets = {"read_date": forms.DateInput(attrs={"type": "date"})}
+        labels = {
+            "meter": "Licznik",
+            "read_date": "Data odczytu",
+            "value": "Wartość",
+        }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -125,6 +176,11 @@ class MeterDefinitionForm(forms.ModelForm):
     class Meta:
         model = MeterDefinition
         fields = ["flat", "name", "unit"]
+        labels = {
+            "flat": "Mieszkanie",
+            "name": "Nazwa",
+            "unit": "Jednostka",
+        }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -133,11 +189,15 @@ class MeterDefinitionForm(forms.ModelForm):
 
 
 class SettlementForm(forms.Form):
-    flat = forms.ModelChoiceField(queryset=Flat.objects.none())
-    period_start = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
-    period_end = forms.DateField(widget=forms.DateInput(attrs={"type": "date"}))
+    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Mieszkanie")
+    period_start = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}), label="Początek okresu"
+    )
+    period_end = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date"}), label="Koniec okresu"
+    )
     email_tenants = forms.BooleanField(
-        required=False, label="Email the breakdown to tenants (in the background)"
+        required=False, label="Wyślij rozliczenie do najemców (w tle)"
     )
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
@@ -150,5 +210,5 @@ class SettlementForm(forms.Form):
         cleaned = super().clean() or {}
         start, end = cleaned.get("period_start"), cleaned.get("period_end")
         if start and end and end < start:
-            raise forms.ValidationError("End date must be on or after the start date.")
+            raise forms.ValidationError("Data końca musi być nie wcześniejsza niż data początku.")
         return cleaned

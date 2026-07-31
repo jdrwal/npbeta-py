@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Settlement — npbeta{% endblock %}
+{% block title %}Rozliczenie — npbeta{% endblock %}
 {% block content %}
-<p class="mb-4"><a href="{% url 'core:calculations' %}">← Settlements</a></p>
+<p class="mb-4"><a href="{% url 'core:calculations' %}">← Rozliczenia</a></p>
 <div class="mb-6 flex items-start justify-between gap-4">
     <div>
         <h1>{{ calc.flat }}</h1>
         <p class="mt-1 text-sm text-gray-500">
             {{ calc.period_start|date:"Y-m-d" }} → {{ calc.period_end|date:"Y-m-d" }}
-            · computed {{ calc.stamp|date:"Y-m-d H:i" }}
+            · obliczono {{ calc.stamp|date:"Y-m-d H:i" }}
         </p>
     </div>
     <div class="flex shrink-0 gap-2">
         <form method="post" action="{% url 'core:email_settlement' calc.pk %}">
-            {% csrf_token %}<button type="submit" class="btn-ghost">Email tenants</button>
+            {% csrf_token %}<button type="submit" class="btn-ghost">Wyślij e-mail</button>
         </form>
         <form method="post" action="{% url 'core:delete_settlement' calc.pk %}"
-              onsubmit="return confirm('Delete this settlement?');">
-            {% csrf_token %}<button type="submit" class="btn-danger">Delete</button>
+              onsubmit="return confirm('Usunąć to rozliczenie?');">
+            {% csrf_token %}<button type="submit" class="btn-danger">Usuń</button>
         </form>
     </div>
 </div>
@@ -24,11 +24,11 @@
 {% for row in tenants %}
 <h2 style="font-size:1.1rem;margin-top:1.5rem;">
     {{ row.tenant.tenant_name }}
-    <span style="color:#666;font-weight:400;">— {{ row.tenant.contract_number }} · total {{ row.total }} PLN</span>
+    <span style="color:#666;font-weight:400;">— {{ row.tenant.contract_number }} · razem {{ row.total }} zł</span>
 </h2>
 <table>
     <thead>
-        <tr><th>Type</th><th>Item</th><th>Usage</th><th>Value</th></tr>
+        <tr><th>Typ</th><th>Pozycja</th><th>Zużycie</th><th>Wartość</th></tr>
     </thead>
     <tbody>
         {% for item in row.items %}
@@ -36,7 +36,7 @@
             <td>{{ item.fee_type }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.usage }}</td>
-            <td>{{ item.value }} PLN</td>
+            <td>{{ item.value }} zł</td>
         </tr>
         {% endfor %}
     </tbody>

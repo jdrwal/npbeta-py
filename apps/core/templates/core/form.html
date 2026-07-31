@@ -13,8 +13,8 @@
     </div>
     {% endfor %}
     <div class="flex items-center gap-3 pt-2">
-        <button type="submit">Save</button>
-        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Cancel</a>
+        <button type="submit">Zapisz</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Anuluj</a>
     </div>
 </form>
 {% endblock %}

@@ -1,31 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Tax — npbeta{% endblock %}
+{% block title %}Podatek — npbeta{% endblock %}
 {% block content %}
-<h1>Rental tax <span style="color:#666;font-size:.9rem;">(lump-sum 8.5% up to 100 000 PLN/year, 12.5% above)</span></h1>
+<h1>Podatek od najmu <span style="color:#666;font-size:.9rem;">(ryczałt 8,5% do 100 000 zł/rok, 12,5% powyżej)</span></h1>
 {% for year, months in table.items %}
 <h2 style="font-size:1.1rem;margin-top:1.5rem;">{{ year }}</h2>
 <table>
     <thead>
         <tr>
-            <th>Month</th>
-            <th>Taxable income</th>
-            <th>Tax</th>
-            <th>Deadline</th>
-            <th>Paid</th>
+            <th>Miesiąc</th>
+            <th>Dochód do opodatkowania</th>
+            <th>Podatek</th>
+            <th>Termin</th>
+            <th>Zapłacono</th>
         </tr>
     </thead>
     <tbody>
         {% for m in months %}
         <tr>
             <td>{{ m.year }}-{{ m.month|stringformat:"02d" }}</td>
-            <td>{{ m.taxable }} PLN</td>
-            <td>{{ m.tax }} PLN</td>
+            <td>{{ m.taxable }} zł</td>
+            <td>{{ m.tax }} zł</td>
             <td>{{ m.deadline|date:"Y-m-d" }}</td>
             <td>
                 {% if m.paid_date %}
                     <span class="badge success"></span> {{ m.paid_date|date:"Y-m-d" }}
                 {% else %}
-                    <span class="badge danger"></span> unpaid
+                    <span class="badge danger"></span> niezapłacony
                 {% endif %}
             </td>
         </tr>
@@ -33,6 +33,6 @@
     </tbody>
 </table>
 {% empty %}
-<p>No tax periods yet.</p>
+<p>Brak okresów podatkowych.</p>
 {% endfor %}
 {% endblock %}

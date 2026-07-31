@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — npbeta{% endblock %}
+{% block title %}Pulpit — npbeta{% endblock %}
 {% block content %}
-<h1 class="mb-1">Dashboard</h1>
-<p class="mb-6 text-sm text-gray-500">Overview of your rental portfolio</p>
+<h1 class="mb-1">Pulpit</h1>
+<p class="mb-6 text-sm text-gray-500">Przegląd Twojego portfela najmu</p>
 
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     <div class="card flex items-start gap-4">
@@ -10,9 +10,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Flats</div>
+            <div class="text-sm font-medium text-gray-500">Mieszkania</div>
             <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.flats }}</div>
-            <div class="text-xs text-gray-400">properties</div>
+            <div class="text-xs text-gray-400">nieruchomości</div>
         </div>
     </div>
 
@@ -21,9 +21,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M4 18v2M20 18v2M12 4v5"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Rooms</div>
+            <div class="text-sm font-medium text-gray-500">Pokoje</div>
             <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.rooms }}</div>
-            <div class="text-xs text-gray-400">rentable units</div>
+            <div class="text-xs text-gray-400">jednostki na wynajem</div>
         </div>
     </div>
 
@@ -32,9 +32,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="m9 15 2 2 4-4"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Active contracts</div>
+            <div class="text-sm font-medium text-gray-500">Aktywne umowy</div>
             <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.active_contracts }}</div>
-            <div class="text-xs text-gray-400">current tenancies</div>
+            <div class="text-xs text-gray-400">bieżące najmy</div>
         </div>
     </div>
 
@@ -43,9 +43,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Ending soon</div>
+            <div class="text-sm font-medium text-gray-500">Kończą się wkrótce</div>
             <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.contracts_ending_soon }}</div>
-            <div class="text-xs text-gray-400">within 2 months</div>
+            <div class="text-xs text-gray-400">w ciągu 2 miesięcy</div>
         </div>
     </div>
 
@@ -54,9 +54,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Tax {{ tax_year }}</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ tax_ytd }} <span class="text-base font-medium text-gray-400">PLN</span></div>
-            <div class="text-xs text-gray-400">lump-sum owed YTD</div>
+            <div class="text-sm font-medium text-gray-500">Podatek {{ tax_year }}</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ tax_ytd }} <span class="text-base font-medium text-gray-400">zł</span></div>
+            <div class="text-xs text-gray-400">ryczałt narastająco</div>
         </div>
     </div>
 
@@ -65,9 +65,9 @@
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Forecast income</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ forecast_income }} <span class="text-base font-medium text-gray-400">PLN</span></div>
-            <div class="text-xs text-gray-400">this month</div>
+            <div class="text-sm font-medium text-gray-500">Prognoza przychodu</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ forecast_income }} <span class="text-base font-medium text-gray-400">zł</span></div>
+            <div class="text-xs text-gray-400">w tym miesiącu</div>
         </div>
     </div>
 </div>
@@ -75,18 +75,18 @@
 <div class="card mt-6">
     <div class="mb-5 flex items-center justify-between">
         <div>
-            <div class="text-sm font-semibold text-gray-800">Taxable income</div>
-            <div class="text-xs text-gray-400">last 6 months</div>
+            <div class="text-sm font-semibold text-gray-800">Dochód do opodatkowania</div>
+            <div class="text-xs text-gray-400">ostatnie 6 miesięcy</div>
         </div>
         <div class="flex items-center gap-1.5 text-xs text-gray-400">
-            <span class="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-500"></span> PLN / month
+            <span class="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-500"></span> zł / miesiąc
         </div>
     </div>
     <div class="flex h-44 gap-3">
         {% for p in income_series %}
         <div class="group flex flex-1 flex-col">
             <div class="flex flex-1 items-end">
-                <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value }} PLN"></div>
+                <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value }} zł"></div>
             </div>
             <div class="pt-2 text-center text-xs font-medium text-gray-500">{{ p.label }}</div>
         </div>

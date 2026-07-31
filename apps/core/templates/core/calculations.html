@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Settlements — npbeta{% endblock %}
+{% block title %}Rozliczenia — npbeta{% endblock %}
 {% block content %}
-<h1>Utility settlements</h1>
+<h1>Rozliczenia mediów</h1>
 <p>
-    <a href="{% url 'core:run_settlement' %}">+ New settlement</a>
+    <a href="{% url 'core:run_settlement' %}">+ Nowe rozliczenie</a>
     &nbsp;·&nbsp;
-    <a href="{% url 'core:add_reading' %}">Add meter reading</a>
+    <a href="{% url 'core:add_reading' %}">Dodaj odczyt licznika</a>
 </p>
 <table>
     <thead>
         <tr>
-            <th>Flat</th>
-            <th>Period</th>
-            <th>Computed</th>
-            <th>Tenants</th>
+            <th>Mieszkanie</th>
+            <th>Okres</th>
+            <th>Obliczono</th>
+            <th>Najemcy</th>
             <th></th>
         </tr>
     </thead>
@@ -24,10 +24,10 @@
             <td>{{ c.period_start|date:"Y-m-d" }} → {{ c.period_end|date:"Y-m-d" }}</td>
             <td>{{ c.stamp|date:"Y-m-d H:i" }}</td>
             <td>{{ c.tenants.count }}</td>
-            <td><a href="{% url 'core:calculation_detail' c.pk %}">details</a></td>
+            <td><a href="{% url 'core:calculation_detail' c.pk %}">szczegóły</a></td>
         </tr>
         {% empty %}
-        <tr><td colspan="5">No settlements.</td></tr>
+        <tr><td colspan="5">Brak rozliczeń.</td></tr>
         {% endfor %}
     </tbody>
 </table>

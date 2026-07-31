@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Records — npbeta{% endblock %}
+{% block title %}Ewidencja — npbeta{% endblock %}
 {% block content %}
-<h1>Records <a href="{% url 'core:add_record' %}" style="font-size:.9rem;">+ Add record</a></h1>
+<h1>Ewidencja <a href="{% url 'core:add_record' %}" style="font-size:.9rem;">+ Dodaj wpis</a></h1>
 <table>
     <thead>
         <tr>
-            <th>Date</th>
-            <th>Flat</th>
-            <th>Description</th>
-            <th>Income</th>
-            <th>Expense</th>
+            <th>Data</th>
+            <th>Mieszkanie</th>
+            <th>Opis</th>
+            <th>Przychód</th>
+            <th>Wydatek</th>
             <th></th>
         </tr>
     </thead>
@@ -18,24 +18,24 @@
         <tr>
             <td>{{ e.record_date|date:"Y-m-d" }}</td>
             <td>{{ e.flat }}</td>
-            <td>{{ e.short_desc }}{% if e.is_mortgage %} <span style="color:#666;">(mortgage)</span>{% endif %}</td>
-            <td>{% if e.amount_in_taxable %}{{ e.amount_in_taxable }} PLN{% endif %}</td>
-            <td>{% if e.amount_out %}{{ e.amount_out }} PLN{% endif %}</td>
+            <td>{{ e.short_desc }}{% if e.is_mortgage %} <span style="color:#666;">(kredyt)</span>{% endif %}</td>
+            <td>{% if e.amount_in_taxable %}{{ e.amount_in_taxable }} zł{% endif %}</td>
+            <td>{% if e.amount_out %}{{ e.amount_out }} zł{% endif %}</td>
             <td>
-                <a href="{% url 'core:edit_record' e.pk %}">edit</a>
-                · <a href="{% url 'core:delete_record' e.pk %}">delete</a>
+                <a href="{% url 'core:edit_record' e.pk %}">edytuj</a>
+                · <a href="{% url 'core:delete_record' e.pk %}">usuń</a>
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">No records.</td></tr>
+        <tr><td colspan="6">Brak wpisów.</td></tr>
         {% endfor %}
     </tbody>
 </table>
 {% if page.paginator.num_pages > 1 %}
 <p style="margin-top:1rem;">
-    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">← Prev</a>{% endif %}
-    <span style="color:#666;">&nbsp;Page {{ page.number }} of {{ page.paginator.num_pages }}&nbsp;</span>
-    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Next →</a>{% endif %}
+    {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">← Poprzednia</a>{% endif %}
+    <span style="color:#666;">&nbsp;Strona {{ page.number }} z {{ page.paginator.num_pages }}&nbsp;</span>
+    {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Następna →</a>{% endif %}
 </p>
 {% endif %}
 {% endblock %}

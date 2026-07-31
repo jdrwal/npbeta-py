@@ -5,7 +5,6 @@ Mirrors ``getInvState``, ``getExpIncomeByFlatId`` and ``getOccRoomsByFlatId``.
 
 from __future__ import annotations
 
-import calendar
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -15,6 +14,22 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.core.models import Contract, Flat, LedgerEntry, Room
+
+_PL_MONTH_ABBR = [
+    "",
+    "sty",
+    "lut",
+    "mar",
+    "kwi",
+    "maj",
+    "cze",
+    "lip",
+    "sie",
+    "wrz",
+    "paź",
+    "lis",
+    "gru",
+]
 
 
 def _add_months(d: date, months: int) -> date:
@@ -120,7 +135,7 @@ def monthly_income_series(user: User, months: int = 6) -> list[MonthPoint]:
     peak = max((v for _, v in values), default=Decimal(0))
     return [
         MonthPoint(
-            label=calendar.month_abbr[month],
+            label=_PL_MONTH_ABBR[month],
             value=value,
             pct=int(value / peak * 100) if peak > 0 else 0,
         )
