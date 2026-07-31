@@ -105,8 +105,8 @@
         <div class="flex flex-1 gap-1.5">
             {% for p in income_series %}
             <div class="group flex flex-1 flex-col">
-                <div class="relative flex h-40 items-end">
-                    <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value|floatformat:2|intcomma }} zł">
+                <div class="flex h-40 items-end">
+                    <div class="relative w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value|floatformat:2|intcomma }} zł">
                         <span class="absolute inset-x-0 -top-5 text-center text-[11px] font-semibold text-gray-600">{{ p.value|floatformat:0|intcomma }}</span>
                     </div>
                 </div>
