@@ -32,6 +32,7 @@ from apps.core.models import (
     MeterReading,
     Room,
 )
+from apps.core.services.counters import counters_matrix
 from apps.core.services.fees import save_settlement
 from apps.core.services.forecast import forecast_income, forecast_income_total
 from apps.core.services.mortgage import is_mortgaged, mortgage_schedule
@@ -323,19 +324,24 @@ def tax(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def counters(request: HttpRequest) -> HttpResponse:
-    """Meters grouped per flat with their latest reading (CRUD entry point)."""
+    """Per-flat meter matrix: reading / usage / cost per date (port of counters.php)."""
     user = cast(User, request.user)
-    rows = []
-    for meter in (
-        MeterDefinition.objects.filter(owner=user)
-        .select_related("flat")
-        .order_by("flat", "name")
-    ):
-        latest = (
-            MeterReading.objects.filter(meter=meter).order_by("-read_date").first()
-        )
-        rows.append({"meter": meter, "latest": latest})
-    return render(request, "core/counters.html", {"rows": rows})
+    return render(request, "core/counters.html", {"flats": counters_matrix(user)})
+
+
+@login_required
+@require_POST
+def delete_readings_on_date(request: HttpRequest, flat_id: int) -> HttpResponse:
+    """Delete every meter reading of a flat taken on a given date."""
+    user = cast(User, request.user)
+    flat = get_object_or_404(Flat, pk=flat_id, owner=user)
+    read_date = request.POST.get("date")
+    if read_date:
+        MeterReading.objects.filter(
+            owner=user, flat=flat, read_date=read_date
+        ).delete()
+        messages.success(request, "Odczyty z tego dnia zostały usunięte.")
+    return redirect("core:counters")
 
 
 @login_required

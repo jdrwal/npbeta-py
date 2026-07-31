@@ -47,6 +47,11 @@ urlpatterns = [
         name="delete_reading",
     ),
     path("counters/", views.counters, name="counters"),
+    path(
+        "counters/flat/<int:flat_id>/delete-readings/",
+        views.delete_readings_on_date,
+        name="delete_readings_on_date",
+    ),
     path("counters/add/", views.MeterCreate.as_view(), name="add_meter"),
     path("counters/<int:pk>/edit/", views.MeterUpdate.as_view(), name="edit_meter"),
     path("counters/<int:pk>/delete/", views.MeterDelete.as_view(), name="delete_meter"),
