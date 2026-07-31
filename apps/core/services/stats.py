@@ -137,7 +137,8 @@ def monthly_income_series(user: User, months: int = 6) -> list[MonthPoint]:
         MonthPoint(
             label=_PL_MONTH_ABBR[month],
             value=value,
-            pct=int(value / peak * 100) if peak > 0 else 0,
+            # Cap at 90% so the amount label above the tallest bar stays visible.
+            pct=int(value / peak * 90) if peak > 0 else 0,
         )
         for month, value in values
     ]

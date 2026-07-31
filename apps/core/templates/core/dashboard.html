@@ -95,22 +95,31 @@
     <div class="mb-5 flex items-center justify-between">
         <div>
             <div class="text-sm font-semibold text-gray-800">Dochód do opodatkowania</div>
-            <div class="text-xs text-gray-400">ostatnie 6 miesięcy</div>
+            <div class="text-xs text-gray-400">ostatnie 12 miesięcy</div>
         </div>
         <div class="flex items-center gap-1.5 text-xs text-gray-400">
             <span class="inline-block h-2.5 w-2.5 rounded-sm bg-indigo-500"></span> zł / miesiąc
         </div>
     </div>
-    <div class="flex h-44 gap-3">
-        {% for p in income_series %}
-        <div class="group flex flex-1 flex-col">
-            <div class="flex flex-1 flex-col justify-end">
-                <div class="mb-1 text-center text-xs font-semibold text-gray-600">{{ p.value|floatformat:0|intcomma }}</div>
-                <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value|floatformat:2|intcomma }} zł"></div>
+    <div class="flex items-stretch gap-6">
+        <div class="flex flex-1 gap-1.5">
+            {% for p in income_series %}
+            <div class="group flex flex-1 flex-col">
+                <div class="relative flex h-40 items-end">
+                    <div class="w-full rounded-t-md bg-indigo-500 transition-all group-hover:bg-indigo-600" style="height: {{ p.pct }}%" title="{{ p.value|floatformat:2|intcomma }} zł">
+                        <span class="absolute inset-x-0 -top-5 text-center text-[11px] font-semibold text-gray-600">{{ p.value|floatformat:0|intcomma }}</span>
+                    </div>
+                </div>
+                <div class="pt-2 text-center text-xs font-medium text-gray-500">{{ p.label }}</div>
             </div>
-            <div class="pt-2 text-center text-xs font-medium text-gray-500">{{ p.label }}</div>
+            {% endfor %}
         </div>
-        {% endfor %}
+        <div class="flex w-32 shrink-0 flex-col justify-center border-l border-gray-100 pl-5">
+            <div class="text-xs font-medium text-gray-400">Średnia</div>
+            <div class="text-xs text-gray-400">(12 mies.)</div>
+            <div class="mt-1 text-2xl font-bold text-gray-900">{{ income_avg|floatformat:0|intcomma }}</div>
+            <div class="text-xs text-gray-400">zł / miesiąc</div>
+        </div>
     </div>
 </div>
 {% endblock %}

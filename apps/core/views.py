@@ -74,6 +74,13 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         Decimal(0),
     )
 
+    income_series = monthly_income_series(user, months=12)
+    income_avg = (
+        sum((p.value for p in income_series), Decimal(0)) / len(income_series)
+        if income_series
+        else Decimal(0)
+    )
+
     return render(
         request,
         "core/dashboard.html",
@@ -86,7 +93,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "tax_status": tax_status,
             "income_month": income_month,
             "income_ytd": income_ytd,
-            "income_series": monthly_income_series(user, months=6),
+            "income_series": income_series,
+            "income_avg": income_avg,
         },
     )
 
