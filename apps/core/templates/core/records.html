@@ -4,10 +4,10 @@
 {% block content %}
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
         <div>
             <h1>Wpłaty</h1>
-            <p class="mt-1 text-sm text-gray-500">Przychody z najmu w podziale na miesiące</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Przychody z najmu w podziale na miesiące</p>
         </div>
     </div>
     <a href="{% url 'core:add_record' %}" class="btn">
@@ -16,14 +16,14 @@
     </a>
 </div>
 
-<div class="mb-6 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+<div class="mb-6 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-800 dark:bg-gray-900">
     <a href="?year={{ prev.year }}&month={{ prev.month }}{% if selected_flat_id %}&flat={{ selected_flat_id }}{% endif %}" class="btn-ghost">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         Poprzedni
     </a>
     <div class="text-center">
-        <p class="text-lg font-semibold text-gray-900">{{ month_label }} {{ year }}</p>
-        <p class="text-xs text-gray-400">{{ period_start|date:"Y.m.d" }} – {{ period_end|date:"Y.m.d" }}</p>
+        <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ month_label }} {{ year }}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500">{{ period_start|date:"Y.m.d" }} – {{ period_end|date:"Y.m.d" }}</p>
     </div>
     <a href="?year={{ next.year }}&month={{ next.month }}{% if selected_flat_id %}&flat={{ selected_flat_id }}{% endif %}" class="btn-ghost">
         Następny
@@ -34,14 +34,14 @@
 {% if flats %}
 <div class="mb-6 flex flex-wrap gap-2">
     <a href="?year={{ year }}&month={{ month }}"
-       class="rounded-lg border px-4 py-2 text-sm font-semibold transition-colors {% if not selected_flat_id %}border-indigo-500 bg-indigo-50 text-indigo-700{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800{% endif %}">
+       class="rounded-lg border px-4 py-2 text-sm font-semibold transition-colors {% if not selected_flat_id %}border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white{% endif %}">
         Wszystkie
     </a>
     {% for f in flats %}
     <a href="?year={{ year }}&month={{ month }}&flat={{ f.pk }}"
-       class="rounded-lg border px-4 py-2 text-left text-sm leading-tight transition-colors {% if selected_flat_id == f.pk %}border-indigo-500 bg-indigo-50 text-indigo-700{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800{% endif %}">
+       class="rounded-lg border px-4 py-2 text-left text-sm leading-tight transition-colors {% if selected_flat_id == f.pk %}border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white{% endif %}">
         <span class="font-semibold">{{ f.street }} {{ f.building_no }}{% if f.flat_no %}/{{ f.flat_no }}{% endif %}</span>
-        <span class="block text-xs text-gray-400">{{ f.code }} {{ f.city }}</span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ f.code }} {{ f.city }}</span>
     </a>
     {% endfor %}
 </div>
@@ -49,34 +49,34 @@
 
 <section class="mb-8">
     <h2 class="mb-3">Podsumowanie</h2>
-    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <table class="w-full border-collapse text-right text-sm">
             <thead>
-                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500">
+                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                     <th class="px-3 py-2 text-left">Inwestycja</th>
-                    <th class="border-l border-gray-200 px-3 py-2">Przychód</th>
-                    <th class="border-l border-gray-200 px-3 py-2">Ryczałt</th>
-                    <th class="border-l border-gray-200 px-3 py-2">Wynik</th>
+                    <th class="border-l border-gray-200 px-3 py-2 dark:border-gray-700">Przychód</th>
+                    <th class="border-l border-gray-200 px-3 py-2 dark:border-gray-700">Ryczałt</th>
+                    <th class="border-l border-gray-200 px-3 py-2 dark:border-gray-700">Wynik</th>
                 </tr>
             </thead>
-            <tbody class="text-gray-700">
+            <tbody class="text-gray-700 dark:text-gray-300">
                 {% for r in summary_rows %}
-                <tr class="border-t border-gray-200">
-                    <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800">{{ r.flat }}</td>
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono">{{ r.income|floatformat:2|intcomma }} zł</td>
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono text-gray-500">{{ r.ryczalt|floatformat:2|intcomma }} zł</td>
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono text-gray-800">{{ r.wynik|floatformat:2|intcomma }} zł</td>
+                <tr class="border-t border-gray-200 dark:border-gray-800">
+                    <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800 dark:text-gray-100">{{ r.flat }}</td>
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono dark:border-gray-700">{{ r.income|floatformat:2|intcomma }} zł</td>
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono text-gray-500 dark:border-gray-700 dark:text-gray-400">{{ r.ryczalt|floatformat:2|intcomma }} zł</td>
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono text-gray-800 dark:border-gray-700 dark:text-gray-100">{{ r.wynik|floatformat:2|intcomma }} zł</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" class="px-3 py-6 text-center text-gray-400">Brak wpisów w tym miesiącu.</td></tr>
+                <tr><td colspan="4" class="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Brak wpisów w tym miesiącu.</td></tr>
                 {% endfor %}
                 {% if summary_rows %}
-                <tr class="border-t-2 border-gray-300 bg-gray-100/70 font-semibold text-gray-900">
+                <tr class="border-t-2 border-gray-300 bg-gray-100/70 font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-800/60 dark:text-white">
                     <td class="px-3 py-2.5 text-left">SUMA</td>
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono">{{ totals.income|floatformat:2|intcomma }} zł</td>
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono text-gray-600">{{ totals.ryczalt|floatformat:2|intcomma }} zł</td>
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono">
-                        <span class="flex items-center justify-end gap-1 {% if totals.wynik >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono dark:border-gray-700">{{ totals.income|floatformat:2|intcomma }} zł</td>
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono text-gray-600 dark:border-gray-700 dark:text-gray-300">{{ totals.ryczalt|floatformat:2|intcomma }} zł</td>
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono dark:border-gray-700">
+                        <span class="flex items-center justify-end gap-1 {% if totals.wynik >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
                             {{ totals.wynik|floatformat:2|intcomma }} zł
                             {% if totals.wynik >= 0 %}
                             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -94,10 +94,10 @@
 
 <section>
     <h2 class="mb-3">Czynsz Najmu</h2>
-    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <table class="w-full border-collapse text-right text-sm">
             <thead>
-                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500">
+                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                     <th class="px-3 py-2 text-left">Data wpłaty</th>
                     <th class="px-3 py-2 text-left">Opis</th>
                     <th class="px-3 py-2 text-left">Numer umowy</th>
@@ -106,56 +106,58 @@
                     <th class="px-2 py-2"></th>
                 </tr>
             </thead>
-            <tbody class="text-gray-700">
+            <tbody class="text-gray-700 dark:text-gray-300">
                 {% for e in rent_entries %}
-                <tr class="border-t border-gray-100 hover:bg-indigo-50/40">
-                    <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800">{{ e.record_date|date:"Y-m-d" }}</td>
-                    <td class="px-3 py-2 text-left">{{ e.short_desc }}{% if e.is_mortgage %} <span class="pill bg-amber-50 text-amber-600">kredyt</span>{% endif %}</td>
+                <tr class="border-t border-gray-100 hover:bg-indigo-50/40 dark:border-gray-800 dark:hover:bg-indigo-500/10">
+                    <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800 dark:text-gray-100">{{ e.record_date|date:"Y-m-d" }}</td>
+                    <td class="px-3 py-2 text-left">{{ e.short_desc }}{% if e.is_mortgage %} <span class="pill bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300">kredyt</span>{% endif %}</td>
                     <td class="px-3 py-2 text-left">
                         {% if e.contract %}
-                        <span class="font-medium text-gray-800">{{ e.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400">{{ e.contract.tenant_name }}</span>
-                        {% else %}<span class="text-gray-300">—</span>{% endif %}
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ e.contract.contract_number }}</span>
+                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.contract.tenant_name }}</span>
+                        {% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     <td class="px-3 py-2 text-left">
-                        <span class="text-gray-700">{{ e.flat }}</span>
-                        {% if e.room %}<span class="block text-xs text-gray-400">{{ e.room.name|default:e.room.room_no }}</span>{% endif %}
+                        <span class="text-gray-700 dark:text-gray-300">{{ e.flat }}</span>
+                        {% if e.room %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.room.name|default:e.room.room_no }}</span>{% endif %}
                     </td>
                     <td class="whitespace-nowrap px-3 py-2 font-mono">{{ e.amount_in_taxable|default_if_none:0|floatformat:2|intcomma }} zł</td>
                     <td class="whitespace-nowrap px-2 py-2 text-center">
-                        <a href="{% url 'core:edit_record' e.pk %}" class="text-gray-400 hover:text-indigo-600" title="Edytuj">
-                            <svg class="inline h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                        </a>
-                        <a href="{% url 'core:delete_record' e.pk %}" class="ml-1 text-gray-400 hover:text-rose-600" title="Usuń">
-                            <svg class="inline h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                        </a>
+                        <div class="inline-flex items-center justify-center gap-1.5">
+                            <a href="{% url 'core:edit_record' e.pk %}" class="act !px-1.5 !py-1" title="Edytuj">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            </a>
+                            <a href="{% url 'core:delete_record' e.pk %}" class="act act-danger !px-1.5 !py-1" title="Usuń">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
 
                 {% for f in forecast_rows %}
-                <tr class="border-t border-gray-100 bg-amber-50/50">
-                    <td class="whitespace-nowrap px-3 py-2 text-left text-gray-300">—</td>
-                    <td class="px-3 py-2 text-left">Czynsz Najmu <span class="pill bg-amber-100 text-amber-700">oczekiwane</span></td>
+                <tr class="border-t border-gray-100 bg-amber-50/50 dark:border-gray-800 dark:bg-amber-500/10">
+                    <td class="whitespace-nowrap px-3 py-2 text-left text-gray-300 dark:text-gray-600">—</td>
+                    <td class="px-3 py-2 text-left">Czynsz Najmu <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">oczekiwane</span></td>
                     <td class="px-3 py-2 text-left">
-                        <span class="font-medium text-gray-800">{{ f.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400">{{ f.contract.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ f.contract.contract_number }}</span>
+                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ f.contract.tenant_name }}</span>
                     </td>
                     <td class="px-3 py-2 text-left">
-                        <span class="text-gray-700">{{ f.contract.flat }}</span>
-                        {% if f.contract.room %}<span class="block text-xs text-gray-400">{{ f.contract.room.name|default:f.contract.room.room_no }}</span>{% endif %}
+                        <span class="text-gray-700 dark:text-gray-300">{{ f.contract.flat }}</span>
+                        {% if f.contract.room %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ f.contract.room.name|default:f.contract.room.room_no }}</span>{% endif %}
                     </td>
-                    <td class="whitespace-nowrap px-3 py-2 font-mono font-medium text-amber-700">{{ f.amount|floatformat:2|intcomma }} zł</td>
+                    <td class="whitespace-nowrap px-3 py-2 font-mono font-medium text-amber-700 dark:text-amber-300">{{ f.amount|floatformat:2|intcomma }} zł</td>
                     <td class="whitespace-nowrap px-2 py-2 text-center">
-                        <div class="inline-flex items-center gap-1.5">
+                        <div class="inline-flex items-center justify-center gap-1.5">
                             <a href="{% url 'core:add_record' %}?flat={{ f.contract.flat_id }}&room={{ f.contract.room_id }}&contract={{ f.contract.pk }}&billing_period={{ f.record_date|date:'Y-m' }}&amount_in_taxable={{ f.amount }}&short_desc={{ 'Czynsz Najmu'|urlencode }}"
-                               class="text-emerald-600 hover:text-emerald-700" title="Zatwierdź płatność — uzupełnij wpis">
-                                <svg class="inline h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                               class="act !px-1.5 !py-1" title="Zatwierdź płatność — uzupełnij wpis">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
                             </a>
                             {% if f.status == "EXC" %}
-                            <span title="Dług — po zakończeniu okresu"><svg class="h-4 w-4 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span>
+                            <span title="Dług — po zakończeniu okresu"><svg class="h-4 w-4 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span>
                             {% elif f.status == "RED" %}
-                            <span title="Termin przekroczony!"><svg class="h-3 w-3 text-rose-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
+                            <span title="Termin przekroczony!"><svg class="h-3 w-3 text-rose-500 dark:text-rose-400" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
                             {% elif f.status == "AMB" %}
                             <span title="Na granicy terminu"><svg class="h-3 w-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
                             {% elif f.status == "GRN" %}
@@ -167,7 +169,7 @@
                 {% endfor %}
 
                 {% if not rent_entries and not forecast_rows %}
-                <tr><td colspan="6" class="px-3 py-6 text-center text-gray-400">Brak operacji w tym miesiącu.</td></tr>
+                <tr><td colspan="6" class="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Brak operacji w tym miesiącu.</td></tr>
                 {% endif %}
             </tbody>
         </table>
@@ -175,11 +177,11 @@
 </section>
 
 <section class="mt-8">
-    <h2 class="mb-3">Pozostałe opłaty <span class="text-sm font-normal text-gray-400">— rozliczenie za {{ fee_period_label }}</span></h2>
-    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+    <h2 class="mb-3">Pozostałe opłaty <span class="text-sm font-normal text-gray-400 dark:text-gray-500">— rozliczenie za {{ fee_period_label }}</span></h2>
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <table class="w-full border-collapse text-right text-sm">
             <thead>
-                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500">
+                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                     <th class="px-3 py-2 text-left">Data wpłaty</th>
                     <th class="px-3 py-2 text-left">Opis</th>
                     <th class="px-3 py-2 text-left">Numer umowy</th>
@@ -188,63 +190,65 @@
                     <th class="px-2 py-2"></th>
                 </tr>
             </thead>
-            <tbody class="text-gray-700">
+            <tbody class="text-gray-700 dark:text-gray-300">
                 {% for e in fee_entries %}
-                <tr class="border-t border-gray-100 hover:bg-indigo-50/40">
-                    <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800">{{ e.record_date|date:"Y-m-d" }}</td>
+                <tr class="border-t border-gray-100 hover:bg-indigo-50/40 dark:border-gray-800 dark:hover:bg-indigo-500/10">
+                    <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800 dark:text-gray-100">{{ e.record_date|date:"Y-m-d" }}</td>
                     <td class="px-3 py-2 text-left">{{ e.short_desc }}</td>
                     <td class="px-3 py-2 text-left">
                         {% if e.contract %}
-                        <span class="font-medium text-gray-800">{{ e.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400">{{ e.contract.tenant_name }}</span>
-                        {% else %}<span class="text-gray-300">—</span>{% endif %}
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ e.contract.contract_number }}</span>
+                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.contract.tenant_name }}</span>
+                        {% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     <td class="px-3 py-2 text-left">
-                        <span class="text-gray-700">{{ e.flat }}</span>
-                        {% if e.room %}<span class="block text-xs text-gray-400">{{ e.room.name|default:e.room.room_no }}</span>{% endif %}
+                        <span class="text-gray-700 dark:text-gray-300">{{ e.flat }}</span>
+                        {% if e.room %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.room.name|default:e.room.room_no }}</span>{% endif %}
                     </td>
                     <td class="whitespace-nowrap px-3 py-2 font-mono">{{ e.amount_in_taxable|default_if_none:0|floatformat:2|intcomma }} zł</td>
                     <td class="whitespace-nowrap px-2 py-2 text-center">
-                        <a href="{% url 'core:edit_record' e.pk %}" class="text-gray-400 hover:text-indigo-600" title="Edytuj">
-                            <svg class="inline h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                        </a>
-                        <a href="{% url 'core:delete_record' e.pk %}" class="ml-1 text-gray-400 hover:text-rose-600" title="Usuń">
-                            <svg class="inline h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                        </a>
+                        <div class="inline-flex items-center justify-center gap-1.5">
+                            <a href="{% url 'core:edit_record' e.pk %}" class="act !px-1.5 !py-1" title="Edytuj">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            </a>
+                            <a href="{% url 'core:delete_record' e.pk %}" class="act act-danger !px-1.5 !py-1" title="Usuń">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
 
                 {% for r in fee_rows %}
-                <tr class="border-t border-gray-100 bg-amber-50/50">
-                    <td class="whitespace-nowrap px-3 py-2 text-left text-gray-300">—</td>
-                    <td class="px-3 py-2 text-left">Pozostałe opłaty <span class="pill bg-amber-100 text-amber-700">do zatwierdzenia</span></td>
+                <tr class="border-t border-gray-100 bg-amber-50/50 dark:border-gray-800 dark:bg-amber-500/10">
+                    <td class="whitespace-nowrap px-3 py-2 text-left text-gray-300 dark:text-gray-600">—</td>
+                    <td class="px-3 py-2 text-left">Pozostałe opłaty <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">do zatwierdzenia</span></td>
                     <td class="px-3 py-2 text-left">
                         {% if r.contract %}
-                        <span class="font-medium text-gray-800">{{ r.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400">{{ r.contract.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ r.contract.contract_number }}</span>
+                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ r.contract.tenant_name }}</span>
                         {% else %}
-                        <span class="font-medium text-gray-800">{{ r.tenant.contract_number|default:'—' }}</span>
-                        <span class="block text-xs text-gray-400">{{ r.tenant.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ r.tenant.contract_number|default:'—' }}</span>
+                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ r.tenant.tenant_name }}</span>
                         {% endif %}
                     </td>
                     <td class="px-3 py-2 text-left">
-                        <span class="text-gray-700">{{ r.flat }}</span>
+                        <span class="text-gray-700 dark:text-gray-300">{{ r.flat }}</span>
                     </td>
-                    <td class="whitespace-nowrap px-3 py-2 font-mono font-medium text-amber-700">{{ r.amount|floatformat:2|intcomma }} zł</td>
+                    <td class="whitespace-nowrap px-3 py-2 font-mono font-medium text-amber-700 dark:text-amber-300">{{ r.amount|floatformat:2|intcomma }} zł</td>
                     <td class="whitespace-nowrap px-2 py-2 text-center">
                         <a href="{% url 'core:add_record' %}?flat={{ r.flat.pk }}{% if r.contract %}&contract={{ r.contract.pk }}&room={{ r.contract.room_id }}{% endif %}&billing_period={{ billing_ym }}&amount_in_taxable={{ r.amount }}&short_desc={{ 'Pozostałe opłaty'|urlencode }}&kind=fee"
-                           class="text-emerald-600 hover:text-emerald-700" title="Zatwierdź opłatę — uzupełnij wpis">
-                            <svg class="inline h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                           class="act !px-1.5 !py-1" title="Zatwierdź opłatę — uzupełnij wpis">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
                         </a>
                     </td>
                 </tr>
                 {% endfor %}
 
                 {% if not fee_entries and not fee_rows %}
-                <tr><td colspan="6" class="px-3 py-6 text-center text-gray-400">
+                <tr><td colspan="6" class="px-3 py-6 text-center text-gray-400 dark:text-gray-500">
                     Brak naliczonych opłat za {{ fee_period_label }}.
-                    <a href="{% url 'core:run_settlement' %}" class="font-medium text-indigo-600 hover:underline">Nalicz opłaty →</a>
+                    <a href="{% url 'core:run_settlement' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">Nalicz opłaty →</a>
                 </td></tr>
                 {% endif %}
             </tbody>

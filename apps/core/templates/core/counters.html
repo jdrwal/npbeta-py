@@ -4,10 +4,10 @@
 {% block content %}
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14 8 10"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5"/></svg></span>
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14 8 10"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5"/></svg></span>
         <div>
             <h1>Liczniki</h1>
-            <p class="mt-1 text-sm text-gray-500">Odczyty, zużycie i koszty mediów w podziale na mieszkania</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Odczyty, zużycie i koszty mediów w podziale na mieszkania</p>
         </div>
     </div>
     <div class="flex gap-2">
@@ -22,68 +22,68 @@
 <div class="mb-5 flex flex-wrap gap-2" role="tablist">
     {% for f in flats %}
     <button type="button" data-tab="flat-{{ f.flat.pk }}"
-            class="tab-btn rounded-lg border px-4 py-2 text-left text-sm leading-tight transition-colors {% if forloop.first %}border-indigo-500 bg-indigo-50 text-indigo-700{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800{% endif %}">
+            class="tab-btn rounded-lg border px-4 py-2 text-left text-sm leading-tight transition-colors {% if forloop.first %}border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white{% endif %}">
         <span class="font-semibold">{{ f.flat.street }} {{ f.flat.building_no }}{% if f.flat.flat_no %}/{{ f.flat.flat_no }}{% endif %}</span>
-        <span class="block text-xs text-gray-400">{{ f.flat.code }} {{ f.flat.city }}</span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ f.flat.code }} {{ f.flat.city }}</span>
     </button>
     {% endfor %}
 </div>
 
 {% for f in flats %}
 <section id="flat-{{ f.flat.pk }}" class="tab-panel {% if not forloop.first %}hidden{% endif %}">
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table class="w-full table-fixed border-collapse text-right text-sm">
             <thead>
-                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500">
-                    <th class="w-28 border-b border-gray-200 px-3 py-2 text-left">Data</th>
-                    <th class="w-20 border-b border-l border-gray-200 px-3 py-2 text-left"></th>
-                    {% for m in f.meters %}<th class="border-b border-l border-gray-200 px-3 py-2 text-right">{{ m.name }}</th>{% endfor %}
-                    <th class="w-24 border-b border-l border-gray-200 px-3 py-2 text-right">Suma</th>
-                    <th class="w-12 border-b border-l border-gray-200 px-1 py-2"></th>
+                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <th class="w-28 border-b border-gray-200 px-3 py-2 text-left dark:border-gray-700">Data</th>
+                    <th class="w-20 border-b border-l border-gray-200 px-3 py-2 text-left dark:border-gray-700"></th>
+                    {% for m in f.meters %}<th class="border-b border-l border-gray-200 px-3 py-2 text-right dark:border-gray-700">{{ m.name }}</th>{% endfor %}
+                    <th class="w-24 border-b border-l border-gray-200 px-3 py-2 text-right dark:border-gray-700">Suma</th>
+                    <th class="w-12 border-b border-l border-gray-200 px-1 py-2 dark:border-gray-700"></th>
                 </tr>
             </thead>
-            <tbody class="font-mono text-xs text-gray-700">
+            <tbody class="font-mono text-xs text-gray-700 dark:text-gray-300">
                 {% for row in f.rows %}
-                <tr class="border-t-2 border-gray-200 hover:bg-indigo-50/40">
-                    <th rowspan="3" scope="rowgroup" class="whitespace-nowrap border-t-2 border-gray-200 px-3 py-2 text-left align-top font-semibold text-gray-800">{{ row.date|date:"Y-m-d" }}</th>
-                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400">Odczyt</td>
+                <tr class="border-t-2 border-gray-200 hover:bg-indigo-50/40 dark:border-gray-800 dark:hover:bg-indigo-500/10">
+                    <th rowspan="3" scope="rowgroup" class="whitespace-nowrap border-t-2 border-gray-200 px-3 py-2 text-left align-top font-semibold text-gray-800 dark:border-gray-800 dark:text-gray-100">{{ row.date|date:"Y-m-d" }}</th>
+                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400 dark:border-gray-700 dark:text-gray-500">Odczyt</td>
                     {% for c in row.cells %}
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5">
-                        {% if c.reading is not None %}{{ c.reading|floatformat:3|intcomma }} <span class="text-gray-400">{{ c.unit }}</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5 dark:border-gray-700">
+                        {% if c.reading is not None %}{{ c.reading|floatformat:3|intcomma }} <span class="text-gray-400 dark:text-gray-500">{{ c.unit }}</span>{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     {% endfor %}
-                    <td rowspan="3" class="whitespace-nowrap border-l border-gray-200 px-3 py-2 align-middle font-semibold text-gray-900">
-                        {% if row.total is not None %}{{ row.total|floatformat:2|intcomma }} <span class="text-gray-400">zł</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    <td rowspan="3" class="whitespace-nowrap border-l border-gray-200 px-3 py-2 align-middle font-semibold text-gray-900 dark:border-gray-700 dark:text-white">
+                        {% if row.total is not None %}{{ row.total|floatformat:2|intcomma }} <span class="text-gray-400 dark:text-gray-500">zł</span>{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
-                    <td rowspan="3" class="border-l border-gray-200 px-1 py-2 text-center align-middle">
+                    <td rowspan="3" class="border-l border-gray-200 px-1 py-2 text-center align-middle dark:border-gray-700">
                         <form method="post" action="{% url 'core:delete_readings_on_date' f.flat.pk %}"
                               onsubmit="return confirm('Usunąć wszystkie odczyty z dnia {{ row.date|date:'Y-m-d' }}?');">
                             {% csrf_token %}
                             <input type="hidden" name="date" value="{{ row.date|date:'Y-m-d' }}">
-                            <button type="submit" class="mx-auto grid h-8 w-8 place-items-center !rounded-lg !bg-transparent !p-0 !text-rose-500 !shadow-none transition hover:!bg-rose-50 hover:!text-rose-700" title="Usuń odczyty z tego dnia">
+                            <button type="submit" class="act act-danger !px-1.5 !py-1" title="Usuń odczyty z tego dnia" aria-label="Usuń odczyty z tego dnia">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
                             </button>
                         </form>
                     </td>
                 </tr>
-                <tr class="hover:bg-indigo-50/40">
-                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400">Zużycie</td>
+                <tr class="hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400 dark:border-gray-700 dark:text-gray-500">Zużycie</td>
                     {% for c in row.cells %}
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5">
-                        {% if c.usage is not None %}{{ c.usage|floatformat:3|intcomma }} <span class="text-gray-400">{{ c.unit }}</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5 dark:border-gray-700">
+                        {% if c.usage is not None %}{{ c.usage|floatformat:3|intcomma }} <span class="text-gray-400 dark:text-gray-500">{{ c.unit }}</span>{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     {% endfor %}
                 </tr>
-                <tr class="hover:bg-indigo-50/40">
-                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400">Koszt</td>
+                <tr class="hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                    <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400 dark:border-gray-700 dark:text-gray-500">Koszt</td>
                     {% for c in row.cells %}
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5">
-                        {% if c.cost is not None %}{{ c.cost|floatformat:2|intcomma }} <span class="text-gray-400">zł</span>{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5 dark:border-gray-700">
+                        {% if c.cost is not None %}{{ c.cost|floatformat:2|intcomma }} <span class="text-gray-400 dark:text-gray-500">zł</span>{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     {% endfor %}
                 </tr>
                 {% empty %}
-                <tr><td colspan="99" class="px-3 py-6 text-center text-gray-400">Brak odczytów dla tego mieszkania.</td></tr>
+                <tr><td colspan="99" class="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Brak odczytów dla tego mieszkania.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -100,18 +100,18 @@
                 panels.forEach(p => p.classList.add('hidden'));
                 document.getElementById(btn.dataset.tab).classList.remove('hidden');
                 buttons.forEach(function (b) {
-                    b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
-                    b.classList.add('border-gray-200', 'bg-white', 'text-gray-600');
+                    b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:border-indigo-500/60', 'dark:bg-indigo-500/15', 'dark:text-indigo-300');
+                    b.classList.add('border-gray-200', 'bg-white', 'text-gray-600', 'dark:border-gray-700', 'dark:bg-gray-900', 'dark:text-gray-300');
                 });
-                btn.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
-                btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-600');
+                btn.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:border-indigo-500/60', 'dark:bg-indigo-500/15', 'dark:text-indigo-300');
+                btn.classList.remove('border-gray-200', 'bg-white', 'text-gray-600', 'dark:border-gray-700', 'dark:bg-gray-900', 'dark:text-gray-300');
             });
         });
     })();
 </script>
 {% else %}
-<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-    <p class="text-gray-500">Brak liczników. Dodaj mieszkanie i licznik, aby rozpocząć.</p>
+<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
+    <p class="text-gray-500 dark:text-gray-400">Brak liczników. Dodaj mieszkanie i licznik, aby rozpocząć.</p>
     <a href="{% url 'core:add_meter' %}" class="btn mt-4">Dodaj licznik</a>
 </div>
 {% endif %}

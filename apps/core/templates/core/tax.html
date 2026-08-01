@@ -73,7 +73,10 @@
                         <span class="pill bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">niezapłacony</span>
                         <form method="post" action="{% url 'core:confirm_tax_payment' m.year m.month %}" class="inline-flex">
                             {% csrf_token %}
-                            <button type="submit" class="btn !px-2.5 !py-1 !text-xs" title="Zapisz zapłatę podatku">Zatwierdź</button>
+                            <button type="submit" class="act" title="Zapisz zapłatę podatku">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Zatwierdź
+                            </button>
                         </form>
                     </div>
                     {% endif %}

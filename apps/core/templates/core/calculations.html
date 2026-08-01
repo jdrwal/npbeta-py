@@ -3,10 +3,10 @@
 {% block content %}
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2M8 18h2M14 18h2"/></svg></span>
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2M8 18h2M14 18h2"/></svg></span>
         <div>
             <h1>Rozliczenia mediów</h1>
-            <p class="mt-1 text-sm text-gray-500">Zapisane rozliczenia zużycia i kosztów w podziale na mieszkania</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Zapisane rozliczenia zużycia i kosztów w podziale na mieszkania</p>
         </div>
     </div>
     <div class="flex gap-2">
@@ -24,14 +24,14 @@
 {% if calculations %}
 <div class="mb-5 flex flex-wrap gap-2" role="tablist">
     <button type="button" data-flat="all"
-            class="flat-filter rounded-lg border px-4 py-2 text-sm font-semibold transition-colors border-indigo-500 bg-indigo-50 text-indigo-700">
+            class="flat-filter rounded-lg border px-4 py-2 text-sm font-semibold transition-colors border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300">
         Wszystkie
     </button>
     {% for f in flats %}
     <button type="button" data-flat="{{ f.pk }}"
-            class="flat-filter rounded-lg border px-4 py-2 text-left text-sm leading-tight transition-colors border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800">
+            class="flat-filter rounded-lg border px-4 py-2 text-left text-sm leading-tight transition-colors border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white">
         <span class="font-semibold">{{ f.street }} {{ f.building_no }}{% if f.flat_no %}/{{ f.flat_no }}{% endif %}</span>
-        <span class="block text-xs text-gray-400">{{ f.code }} {{ f.city }}</span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ f.code }} {{ f.city }}</span>
     </button>
     {% endfor %}
 </div>
@@ -39,27 +39,27 @@
 <div id="calc-list" class="space-y-2">
     {% for c in calculations %}
     <a href="{% url 'core:calculation_detail' c.pk %}" data-flat="{{ c.flat_id }}"
-       class="calc-card group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition hover:border-indigo-300 hover:shadow-md">
+       class="calc-card group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-500/50">
         <div class="w-52 shrink-0">
-            <p class="truncate font-semibold text-gray-900">{{ c.flat.street }} {{ c.flat.building_no }}{% if c.flat.flat_no %}/{{ c.flat.flat_no }}{% endif %}</p>
-            <p class="truncate text-xs text-gray-400">{{ c.flat.code }} {{ c.flat.city }}</p>
+            <p class="truncate font-semibold text-gray-900 dark:text-white">{{ c.flat.street }} {{ c.flat.building_no }}{% if c.flat.flat_no %}/{{ c.flat.flat_no }}{% endif %}</p>
+            <p class="truncate text-xs text-gray-400 dark:text-gray-500">{{ c.flat.code }} {{ c.flat.city }}</p>
         </div>
-        <div class="flex w-[22rem] shrink-0 items-center gap-2 text-sm text-gray-800">
-            <svg class="h-4 w-4 shrink-0 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <span class="whitespace-nowrap"><span class="font-medium">{{ c.period_label }}</span> <span class="text-gray-400">({{ c.period_start|date:"d.m.Y" }} → {{ c.period_end|date:"d.m.Y" }})</span></span>
+        <div class="flex w-[22rem] shrink-0 items-center gap-2 text-sm text-gray-800 dark:text-gray-100">
+            <svg class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span class="whitespace-nowrap"><span class="font-medium">{{ c.period_label }}</span> <span class="text-gray-400 dark:text-gray-500">({{ c.period_start|date:"d.m.Y" }} → {{ c.period_end|date:"d.m.Y" }})</span></span>
         </div>
-        <div class="hidden w-44 shrink-0 text-xs text-gray-400 md:block">Obliczono {{ c.stamp|date:"Y-m-d H:i" }}</div>
-        <span class="pill shrink-0 gap-1 bg-indigo-50 text-indigo-600">{{ c.tenants_count }}
+        <div class="hidden w-44 shrink-0 text-xs text-gray-400 md:block dark:text-gray-500">Obliczono {{ c.stamp|date:"Y-m-d H:i" }}</div>
+        <span class="pill shrink-0 gap-1 bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">{{ c.tenants_count }}
             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </span>
-        <div class="flex items-center gap-1 text-sm font-medium text-indigo-600 group-hover:text-indigo-700 sm:ml-auto">
+        <div class="flex items-center gap-1 text-sm font-medium text-indigo-600 group-hover:text-indigo-700 sm:ml-auto dark:text-indigo-400">
             Szczegóły
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </div>
     </a>
     {% endfor %}
 </div>
-<div id="calc-empty-filter" class="hidden rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500">
+<div id="calc-empty-filter" class="hidden rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
     Brak rozliczeń dla wybranego mieszkania.
 </div>
 
@@ -70,11 +70,11 @@
         const empty = document.getElementById('calc-empty-filter');
         function setActive(active) {
             buttons.forEach(function (b) {
-                b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
-                b.classList.add('border-gray-200', 'bg-white', 'text-gray-600');
+                b.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:border-indigo-500/60', 'dark:bg-indigo-500/15', 'dark:text-indigo-300');
+                b.classList.add('border-gray-200', 'bg-white', 'text-gray-600', 'dark:border-gray-700', 'dark:bg-gray-900', 'dark:text-gray-300');
             });
-            active.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
-            active.classList.remove('border-gray-200', 'bg-white', 'text-gray-600');
+            active.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:border-indigo-500/60', 'dark:bg-indigo-500/15', 'dark:text-indigo-300');
+            active.classList.remove('border-gray-200', 'bg-white', 'text-gray-600', 'dark:border-gray-700', 'dark:bg-gray-900', 'dark:text-gray-300');
         }
         function apply(flat) {
             let visible = 0;
@@ -94,8 +94,8 @@
     })();
 </script>
 {% else %}
-<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-    <p class="text-gray-500">Brak rozliczeń. Utwórz nowe rozliczenie, aby rozpocząć.</p>
+<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
+    <p class="text-gray-500 dark:text-gray-400">Brak rozliczeń. Utwórz nowe rozliczenie, aby rozpocząć.</p>
     <a href="{% url 'core:run_settlement' %}" class="btn mt-4">Nowe rozliczenie</a>
 </div>
 {% endif %}

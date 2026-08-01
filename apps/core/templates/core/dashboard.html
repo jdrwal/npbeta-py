@@ -3,32 +3,32 @@
 {% block title %}Pulpit — npbeta{% endblock %}
 {% block content %}
 <div class="mb-6 flex items-center gap-3">
-    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span>
     <div>
         <h1>Pulpit</h1>
-        <p class="text-sm text-gray-500">Przegląd Twojego portfela najmu</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Przegląd Twojego portfela najmu</p>
     </div>
 </div>
 
 {% if has_arrears %}
-<div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-5">
+<div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-500/30 dark:bg-rose-500/10">
     <div class="flex items-start gap-3">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
         </span>
         <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 class="text-base font-semibold text-rose-800">Zaległości do uregulowania</h2>
-                <span class="font-mono text-sm font-semibold text-rose-700">{{ arrears_total|floatformat:2|intcomma }} zł</span>
+                <h2 class="text-base font-semibold text-rose-800 dark:text-rose-200">Zaległości do uregulowania</h2>
+                <span class="font-mono text-sm font-semibold text-rose-700 dark:text-rose-300">{{ arrears_total|floatformat:2|intcomma }} zł</span>
             </div>
             <div class="mt-3 grid gap-5 md:grid-cols-2">
                 {% if tax_arrears %}
                 <div>
-                    <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-rose-700">Niezapłacony podatek · {{ tax_arrears_total|intcomma }} zł</div>
-                    <ul class="space-y-1 text-sm text-gray-700">
+                    <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Niezapłacony podatek · {{ tax_arrears_total|intcomma }} zł</div>
+                    <ul class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                         {% for m in tax_arrears %}
                         <li class="flex items-center justify-between gap-3">
-                            <span>{{ m.month|stringformat:"02d" }}/{{ m.year }} <span class="text-xs text-gray-400">termin {{ m.deadline|date:"Y-m-d" }}</span></span>
+                            <span>{{ m.month|stringformat:"02d" }}/{{ m.year }} <span class="text-xs text-gray-400 dark:text-gray-500">termin {{ m.deadline|date:"Y-m-d" }}</span></span>
                             <span class="font-mono font-medium">{{ m.tax|intcomma }} zł</span>
                         </li>
                         {% endfor %}
@@ -37,24 +37,24 @@
                 {% endif %}
                 {% if rent_arrears %}
                 <div>
-                    <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-rose-700">Zaległe wpłaty czynszu · {{ rent_arrears_total|floatformat:2|intcomma }} zł</div>
-                    <ul class="space-y-1 text-sm text-gray-700">
+                    <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300">Zaległe wpłaty czynszu · {{ rent_arrears_total|floatformat:2|intcomma }} zł</div>
+                    <ul class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
                         {% for i in rent_arrears|slice:":8" %}
                         <li class="flex items-center justify-between gap-3">
-                            <span>{{ i.contract.tenant_name }} <span class="text-xs text-gray-400">{{ i.period }} · {{ i.contract.flat.street }} {{ i.contract.flat.building_no }}</span></span>
+                            <span>{{ i.contract.tenant_name }} <span class="text-xs text-gray-400 dark:text-gray-500">{{ i.period }} · {{ i.contract.flat.street }} {{ i.contract.flat.building_no }}</span></span>
                             <span class="font-mono font-medium">{{ i.amount|floatformat:2|intcomma }} zł</span>
                         </li>
                         {% endfor %}
                         {% if rent_arrears|length > 8 %}
-                        <li class="text-xs text-gray-400">…i {{ rent_arrears|length|add:"-8" }} więcej</li>
+                        <li class="text-xs text-gray-400 dark:text-gray-500">…i {{ rent_arrears|length|add:"-8" }} więcej</li>
                         {% endif %}
                     </ul>
                 </div>
                 {% endif %}
             </div>
             <div class="mt-4 flex flex-wrap gap-4 text-sm">
-                <a href="{% url 'core:tax' %}" class="font-medium text-rose-700 hover:underline">Przejdź do podatku →</a>
-                <a href="{% url 'core:records' %}" class="font-medium text-rose-700 hover:underline">Przejdź do wpłat →</a>
+                <a href="{% url 'core:tax' %}" class="font-medium text-rose-700 hover:underline dark:text-rose-300">Przejdź do podatku →</a>
+                <a href="{% url 'core:records' %}" class="font-medium text-rose-700 hover:underline dark:text-rose-300">Przejdź do wpłat →</a>
             </div>
         </div>
     </div>
@@ -63,81 +63,81 @@
 
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:grid-flow-col lg:grid-rows-2">
     <div class="card flex items-start gap-4">
-        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600">
+        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Mieszkania</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.flats }}</div>
-            <div class="text-xs text-gray-400">nieruchomości</div>
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Mieszkania</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.flats }}</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">nieruchomości</div>
         </div>
     </div>
 
     <div class="card flex items-start gap-4">
-        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-600">
+        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M4 18v2M20 18v2M12 4v5"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Pokoje</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.rooms }}</div>
-            <div class="text-xs text-gray-400">jednostki na wynajem</div>
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Pokoje</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.rooms }}</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">jednostki na wynajem</div>
         </div>
     </div>
 
     <div class="card flex items-start gap-4">
-        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-600">
+        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="m9 15 2 2 4-4"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Aktywne umowy</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.active_contracts }}</div>
-            <div class="text-xs text-gray-400">bieżące najmy</div>
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Aktywne umowy</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.active_contracts }}</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">bieżące najmy</div>
         </div>
     </div>
 
     <div class="card flex items-start gap-4">
-        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-600">
+        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Kończą się wkrótce</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ stats.contracts_ending_soon }}</div>
-            <div class="text-xs text-gray-400">w ciągu 2 miesięcy</div>
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Kończą się wkrótce</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{{ stats.contracts_ending_soon }}</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">w ciągu 2 miesięcy</div>
         </div>
     </div>
 
     <div class="card flex items-start gap-4">
-        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-600">
+        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </div>
         <div>
-            <div class="text-sm font-medium text-gray-500">Przychód {{ period_label }}</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ income_month|floatformat:2|intcomma }} <span class="text-base font-medium text-gray-400">zł</span></div>
-            <div class="text-xs text-gray-400">narastająco {{ tax_year }}: {{ income_ytd|floatformat:2|intcomma }} zł</div>
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Przychód {{ period_label }}</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{{ income_month|floatformat:2|intcomma }} <span class="text-base font-medium text-gray-400 dark:text-gray-500">zł</span></div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">narastająco {{ tax_year }}: {{ income_ytd|floatformat:2|intcomma }} zł</div>
         </div>
     </div>
 
     <div class="card relative flex items-start gap-4">
-        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600">
+        <div class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
         </div>
         {% if tax_status == "paid" %}
-        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-emerald-100 text-emerald-600" title="Zapłacony">
+        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300" title="Zapłacony">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </span>
         {% elif tax_status == "overdue" %}
-        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-rose-100 text-rose-600" title="Po terminie ({{ tax_month.deadline|date:'Y-m-d' }})">
+        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300" title="Po terminie ({{ tax_month.deadline|date:'Y-m-d' }})">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
         </span>
         {% else %}
-        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-amber-100 text-amber-600" title="Do zapłaty do {{ tax_month.deadline|date:'Y-m-d' }}">
+        <span class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300" title="Do zapłaty do {{ tax_month.deadline|date:'Y-m-d' }}">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 7 12 12 15 14"/></svg>
         </span>
         {% endif %}
         <div>
-            <div class="text-sm font-medium text-gray-500">Podatek {{ period_label }}</div>
-            <div class="mt-0.5 text-2xl font-bold text-gray-900">{{ tax_month.tax|intcomma }} <span class="text-base font-medium text-gray-400">zł</span></div>
-            <div class="text-xs text-gray-400">narastająco {{ tax_year }}: {{ tax_ytd|intcomma }} zł</div>
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Podatek {{ period_label }}</div>
+            <div class="mt-0.5 text-2xl font-bold text-gray-900 dark:text-white">{{ tax_month.tax|intcomma }} <span class="text-base font-medium text-gray-400 dark:text-gray-500">zł</span></div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">narastająco {{ tax_year }}: {{ tax_ytd|intcomma }} zł</div>
         </div>
     </div>
 </div>
@@ -145,15 +145,15 @@
 <div class="card mt-6" id="income-chart">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-            <div class="text-sm font-semibold text-gray-800">
+            <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">
                 <span class="chart-title-income">Przychód</span>
                 <span class="chart-title-net hidden">Dochód (po ryczałcie)</span>
-                <span class="text-gray-400">— ostatnie 12 miesięcy</span>
+                <span class="text-gray-400 dark:text-gray-500">— ostatnie 12 miesięcy</span>
             </div>
-            <div class="text-xs text-gray-400">zł / miesiąc</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">zł / miesiąc</div>
         </div>
         <div class="flex items-center gap-3">
-            <span class="chart-mode-name text-sm font-medium text-gray-700">Przychód</span>
+            <span class="chart-mode-name text-sm font-medium text-gray-700 dark:text-gray-300">Przychód</span>
             <button type="button" id="chart-switch" role="switch" aria-checked="false"
                     class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full bg-gray-200 !p-0 !shadow-none transition-colors">
                 <span class="chart-knob inline-block h-4 w-4 rounded-full bg-white shadow transition-transform" style="transform: translateX(6px)"></span>
@@ -170,18 +170,18 @@
                          data-income-val="{{ p.income|floatformat:0|intcomma }}" data-net-val="{{ p.net|floatformat:0|intcomma }}"
                          style="height: {{ p.income_pct }}%">
                         <span class="chart-tax absolute inset-x-0 top-0 hidden rounded-t-md bg-rose-500"></span>
-                        <span class="chart-label absolute inset-x-0 -top-5 text-center text-[11px] font-semibold text-gray-600">{{ p.income|floatformat:0|intcomma }}</span>
+                        <span class="chart-label absolute inset-x-0 -top-5 text-center text-[11px] font-semibold text-gray-600 dark:text-gray-300">{{ p.income|floatformat:0|intcomma }}</span>
                     </div>
                 </div>
-                <div class="pt-2 text-center text-xs font-medium text-gray-500">{{ p.label }}</div>
+                <div class="pt-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">{{ p.label }}</div>
             </div>
             {% endfor %}
         </div>
-        <div class="flex w-32 shrink-0 flex-col justify-center border-l border-gray-100 pl-5">
-            <div class="text-xs font-medium text-gray-400">Średnia</div>
-            <div class="text-xs text-gray-400">(12 mies.)</div>
-            <div class="mt-1 text-2xl font-bold text-gray-900"><span class="chart-avg" data-income-avg="{{ income_avg|floatformat:0|intcomma }}" data-net-avg="{{ net_avg|floatformat:0|intcomma }}">{{ income_avg|floatformat:0|intcomma }}</span></div>
-            <div class="text-xs text-gray-400">zł / miesiąc</div>
+        <div class="flex w-32 shrink-0 flex-col justify-center border-l border-gray-100 pl-5 dark:border-gray-800">
+            <div class="text-xs font-medium text-gray-400 dark:text-gray-500">Średnia</div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">(12 mies.)</div>
+            <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-white"><span class="chart-avg" data-income-avg="{{ income_avg|floatformat:0|intcomma }}" data-net-avg="{{ net_avg|floatformat:0|intcomma }}">{{ income_avg|floatformat:0|intcomma }}</span></div>
+            <div class="text-xs text-gray-400 dark:text-gray-500">zł / miesiąc</div>
         </div>
     </div>
 </div>

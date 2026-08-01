@@ -2,19 +2,19 @@
 {% comment %}Shared price-history list. Params: prices, delete_url (name), decimals, flat, unit (optional).{% endcomment %}
 {% if prices %}
 <div>
-    <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Historia stawek</div>
-    <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200">
+    <div class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Historia stawek</div>
+    <ul class="divide-y divide-gray-100 rounded-lg border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
         {% for p in prices %}
-        <li class="flex items-center justify-between gap-3 px-3 py-2 text-sm {% if forloop.first %}bg-indigo-50/40{% endif %}">
+        <li class="flex items-center justify-between gap-3 px-3 py-2 text-sm {% if forloop.first %}bg-indigo-50/40 dark:bg-indigo-500/10{% endif %}">
             <span class="flex items-center gap-2">
-                {% if forloop.first %}<span class="pill bg-indigo-100 text-indigo-700">aktualna</span>{% endif %}
-                <span class="text-gray-600">{% if p.price_date %}od {{ p.price_date|date:"Y-m-d" }}{% else %}od początku{% endif %}</span>
+                {% if forloop.first %}<span class="pill bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">aktualna</span>{% endif %}
+                <span class="text-gray-600 dark:text-gray-300">{% if p.price_date %}od {{ p.price_date|date:"Y-m-d" }}{% else %}od początku{% endif %}</span>
             </span>
             <span class="flex items-center gap-3">
-                <span class="font-mono font-medium text-gray-800">{{ p.price|floatformat:decimals|intcomma }} zł{% if unit %}<span class="text-gray-400">/{{ unit }}</span>{% endif %}</span>
+                <span class="font-mono font-medium text-gray-800 dark:text-gray-100">{{ p.price|floatformat:decimals|intcomma }} zł{% if unit %}<span class="text-gray-400 dark:text-gray-500">/{{ unit }}</span>{% endif %}</span>
                 <form method="post" action="{% url delete_url flat.pk p.pk %}" onsubmit="return confirm('Usunąć tę stawkę z historii?');">
                     {% csrf_token %}
-                    <button type="submit" class="grid h-7 w-7 place-items-center !bg-transparent !p-0 !text-gray-300 !shadow-none transition hover:!text-rose-600" title="Usuń stawkę"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                    <button type="submit" class="act act-danger !px-1.5 !py-1" title="Usuń stawkę"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
                 </form>
             </span>
         </li>
@@ -22,5 +22,5 @@
     </ul>
 </div>
 {% else %}
-<p class="text-sm text-gray-400">Brak stawek — dodaj pierwszą powyżej.</p>
+<p class="text-sm text-gray-400 dark:text-gray-500">Brak stawek — dodaj pierwszą powyżej.</p>
 {% endif %}
