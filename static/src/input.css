@@ -4,47 +4,50 @@
 @source "../../templates";
 @source "../../apps";
 
+/* Class-based dark mode: `dark:` utilities respond to a `.dark` class on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Design system — component + element styles so existing markup (tables, cards,
    badges) picks up the modern look without rewriting every template. */
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-800 antialiased;
+    @apply bg-gray-50 text-gray-800 antialiased dark:bg-gray-950 dark:text-gray-200;
   }
   h1 {
-    @apply text-2xl font-bold tracking-tight text-gray-900;
+    @apply text-2xl font-bold tracking-tight text-gray-900 dark:text-white;
   }
   h2 {
-    @apply text-lg font-semibold text-gray-900;
+    @apply text-lg font-semibold text-gray-900 dark:text-white;
   }
   main a {
-    @apply font-medium text-indigo-600 transition hover:text-indigo-800 hover:underline;
+    @apply font-medium text-indigo-600 transition hover:text-indigo-800 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300;
   }
   main table {
-    @apply w-full border-collapse overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-sm;
+    @apply w-full border-collapse overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-sm dark:border-gray-800 dark:bg-gray-900;
   }
   main thead th {
-    @apply border-b border-gray-200 bg-gray-100 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500;
+    @apply border-b border-gray-200 bg-gray-100 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400;
   }
   main tbody td {
-    @apply border-b border-gray-100 px-4 py-3 align-middle;
+    @apply border-b border-gray-100 px-4 py-3 align-middle dark:border-gray-800;
   }
   main tbody tr:last-child td {
     @apply border-b-0;
   }
   main tbody tr:hover {
-    @apply bg-gray-50/70;
+    @apply bg-gray-50/70 dark:bg-gray-800/50;
   }
   main tfoot th {
-    @apply border-t border-gray-200 px-4 py-2.5 text-left text-sm font-semibold;
+    @apply border-t border-gray-200 px-4 py-2.5 text-left text-sm font-semibold dark:border-gray-800;
   }
   label {
-    @apply mb-1 block text-sm font-medium text-gray-700;
+    @apply mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300;
   }
   input:not([type="checkbox"]):not([type="radio"]),
   select,
   textarea {
-    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200;
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-900;
   }
   button {
     @apply inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700;
@@ -56,16 +59,16 @@
     @apply inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-medium !text-white !no-underline shadow-sm transition hover:bg-indigo-700;
   }
   .card {
-    @apply rounded-xl border border-gray-200 bg-white p-5 shadow-sm;
+    @apply rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900;
   }
   .cards {
     @apply mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
   }
   .card .n {
-    @apply text-3xl font-bold tracking-tight text-gray-900;
+    @apply text-3xl font-bold tracking-tight text-gray-900 dark:text-white;
   }
   .card .l {
-    @apply mt-1 text-sm text-gray-500;
+    @apply mt-1 text-sm text-gray-500 dark:text-gray-400;
   }
   .badge {
     @apply inline-block h-2.5 w-2.5 rounded-full align-middle;
@@ -80,45 +83,60 @@
     @apply bg-rose-500;
   }
   .msg {
-    @apply mb-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm text-indigo-800;
+    @apply mb-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-200;
   }
   .btn-danger {
     @apply bg-rose-600 hover:bg-rose-700;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-1.5 rounded-lg bg-transparent px-3.5 py-2 text-sm font-medium !text-gray-700 !no-underline shadow-none transition hover:bg-gray-100;
+    @apply inline-flex items-center gap-1.5 rounded-lg bg-transparent px-3.5 py-2 text-sm font-medium !text-gray-700 !no-underline shadow-none transition hover:bg-gray-100 dark:!text-gray-300 dark:hover:bg-gray-800;
   }
   .act {
-    @apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium !text-gray-700 !no-underline transition hover:!bg-gray-50;
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium !text-gray-700 !no-underline transition hover:!bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:!text-gray-200 dark:hover:!bg-gray-700;
   }
   .act-danger {
-    @apply border-transparent bg-transparent !text-rose-600 hover:!bg-rose-50;
+    @apply border-transparent bg-transparent !text-rose-600 hover:!bg-rose-50 dark:hover:!bg-rose-500/10;
   }
   .pw-wrap input {
     @apply pr-10;
   }
   .pw-toggle {
-    @apply absolute right-1 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-md !bg-transparent !p-1.5 !text-gray-400 !shadow-none hover:!bg-gray-100 hover:!text-gray-600;
+    @apply absolute right-1 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-md !bg-transparent !p-1.5 !text-gray-400 !shadow-none hover:!bg-gray-100 hover:!text-gray-600 dark:hover:!bg-gray-700 dark:hover:!text-gray-200;
   }
   .np-slider {
     @apply w-full cursor-pointer accent-indigo-600 !border-0 !bg-transparent !px-0 !py-2 !shadow-none;
+  }
+  .theme-toggle {
+    @apply relative inline-flex h-7 w-14 shrink-0 items-center rounded-full !bg-gray-200 !p-0 !text-inherit !shadow-inner transition-colors hover:!bg-gray-300 dark:!bg-gray-700 dark:hover:!bg-gray-600;
+  }
+  .theme-toggle .theme-knob {
+    @apply pointer-events-none absolute left-0.5 top-0.5 grid h-6 w-6 place-items-center rounded-full bg-white text-amber-500 shadow transition-transform duration-200 dark:translate-x-7 dark:bg-gray-900 dark:text-indigo-300;
+  }
+  .theme-toggle .theme-ico {
+    @apply h-3.5 w-3.5;
+  }
+  .theme-toggle .sun {
+    @apply block dark:hidden;
+  }
+  .theme-toggle .moon {
+    @apply hidden dark:block;
   }
   .pill {
     @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
   }
   .sidebar-link {
-    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900;
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
   }
   .sidebar-link.active {
-    @apply bg-indigo-50 text-indigo-700;
+    @apply bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300;
   }
   .sidebar-link svg {
     @apply h-[18px] w-[18px] shrink-0;
   }
   .sidebar-group {
-    @apply px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-gray-400;
+    @apply px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500;
   }
   .login-card {
-    @apply mx-auto w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-xl;
+    @apply mx-auto w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-8 shadow-xl dark:border-gray-800 dark:bg-gray-900;
   }
 }

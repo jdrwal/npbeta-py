@@ -5,23 +5,38 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}npbeta{% endblock %}</title>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('theme');
+                if (!t) { t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+                if (t === 'dark') { document.documentElement.classList.add('dark'); }
+            } catch (e) {}
+        })();
+    </script>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
 </head>
 <body class="h-screen">
 <div class="flex h-screen flex-col">
     {% if user.is_authenticated %}
-    <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-5">
+    <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-5 dark:border-gray-800 dark:bg-gray-900">
         <div class="flex items-center gap-2.5">
             <div class="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">nP</div>
-            <span class="font-semibold tracking-tight">npbeta</span>
+            <span class="font-semibold tracking-tight dark:text-white">npbeta</span>
         </div>
         <div class="flex items-center gap-3">
+            <button type="button" class="theme-toggle" role="switch" aria-label="Przełącz motyw jasny/ciemny" title="Motyw jasny/ciemny">
+                <span class="theme-knob">
+                    <svg class="theme-ico sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    <svg class="theme-ico moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </span>
+            </button>
             <div class="text-right leading-tight">
-                <div class="text-sm font-medium text-gray-800">{{ user.get_username }}</div>
-                <div class="text-xs text-gray-400">Zalogowano</div>
+                <div class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ user.get_username }}</div>
+                <div class="text-xs text-gray-400 dark:text-gray-500">Zalogowano</div>
             </div>
-            <div class="grid h-9 w-9 place-items-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
+            <div class="grid h-9 w-9 place-items-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
                 {{ user.get_username|first|upper }}
             </div>
             <form method="post" action="{% url 'logout' %}">
@@ -34,7 +49,7 @@
     <div class="flex flex-1 overflow-hidden">
         {% if user.is_authenticated %}
         {% with active=request.resolver_match.url_name %}
-        <aside class="flex w-60 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white px-3 py-4">
+        <aside class="flex w-60 shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white px-3 py-4 dark:border-gray-800 dark:bg-gray-900">
             <p class="sidebar-group">Nieruchomości</p>
             <a href="{% url 'core:dashboard' %}" class="sidebar-link {% if active == 'dashboard' %}active{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
@@ -86,7 +101,7 @@
         {% endwith %}
         {% endif %}
 
-        <main class="flex-1 overflow-y-auto {% if user.is_authenticated %}bg-gray-50{% else %}relative flex items-center justify-center bg-white{% endif %}">
+        <main class="flex-1 overflow-y-auto {% if user.is_authenticated %}bg-gray-50 dark:bg-gray-950{% else %}relative flex items-center justify-center bg-white dark:bg-gray-950{% endif %}">
             {% block banner %}{% endblock %}
             <div class="{% if user.is_authenticated %}mx-auto max-w-6xl px-6 py-8{% else %}relative z-10 w-full max-w-md px-4 py-10{% endif %}">
                 {% if messages %}
@@ -98,10 +113,18 @@
     </div>
 </div>
 {% if not user.is_authenticated %}
+<div class="fixed right-4 top-4 z-50">
+    <button type="button" class="theme-toggle" role="switch" aria-label="Przełącz motyw jasny/ciemny" title="Motyw jasny/ciemny">
+        <span class="theme-knob">
+            <svg class="theme-ico sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="theme-ico moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </span>
+    </button>
+</div>
 <div id="cookie-note" class="fixed inset-x-0 bottom-0 z-50 hidden">
-    <div class="pointer-events-none bg-gradient-to-t from-white via-white/80 to-transparent px-4 pb-4 pt-10">
-        <div class="pointer-events-auto mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
-            <p class="flex-1 text-sm text-gray-600">
+    <div class="pointer-events-none bg-gradient-to-t from-white via-white/80 to-transparent px-4 pb-4 pt-10 dark:from-gray-950 dark:via-gray-950/80">
+        <div class="pointer-events-auto mx-auto flex max-w-3xl flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+            <p class="flex-1 text-sm text-gray-600 dark:text-gray-300">
                 Używamy wyłącznie plików cookie niezbędnych do działania serwisu (logowanie, bezpieczeństwo).
                 Nie stosujemy analityki ani śledzenia. Szczegóły w
                 <a href="{% url 'privacy' %}" class="font-medium text-indigo-600 underline">polityce prywatności</a>.
@@ -122,5 +145,23 @@
     })();
 </script>
 {% endif %}
+<script>
+    (function () {
+        function apply(dark) {
+            document.documentElement.classList.toggle('dark', dark);
+            try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+            document.querySelectorAll('.theme-toggle').forEach(function (b) {
+                b.setAttribute('aria-checked', dark ? 'true' : 'false');
+            });
+        }
+        var initDark = document.documentElement.classList.contains('dark');
+        document.querySelectorAll('.theme-toggle').forEach(function (btn) {
+            btn.setAttribute('aria-checked', initDark ? 'true' : 'false');
+            btn.addEventListener('click', function () {
+                apply(!document.documentElement.classList.contains('dark'));
+            });
+        });
+    })();
+</script>
 </body>
 </html>
