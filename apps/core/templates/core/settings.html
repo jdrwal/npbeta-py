@@ -14,15 +14,35 @@
 <div class="grid max-w-3xl gap-6">
     <section class="card space-y-4">
         <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Zmiana hasła</h2>
-        <form method="post" class="space-y-4">
+        <form method="post" class="max-w-lg space-y-4">
             {% csrf_token %}
             {% if pwd_form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ pwd_form.non_field_errors }}</div>{% endif %}
-            {% include "core/_field.html" with field=pwd_form.old_password %}
-            <div class="grid gap-4 sm:grid-cols-2">
-                {% include "core/_field.html" with field=pwd_form.new_password1 %}
-                {% include "core/_field.html" with field=pwd_form.new_password2 %}
-            </div>
+            {% include "core/_password_field.html" with field=pwd_form.old_password %}
+            {% include "core/_password_field.html" with field=pwd_form.new_password1 %}
+            {% include "core/_password_field.html" with field=pwd_form.new_password2 %}
             <button type="submit" name="save_password" value="1">Zmień hasło</button>
+        </form>
+    </section>
+
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Bezpieczeństwo</h2>
+        <form method="post" class="max-w-lg space-y-4">
+            {% csrf_token %}
+            {% if sec_form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ sec_form.non_field_errors }}</div>{% endif %}
+            <div>
+                <div class="mb-1 flex items-center justify-between gap-3">
+                    <label for="{{ sec_form.session_timeout_minutes.id_for_label }}" class="!mb-0">{{ sec_form.session_timeout_minutes.label }}</label>
+                    <span id="timeout-value" class="rounded-md bg-indigo-50 px-2 py-0.5 text-sm font-semibold text-indigo-700"></span>
+                </div>
+                {{ sec_form.session_timeout_minutes }}
+                <div class="mt-1 flex justify-between text-xs text-gray-400">
+                    <span>5 min</span>
+                    <span>6 godz.</span>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Po tym czasie bezczynności nastąpi automatyczne wylogowanie.</p>
+                {% if sec_form.session_timeout_minutes.errors %}<span class="mt-1 block text-sm text-rose-600">{{ sec_form.session_timeout_minutes.errors|striptags }}</span>{% endif %}
+            </div>
+            <button type="submit" name="save_security" value="1">Zapisz ustawienia bezpieczeństwa</button>
         </form>
     </section>
 
@@ -72,6 +92,35 @@
             block.style.display = show ? '' : 'none';
         }
         radios.forEach(function (r) { r.addEventListener('change', sync); });
+        sync();
+    })();
+
+    (function () {
+        document.querySelectorAll('.pw-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const input = document.getElementById(btn.dataset.target);
+                if (!input) { return; }
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.querySelector('.eye').classList.toggle('hidden', show);
+                btn.querySelector('.eye-off').classList.toggle('hidden', !show);
+            });
+        });
+    })();
+
+    (function () {
+        const slider = document.getElementById('id_session_timeout_minutes');
+        const out = document.getElementById('timeout-value');
+        if (!slider || !out) { return; }
+        function fmt(total) {
+            const h = Math.floor(total / 60);
+            const m = total % 60;
+            if (h && m) { return h + ' godz. ' + m + ' min'; }
+            if (h) { return h + ' godz.'; }
+            return m + ' min';
+        }
+        function sync() { out.textContent = fmt(parseInt(slider.value, 10)); }
+        slider.addEventListener('input', sync);
         sync();
     })();
 </script>

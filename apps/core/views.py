@@ -31,6 +31,7 @@ from apps.core.forms import (
     MeterPriceForm,
     MeterReadingForm,
     RoomForm,
+    SecuritySettingsForm,
     SettlementForm,
 )
 from apps.core.models import (
@@ -939,6 +940,7 @@ def user_settings(request: HttpRequest) -> HttpResponse:
     mail, _ = MailSettings.objects.get_or_create(user=user)
     pwd_form = PasswordChangeForm(user)
     mail_form = MailSettingsForm(instance=mail)
+    sec_form = SecuritySettingsForm(instance=user)
     if request.method == "POST":
         if "save_password" in request.POST:
             pwd_form = PasswordChangeForm(user, request.POST)
@@ -953,10 +955,19 @@ def user_settings(request: HttpRequest) -> HttpResponse:
                 mail_form.save()
                 messages.success(request, "Ustawienia poczty zapisane.")
                 return redirect("core:settings")
+        elif "save_security" in request.POST:
+            sec_form = SecuritySettingsForm(request.POST, instance=user)
+            if sec_form.is_valid():
+                sec_form.save()
+                request.session.set_expiry(
+                    sec_form.cleaned_data["session_timeout_minutes"] * 60
+                )
+                messages.success(request, "Ustawienia bezpieczeństwa zapisane.")
+                return redirect("core:settings")
     return render(
         request,
         "core/settings.html",
-        {"pwd_form": pwd_form, "mail_form": mail_form},
+        {"pwd_form": pwd_form, "mail_form": mail_form, "sec_form": sec_form},
     )
 
 

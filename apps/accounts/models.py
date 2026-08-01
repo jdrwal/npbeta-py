@@ -14,6 +14,8 @@ from django.db import models
 class User(AbstractUser):
     # Legacy `fore_start`: day-of-month from which income is forecast.
     forecast_start_day = models.PositiveSmallIntegerField(default=20)
+    # Inactivity logout window in minutes (5 min .. 6 h), enforced per request.
+    session_timeout_minutes = models.PositiveSmallIntegerField(default=30)
 
     class Meta:
         db_table = "accounts_user"

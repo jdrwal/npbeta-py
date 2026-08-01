@@ -414,3 +414,33 @@ class FeeCreateForm(forms.Form):
             cast(forms.ModelChoiceField, self.fields["flat"]).queryset = (
                 Flat.objects.filter(owner=user)
             )
+
+
+class SecuritySettingsForm(forms.ModelForm):
+    """Lets the user pick an inactivity logout window between 5 min and 6 h."""
+
+    MIN_MINUTES = 5
+    MAX_MINUTES = 360
+
+    class Meta:
+        model = User
+        fields = ["session_timeout_minutes"]
+        widgets = {
+            "session_timeout_minutes": forms.NumberInput(
+                attrs={
+                    "type": "range",
+                    "min": 5,
+                    "max": 360,
+                    "step": 5,
+                    "class": "np-slider",
+                }
+            ),
+        }
+        labels = {
+            "session_timeout_minutes": "Wylogowanie po bezczynności",
+        }
+
+    def clean_session_timeout_minutes(self) -> int:
+        value = int(self.cleaned_data["session_timeout_minutes"])
+        return max(self.MIN_MINUTES, min(self.MAX_MINUTES, value))
+

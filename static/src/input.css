@@ -94,6 +94,15 @@
   .act-danger {
     @apply border-transparent bg-transparent !text-rose-600 hover:!bg-rose-50;
   }
+  .pw-wrap input {
+    @apply pr-10;
+  }
+  .pw-toggle {
+    @apply absolute right-1 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-md !bg-transparent !p-1.5 !text-gray-400 !shadow-none hover:!bg-gray-100 hover:!text-gray-600;
+  }
+  .np-slider {
+    @apply w-full cursor-pointer accent-indigo-600 !border-0 !bg-transparent !px-0 !py-2 !shadow-none;
+  }
   .pill {
     @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
   }
