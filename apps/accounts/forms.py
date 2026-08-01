@@ -86,6 +86,12 @@ class LandlordSignupForm(_BaseSignupForm):
     role = User.Role.LANDLORD
 
 
+class ResendActivationForm(forms.Form):
+    """Ask for an email to re-send the activation link to."""
+
+    email = forms.EmailField(label="E-mail")
+
+
 class TenantSignupForm(_BaseSignupForm):
     role = User.Role.TENANT
 

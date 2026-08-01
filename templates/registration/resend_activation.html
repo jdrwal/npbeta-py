@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Wyślij link aktywacyjny — npbeta{% endblock %}
+{% block content %}
+<div class="login-card relative z-10">
+    <div class="mb-6 flex items-center gap-2.5">
+        <div class="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">nP</div>
+        <span class="text-lg font-semibold tracking-tight">npbeta</span>
+    </div>
+    <h1 class="mb-1 text-xl">Wyślij link ponownie</h1>
+    <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">Podaj e-mail, na który wyślemy nowy link aktywacyjny.</p>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {% include "core/_field.html" with field=form.email %}
+        <button type="submit" class="w-full justify-center">Wyślij link aktywacyjny</button>
+    </form>
+    <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        <a href="{% url 'login' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">← Powrót do logowania</a>
+    </p>
+</div>
+{% endblock %}

@@ -26,3 +26,12 @@ services:
   db:
     ports:
       - "5432:5432"
+
+  # Local email catcher: SMTP on 1025, web inbox on http://localhost:8025.
+  # Point EMAIL_* in .env at it (EMAIL_HOST=mailpit, EMAIL_PORT=1025, EMAIL_USE_TLS=False).
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"

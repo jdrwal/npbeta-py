@@ -11,5 +11,9 @@
         Kliknij go, aby aktywować konto i móc się zalogować.
     </p>
     <a href="{% url 'login' %}" class="btn mt-6 w-full justify-center">Przejdź do logowania</a>
+    <p class="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">
+        Nie dostałeś maila? Sprawdź spam lub
+        <a href="{% url 'accounts:resend_activation' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">wyślij link ponownie</a>.
+    </p>
 </div>
 {% endblock %}

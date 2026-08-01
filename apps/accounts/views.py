@@ -8,37 +8,30 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
-from apps.accounts.forms import LandlordSignupForm, TenantSignupForm
+from apps.accounts.forms import (
+    LandlordSignupForm,
+    ResendActivationForm,
+    TenantSignupForm,
+)
 from apps.accounts.models import User as UserType
+from apps.accounts.tasks import send_activation_email_task
 
 User = get_user_model()
 
 
 def _send_activation_email(request: HttpRequest, user: UserType) -> None:
-    """Email the user a one-time account activation link."""
+    """Build a one-time activation link and queue the email on a worker."""
     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     path = reverse("accounts:activate", args=[uidb64, token])
     link = request.build_absolute_uri(path)
-    body = render_to_string(
-        "registration/activation_email.txt",
-        {"user": user, "link": link},
-    )
-    send_mail(
-        subject="Aktywacja konta — npbeta",
-        message=body,
-        from_email=None,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
+    send_activation_email_task.delay(user.pk, link)
 
 
 def _register(
@@ -73,6 +66,24 @@ def register_tenant(request: HttpRequest) -> HttpResponse:
     return _register(
         request, TenantSignupForm, "registration/register_tenant.html", invite_code=invite
     )
+
+
+def resend_activation(request: HttpRequest) -> HttpResponse:
+    """Re-send the activation link. Never reveals whether the email exists."""
+    if request.user.is_authenticated:
+        return redirect("accounts:post_login")
+    form = ResendActivationForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        email = form.cleaned_data["email"].strip().lower()
+        user = User.objects.filter(email__iexact=email, is_active=False).first()
+        if user is not None:
+            _send_activation_email(request, user)
+        return render(
+            request,
+            "registration/registration_done.html",
+            {"email": email, "resent": True},
+        )
+    return render(request, "registration/resend_activation.html", {"form": form})
 
 
 def activate(request: HttpRequest, uidb64: str, token: str) -> HttpResponse:

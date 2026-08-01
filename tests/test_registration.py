@@ -65,6 +65,31 @@ def test_landlord_registration_sends_activation_and_activates() -> None:
 
 
 @pytest.mark.django_db
+def test_resend_activation_for_inactive_and_quiet_for_unknown() -> None:
+    User.objects.create_user(
+        username="pending@example.com",
+        email="pending@example.com",
+        password=STRONG_PW,
+        role=User.Role.LANDLORD,
+        is_active=False,
+    )
+    client = Client()
+    resp = client.post(
+        reverse("accounts:resend_activation"), {"email": "Pending@example.com"}
+    )
+    assert resp.status_code == 200
+    assert len(mail.outbox) == 1
+
+    mail.outbox.clear()
+    # Unknown address: same page, no email sent (no account enumeration).
+    resp = client.post(
+        reverse("accounts:resend_activation"), {"email": "nobody@example.com"}
+    )
+    assert resp.status_code == 200
+    assert len(mail.outbox) == 0
+
+
+@pytest.mark.django_db
 def test_duplicate_email_rejected() -> None:
     _landlord()
     client = Client()

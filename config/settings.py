@@ -14,7 +14,9 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     EMAIL_USE_TLS=(bool, True),
+    EMAIL_USE_SSL=(bool, False),
     EMAIL_PORT=(int, 587),
+    EMAIL_TIMEOUT=(int, 10),
 )
 
 # Load .env if present (local dev). In production the env comes from the shell.
@@ -149,16 +151,26 @@ CELERY_RESULT_BACKEND = env("REDIS_URL", default="redis://redis:6379/0")
 CELERY_TASK_TIME_LIMIT = 300
 
 # --- Email ---
-if DEBUG:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = env("EMAIL_HOST", default="")
-    EMAIL_PORT = env("EMAIL_PORT")
-    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
-    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
-    EMAIL_USE_TLS = env("EMAIL_USE_TLS")
+# Backend is env-driven: dev defaults to console, prod to SMTP. Set EMAIL_BACKEND
+# (+ EMAIL_HOST/PORT/USER/PASSWORD) to send for real from any environment — e.g.
+# Mailpit locally or the Hostido submission server in production.
+EMAIL_BACKEND = env(
+    "EMAIL_BACKEND",
+    default=(
+        "django.core.mail.backends.console.EmailBackend"
+        if DEBUG
+        else "django.core.mail.backends.smtp.EmailBackend"
+    ),
+)
+EMAIL_HOST = env("EMAIL_HOST", default="")
+EMAIL_PORT = env("EMAIL_PORT")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env("EMAIL_USE_TLS")
+EMAIL_USE_SSL = env("EMAIL_USE_SSL")
+EMAIL_TIMEOUT = env("EMAIL_TIMEOUT")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@example.com")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # --- Security (tightened when DEBUG is off) ---
 if not DEBUG:
