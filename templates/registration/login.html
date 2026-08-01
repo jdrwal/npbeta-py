@@ -198,6 +198,9 @@
         <button type="submit" class="mt-5 w-full justify-center">Zaloguj się</button>
         <input type="hidden" name="next" value="{{ next }}">
     </form>
+    <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        Nie masz konta? <a href="{% url 'accounts:register' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">Zarejestruj się</a>
+    </p>
 </div>
 <script>
     (function () {

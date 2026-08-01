@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Nieprawidłowy link — npbeta{% endblock %}
+{% block content %}
+<div class="login-card relative z-10 text-center">
+    <div class="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+    </div>
+    <h1 class="mb-2 text-xl">Link nieprawidłowy lub wygasł</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        Link aktywacyjny jest nieprawidłowy albo został już użyty. Spróbuj zarejestrować się ponownie
+        lub skontaktuj się z administratorem.
+    </p>
+    <a href="{% url 'accounts:register' %}" class="btn mt-6 w-full justify-center">Rejestracja</a>
+</div>
+{% endblock %}

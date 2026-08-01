@@ -17,11 +17,31 @@ class User(AbstractUser):
     # Inactivity logout window in minutes (5 min .. 6 h), enforced per request.
     session_timeout_minutes = models.PositiveSmallIntegerField(default=30)
 
+    class Role(models.TextChoices):
+        LANDLORD = "landlord", "Wynajmujący"
+        TENANT = "tenant", "Najemca"
+
+    # Open platform: an account is either a landlord (manages properties) or a
+    # tenant (sees only their own contracts). Existing accounts default to landlord.
+    role = models.CharField(
+        max_length=16, choices=Role.choices, default=Role.LANDLORD
+    )
+    # Set once the account confirms its email via the activation link.
+    email_verified = models.BooleanField(default=False)
+
     class Meta:
         db_table = "accounts_user"
 
     def __str__(self) -> str:
         return self.get_username()
+
+    @property
+    def is_landlord(self) -> bool:
+        return self.role == self.Role.LANDLORD
+
+    @property
+    def is_tenant(self) -> bool:
+        return self.role == self.Role.TENANT
 
 
 class MailSettings(models.Model):

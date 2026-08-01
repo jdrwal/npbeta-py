@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Rozliczenia — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M14 10h2M8 14h2M14 14h2"/></svg></span>
+    <div>
+        <h1>Rozliczenia mediów</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Rozliczenia przygotowane przez wynajmującego</p>
+    </div>
+</div>
+
+{% for r in rows %}
+<section class="card mb-4 space-y-3">
+    <div class="flex items-center justify-between gap-2">
+        <h2 class="text-base">{{ r.flat }}</h2>
+        <span class="text-sm text-gray-500 dark:text-gray-400">{{ r.calc.period_start|date:"Y-m-d" }} – {{ r.calc.period_end|date:"Y-m-d" }}</span>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <table class="w-full border-collapse text-right text-sm">
+            <thead>
+                <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                    <th class="px-3 py-2 text-left">Pozycja</th>
+                    <th class="px-3 py-2">Zużycie</th>
+                    <th class="px-3 py-2">Kwota</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700 dark:text-gray-300">
+                {% for it in r.items %}
+                <tr class="border-t border-gray-100 dark:border-gray-800">
+                    <td class="px-3 py-2 text-left">{{ it.name }}</td>
+                    <td class="px-3 py-2 font-mono">{% if it.usage is not None %}{{ it.usage|floatformat:2 }}{% else %}—{% endif %}</td>
+                    <td class="px-3 py-2 font-mono">{{ it.value|floatformat:2|intcomma }} zł</td>
+                </tr>
+                {% endfor %}
+                <tr class="border-t-2 border-gray-300 bg-gray-100/70 font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-800/60 dark:text-white">
+                    <td class="px-3 py-2.5 text-left">Razem</td>
+                    <td class="px-3 py-2.5"></td>
+                    <td class="px-3 py-2.5 font-mono">{{ r.total|floatformat:2|intcomma }} zł</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% empty %}
+<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
+    <p class="text-gray-500 dark:text-gray-400">Brak rozliczeń do wyświetlenia.</p>
+</div>
+{% endfor %}
+{% endblock %}

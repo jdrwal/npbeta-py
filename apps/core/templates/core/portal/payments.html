@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Historia wpłat — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+    <div>
+        <h1>Historia wpłat</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Wpłaty zaksięgowane na Twoich umowach</p>
+    </div>
+</div>
+
+<div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+    <table class="w-full border-collapse text-right text-sm">
+        <thead>
+            <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                <th class="px-3 py-2 text-left">Data</th>
+                <th class="px-3 py-2 text-left">Opis</th>
+                <th class="px-3 py-2 text-left">Obiekt</th>
+                <th class="px-3 py-2">Kwota</th>
+            </tr>
+        </thead>
+        <tbody class="text-gray-700 dark:text-gray-300">
+            {% for e in entries %}
+            <tr class="border-t border-gray-100 dark:border-gray-800">
+                <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800 dark:text-gray-100">{{ e.record_date|date:"Y-m-d"|default:"—" }}</td>
+                <td class="px-3 py-2 text-left">{{ e.short_desc|default:"—" }}</td>
+                <td class="px-3 py-2 text-left">{{ e.flat }}{% if e.room %} · {{ e.room.name|default:e.room.room_no }}{% endif %}</td>
+                <td class="whitespace-nowrap px-3 py-2 font-mono">{{ e.amount_in_taxable|default_if_none:0|floatformat:2|intcomma }} zł</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Brak zaksięgowanych wpłat.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

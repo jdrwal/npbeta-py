@@ -103,5 +103,10 @@ urlpatterns = [
     ),
     path("forecast/", views.forecast, name="forecast"),
     path("settings/", views.user_settings, name="settings"),
+    path("contracts/<int:pk>/invites/", views.contract_invites, name="contract_invites"),
+    path("contracts/<int:pk>/invites/new/", views.create_invite, name="create_invite"),
+    path("portal/", views.portal, name="portal"),
+    path("portal/settlements/", views.portal_settlements, name="portal_settlements"),
+    path("portal/payments/", views.portal_payments, name="portal_payments"),
     path("healthz/", views.healthz, name="healthz"),
 ]

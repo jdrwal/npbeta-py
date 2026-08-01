@@ -1,0 +1,9 @@
+Cześć{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+dziękujemy za rejestrację w npbeta. Aby aktywować konto, kliknij poniższy link:
+
+{{ link }}
+
+Jeśli to nie Ty zakładałeś konto, zignoruj tę wiadomość.
+
+— npbeta

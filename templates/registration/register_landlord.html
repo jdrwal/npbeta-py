@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Rejestracja wynajmującego — npbeta{% endblock %}
+{% block content %}
+<div class="login-card relative z-10">
+    <div class="mb-6 flex items-center gap-2.5">
+        <div class="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">nP</div>
+        <span class="text-lg font-semibold tracking-tight">npbeta</span>
+    </div>
+    <h1 class="mb-1 text-xl">Rejestracja wynajmującego</h1>
+    <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">Konto do zarządzania najmem</p>
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">{{ form.non_field_errors }}</div>{% endif %}
+        {% include "core/_field.html" with field=form.first_name %}
+        {% include "core/_field.html" with field=form.email %}
+        {% include "core/_password_field.html" with field=form.password1 %}
+        {% include "core/_password_field.html" with field=form.password2 %}
+        <button type="submit" class="w-full justify-center">Załóż konto</button>
+    </form>
+    <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+        Masz już konto? <a href="{% url 'login' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">Zaloguj się</a>
+    </p>
+</div>
+{% endblock %}

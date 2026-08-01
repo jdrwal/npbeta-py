@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sprawdź e-mail — npbeta{% endblock %}
+{% block content %}
+<div class="login-card relative z-10 text-center">
+    <div class="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+    </div>
+    <h1 class="mb-2 text-xl">Potwierdź adres e-mail</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        Wysłaliśmy link aktywacyjny na <span class="font-medium text-gray-700 dark:text-gray-200">{{ email }}</span>.
+        Kliknij go, aby aktywować konto i móc się zalogować.
+    </p>
+    <a href="{% url 'login' %}" class="btn mt-6 w-full justify-center">Przejdź do logowania</a>
+</div>
+{% endblock %}

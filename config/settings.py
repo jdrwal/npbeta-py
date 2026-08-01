@@ -51,6 +51,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "apps.accounts.middleware.SessionTimeoutMiddleware",
+    "apps.accounts.middleware.RoleAccessMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
@@ -139,7 +140,7 @@ AUTH_USER_MODEL = "accounts.User"
 
 # Authentication redirects.
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "core:dashboard"
+LOGIN_REDIRECT_URL = "accounts:post_login"
 LOGOUT_REDIRECT_URL = "login"
 
 # --- Celery ---

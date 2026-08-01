@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Portal najemcy — npbeta{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+    <div>
+        <h1>Twoje umowy</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Podgląd najmu, rozliczeń i wpłat</p>
+    </div>
+</div>
+
+{% if contracts %}
+<div class="grid gap-4 sm:grid-cols-2">
+    {% for c in contracts %}
+    <section class="card space-y-3">
+        <div class="flex items-start justify-between gap-2">
+            <div>
+                <h2 class="text-base">{{ c.flat }}</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{% if c.room %}{{ c.room.name|default:c.room.room_no }} · {% endif %}Umowa {{ c.contract_number|default:"—" }}</p>
+            </div>
+            {% if c.price %}<span class="pill bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">{{ c.price|floatformat:2|intcomma }} zł/mies.</span>{% endif %}
+        </div>
+        <dl class="grid grid-cols-2 gap-2 text-sm">
+            <div><dt class="text-gray-400 dark:text-gray-500">Okres</dt><dd class="text-gray-700 dark:text-gray-300">{{ c.contract_start|date:"Y-m-d"|default:"—" }} – {{ c.contract_end|date:"Y-m-d"|default:"—" }}</dd></div>
+            <div><dt class="text-gray-400 dark:text-gray-500">Dzień płatności</dt><dd class="text-gray-700 dark:text-gray-300">{{ c.payment_day|default:"—" }}</dd></div>
+            <div><dt class="text-gray-400 dark:text-gray-500">Kaucja</dt><dd class="text-gray-700 dark:text-gray-300">{% if c.deposit %}{{ c.deposit|floatformat:2|intcomma }} zł{% else %}—{% endif %}</dd></div>
+            <div><dt class="text-gray-400 dark:text-gray-500">Wynajmujący</dt><dd class="text-gray-700 dark:text-gray-300">{{ c.owner.get_full_name|default:c.owner.email }}</dd></div>
+        </dl>
+    </section>
+    {% endfor %}
+</div>
+<div class="mt-6 flex gap-2">
+    <a href="{% url 'core:portal_settlements' %}" class="act">Rozliczenia mediów</a>
+    <a href="{% url 'core:portal_payments' %}" class="act">Historia wpłat</a>
+</div>
+{% else %}
+<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
+    <p class="text-gray-500 dark:text-gray-400">Twoje konto nie jest jeszcze powiązane z żadną umową.</p>
+</div>
+{% endif %}
+{% endblock %}

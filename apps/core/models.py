@@ -13,10 +13,16 @@ which is the source of truth. Notable choices vs. the legacy MariaDB schema:
   admin-fee model, and are dead code in the deployed app.
 """
 
+import secrets
 from typing import Any
 
 from django.conf import settings
 from django.db import models
+
+
+def _invite_token() -> str:
+    """URL-safe random token for tenant contract invites."""
+    return secrets.token_urlsafe(24)
 
 
 # --- Decimal field factories (fixed precision + passthrough kwargs) -------------
@@ -125,6 +131,14 @@ class Contract(SoftDeleteModel):
     tenant_name = models.CharField(max_length=64, blank=True)
     email = models.EmailField(max_length=64, blank=True)
     phone = models.CharField(max_length=32, blank=True)
+    # Open platform: the tenant's own account, once they register and link.
+    tenant_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tenant_contracts",
+    )
     price = _money(null=True, blank=True)
     deposit = _money(null=True, blank=True)
     contract_date = models.DateField(null=True, blank=True)
@@ -138,6 +152,40 @@ class Contract(SoftDeleteModel):
 
     def __str__(self) -> str:
         return f"{self.contract_number} — {self.tenant_name}"
+
+
+class ContractInvite(models.Model):
+    """One-time invite letting a tenant register and link to a contract.
+
+    The landlord creates an invite for a contract; the resulting ``token`` is
+    shared as a link (``/register/tenant/?invite=<token>``) or as a code the
+    tenant types during self-registration. Consumed once, on registration.
+    """
+
+    contract = models.ForeignKey(
+        Contract, on_delete=models.CASCADE, related_name="invites"
+    )
+    token = models.CharField(max_length=64, unique=True, default=_invite_token)
+    email = models.EmailField(blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    accepted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="accepted_invites",
+    )
+    accepted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created"]
+
+    def __str__(self) -> str:
+        return f"Invite {self.token[:8]}… for {self.contract}"
+
+    @property
+    def is_used(self) -> bool:
+        return self.accepted_by_id is not None
 
 
 # --- Meters --------------------------------------------------------------------

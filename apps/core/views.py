@@ -38,7 +38,9 @@ from apps.core.models import (
     AdminFee,
     AdminFeePrice,
     Contract,
+    ContractInvite,
     FeeCalculation,
+    FeeCalculationTenant,
     Flat,
     LedgerEntry,
     MeterDefinition,
@@ -671,6 +673,94 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
 def healthz(request: HttpRequest) -> JsonResponse:
     """Liveness probe used by Docker/monitoring."""
     return JsonResponse({"status": "ok"})
+
+
+# --- Tenant portal -------------------------------------------------------------
+def _tenant_contracts(user: User) -> "list[Contract]":
+    """Active (non-deleted) contracts linked to this tenant account."""
+    return list(
+        Contract.objects.filter(tenant_user=user).select_related("flat", "room", "owner")
+    )
+
+
+@login_required
+def portal(request: HttpRequest) -> HttpResponse:
+    """Tenant home: overview of their contracts and landlord contact."""
+    user = cast(User, request.user)
+    contracts = _tenant_contracts(user)
+    return render(request, "core/portal/dashboard.html", {"contracts": contracts})
+
+
+@login_required
+def portal_settlements(request: HttpRequest) -> HttpResponse:
+    """Utility settlements addressed to this tenant (matched by contract number)."""
+    user = cast(User, request.user)
+    numbers = [c.contract_number for c in _tenant_contracts(user) if c.contract_number]
+    rows = []
+    if numbers:
+        tenants = (
+            FeeCalculationTenant.objects.filter(contract_number__in=numbers)
+            .select_related("calculation", "flat")
+            .prefetch_related("items")
+            .order_by("-calculation__period_start")
+        )
+        for t in tenants:
+            items = list(t.items.all())
+            rows.append(
+                {
+                    "calc": t.calculation,
+                    "flat": t.flat,
+                    "items": items,
+                    "total": sum((i.value for i in items), Decimal("0")),
+                }
+            )
+    return render(request, "core/portal/settlements.html", {"rows": rows})
+
+
+@login_required
+def portal_payments(request: HttpRequest) -> HttpResponse:
+    """Payment history recorded against this tenant's contracts."""
+    user = cast(User, request.user)
+    contracts = _tenant_contracts(user)
+    entries = (
+        LedgerEntry.objects.filter(contract__in=contracts)
+        .select_related("flat", "room", "contract")
+        .order_by("-record_date")
+    )
+    return render(
+        request, "core/portal/payments.html", {"entries": entries, "contracts": contracts}
+    )
+
+
+# --- Landlord: tenant invites --------------------------------------------------
+@login_required
+def contract_invites(request: HttpRequest, pk: int) -> HttpResponse:
+    """Manage tenant invites for one contract (landlord)."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    invites = contract.invites.select_related("accepted_by").all()
+    link = None
+    latest = invites.filter(accepted_by__isnull=True).first()
+    if latest:
+        link = request.build_absolute_uri(
+            f"{reverse('accounts:register_tenant')}?invite={latest.token}"
+        )
+    return render(
+        request,
+        "core/contract_invites.html",
+        {"contract": contract, "invites": invites, "link": link, "latest": latest},
+    )
+
+
+@login_required
+@require_POST
+def create_invite(request: HttpRequest, pk: int) -> HttpResponse:
+    """Create a fresh tenant invite token for a contract (landlord)."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    ContractInvite.objects.create(contract=contract, email=contract.email or "")
+    messages.success(request, "Utworzono zaproszenie dla najemcy.")
+    return redirect("core:contract_invites", pk=contract.pk)
 
 
 # --- Create / action views -----------------------------------------------------
