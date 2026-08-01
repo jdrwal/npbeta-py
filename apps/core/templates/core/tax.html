@@ -15,7 +15,7 @@
     <div class="flex flex-wrap gap-2" role="tablist">
         {% for y in years %}
         <a href="?year={{ y }}"
-           class="rounded-lg border px-4 py-2 text-sm font-semibold transition-colors {% if y == year %}border-indigo-500 bg-indigo-50 text-indigo-700{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800{% endif %}">
+           class="rounded-lg border px-4 py-2 text-sm font-semibold transition-colors {% if y == year %}border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white{% endif %}">
             {{ y }}
         </a>
         {% endfor %}
@@ -36,63 +36,63 @@
     </div>
 </div>
 
-<div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+<div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
     <table class="w-full border-collapse text-right text-sm">
         <thead>
-            <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500">
+            <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                 <th class="px-3 py-2 text-left">Miesiąc</th>
-                <th class="border-l border-gray-200 px-3 py-2">Przychód</th>
-                <th class="border-l border-gray-200 px-3 py-2">Podatek</th>
-                <th class="border-l border-gray-200 px-3 py-2 text-left">Termin</th>
-                <th class="border-l border-gray-200 px-3 py-2 text-left">Zapłacono</th>
+                <th class="border-l border-gray-200 px-3 py-2 dark:border-gray-700">Przychód</th>
+                <th class="border-l border-gray-200 px-3 py-2 dark:border-gray-700">Podatek</th>
+                <th class="border-l border-gray-200 px-3 py-2 text-left dark:border-gray-700">Termin</th>
+                <th class="border-l border-gray-200 px-3 py-2 text-left dark:border-gray-700">Zapłacono</th>
             </tr>
         </thead>
-        <tbody class="text-gray-700">
+        <tbody class="text-gray-700 dark:text-gray-300">
             {% for m in months %}
-            <tr class="border-t border-gray-200">
-                <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800">{{ m.year }}-{{ m.month|stringformat:"02d" }}</td>
-                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono">{{ m.taxable|floatformat:2|intcomma }} zł</td>
-                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono">{{ m.tax|intcomma }} zł</td>
-                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 text-left text-gray-500">{{ m.deadline|date:"Y-m-d" }}</td>
-                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 text-left">
+            <tr class="border-t border-gray-200 dark:border-gray-800">
+                <td class="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-800 dark:text-gray-100">{{ m.year }}-{{ m.month|stringformat:"02d" }}</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono dark:border-gray-800">{{ m.taxable|floatformat:2|intcomma }} zł</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 font-mono dark:border-gray-800">{{ m.tax|intcomma }} zł</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 text-left text-gray-500 dark:border-gray-800 dark:text-gray-400">{{ m.deadline|date:"Y-m-d" }}</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2 text-left dark:border-gray-800">
                     {% if m.paid_date %}
                     <div class="inline-flex items-center gap-2">
-                        <span class="pill {% if m.paid_pct >= 100 %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}" title="Zapłacono {{ m.paid_amount|intcomma }} zł z {{ m.tax|intcomma }} zł">{{ m.paid_pct }}%</span>
-                        <span class="text-gray-500">{{ m.paid_date|date:"Y-m-d" }}</span>
+                        <span class="pill {% if m.paid_pct >= 100 %}bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300{% else %}bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300{% endif %}" title="Zapłacono {{ m.paid_amount|intcomma }} zł z {{ m.tax|intcomma }} zł">{{ m.paid_pct }}%</span>
+                        <span class="text-gray-500 dark:text-gray-400">{{ m.paid_date|date:"Y-m-d" }}</span>
                         <form method="post" action="{% url 'core:delete_tax_payment' m.paid_pk %}" onsubmit="return confirm('Usunąć zapłatę podatku za {{ m.year }}-{{ m.month|stringformat:'02d' }}?');" class="inline-flex">
                             {% csrf_token %}
-                            <button type="submit" class="text-gray-400 hover:text-rose-600" title="Usuń zapłatę">
+                            <button type="submit" class="act act-danger !px-1.5 !py-1" title="Usuń zapłatę" aria-label="Usuń zapłatę">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                             </button>
                         </form>
                     </div>
                     {% elif m.tax == 0 %}
-                    <span class="inline-flex items-center gap-1.5 text-emerald-600"><span class="badge success"></span> brak podatku</span>
+                    <span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">brak podatku</span>
                     {% else %}
                     <div class="inline-flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1.5 text-rose-600"><span class="badge danger"></span> niezapłacony</span>
+                        <span class="pill bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">niezapłacony</span>
                         <form method="post" action="{% url 'core:confirm_tax_payment' m.year m.month %}" class="inline-flex">
                             {% csrf_token %}
-                            <button type="submit" class="btn-ghost !px-2 !py-1 text-xs" title="Zapisz zapłatę podatku">Zatwierdź</button>
+                            <button type="submit" class="btn !px-2.5 !py-1 !text-xs" title="Zapisz zapłatę podatku">Zatwierdź</button>
                         </form>
                     </div>
                     {% endif %}
                 </td>
             </tr>
             {% endfor %}
-            <tr class="border-t-2 border-gray-300 bg-gray-100/70 font-semibold text-gray-900">
+            <tr class="border-t-2 border-gray-300 bg-gray-100/70 font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-800/60 dark:text-white">
                 <td class="px-3 py-2.5 text-left">Razem {{ year }}</td>
-                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono">{{ year_taxable|floatformat:2|intcomma }} zł</td>
-                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono">{{ year_tax|intcomma }} zł</td>
-                <td class="border-l border-gray-200 px-3 py-2.5"></td>
-                <td class="border-l border-gray-200 px-3 py-2.5"></td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono dark:border-gray-700">{{ year_taxable|floatformat:2|intcomma }} zł</td>
+                <td class="whitespace-nowrap border-l border-gray-200 px-3 py-2.5 font-mono dark:border-gray-700">{{ year_tax|intcomma }} zł</td>
+                <td class="border-l border-gray-200 px-3 py-2.5 dark:border-gray-700"></td>
+                <td class="border-l border-gray-200 px-3 py-2.5 dark:border-gray-700"></td>
             </tr>
         </tbody>
     </table>
 </div>
 {% else %}
-<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-    <p class="text-gray-500">Brak okresów podatkowych.</p>
+<div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
+    <p class="text-gray-500 dark:text-gray-400">Brak okresów podatkowych.</p>
 </div>
 {% endif %}
 {% endblock %}
