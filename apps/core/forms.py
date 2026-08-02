@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any, cast
 
@@ -238,10 +239,14 @@ class MeterDefinitionForm(forms.ModelForm):
 class SettlementForm(forms.Form):
     flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Mieszkanie")
     period_start = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}), label="Początek okresu"
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        input_formats=["%Y-%m-%d"],
+        label="Początek okresu",
     )
     period_end = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}), label="Koniec okresu"
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        input_formats=["%Y-%m-%d"],
+        label="Koniec okresu",
     )
     email_tenants = forms.BooleanField(
         required=False, label="Wyślij rozliczenie do najemców (w tle)"
@@ -252,12 +257,23 @@ class SettlementForm(forms.Form):
         if user is not None:
             field = cast(forms.ModelChoiceField, self.fields["flat"])
             field.queryset = Flat.objects.filter(owner=user)
+        # Default to the previous (last complete) calendar month.
+        first_of_this_month = timezone.localdate().replace(day=1)
+        last_month_end = first_of_this_month - timedelta(days=1)
+        self.fields["period_start"].initial = last_month_end.replace(day=1)
+        self.fields["period_end"].initial = last_month_end
 
     def clean(self) -> dict[str, Any]:
         cleaned = super().clean() or {}
         start, end = cleaned.get("period_start"), cleaned.get("period_end")
         if start and end and end < start:
-            raise forms.ValidationError("Data końca musi być nie wcześniejsza niż data początku.")
+            raise forms.ValidationError(
+                "Data końca musi być nie wcześniejsza niż data początku."
+            )
+        if end and end > timezone.localdate():
+            raise forms.ValidationError(
+                "Okres nie może obejmować przyszłości — rozlicz zakończony miesiąc."
+            )
         return cleaned
 
 

@@ -94,7 +94,7 @@ def test_add_reading_page_shows_estimate_controls(flat_with_history: tuple) -> N
     response = client.get(reverse("core:add_reading"))
     assert response.status_code == 200
     assert b"estimate-btn" in response.content
-    assert "Oszacuj".encode() in response.content
+    assert b"Oszacuj" in response.content
 
 
 @pytest.mark.django_db

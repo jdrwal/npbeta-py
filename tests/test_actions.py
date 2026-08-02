@@ -1,11 +1,15 @@
 """Tests for create/action views and the save_settlement service."""
 
+from datetime import timedelta
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import Client
 from django.urls import reverse
+from django.utils import timezone
 
+from apps.core.forms import SettlementForm
 from apps.core.models import FeeCalculation, FeeCalculationItem, Flat
 from apps.core.services.fees import calculate_fees, save_settlement
 
@@ -43,6 +47,35 @@ def test_run_settlement_form_renders(owner_client: tuple) -> None:
     _, client = owner_client
     response = client.get(reverse("core:run_settlement"))
     assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_settlement_form_defaults_to_previous_month(owner_client: tuple) -> None:
+    user, _ = owner_client
+    form = SettlementForm(user=user)
+    today = timezone.localdate()
+    first_this = today.replace(day=1)
+    prev_end = first_this - timedelta(days=1)
+    assert form.fields["period_start"].initial == prev_end.replace(day=1)
+    assert form.fields["period_end"].initial == prev_end
+
+
+@pytest.mark.django_db
+def test_settlement_rejects_future_period(owner_client: tuple) -> None:
+    user, _ = owner_client
+    flat = Flat.objects.create(owner=user, city="X", street="Y", code="C")
+    today = timezone.localdate()
+    future = today + timedelta(days=10)
+    form = SettlementForm(
+        data={
+            "flat": flat.pk,
+            "period_start": today.replace(day=1).isoformat(),
+            "period_end": future.isoformat(),
+        },
+        user=user,
+    )
+    assert not form.is_valid()
+    assert any("przyszłości" in e for e in form.non_field_errors())
 
 
 @pytest.mark.django_db
