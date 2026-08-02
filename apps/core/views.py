@@ -920,7 +920,7 @@ def run_settlement(request: HttpRequest) -> HttpResponse:
     else:
         form = SettlementForm(user=user)
     return render(
-        request, "core/form.html", {"form": form, "title": "Nowe rozliczenie"}
+        request, "core/settlement_form.html", {"form": form, "title": "Nowe rozliczenie"}
     )
 
 
