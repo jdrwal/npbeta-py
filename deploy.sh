@@ -28,7 +28,11 @@ echo "==> Applying migrations (once, before serving)"
 $COMPOSE run --rm web python manage.py migrate --noinput
 
 echo "==> Collecting static files"
-$COMPOSE run --rm web python manage.py collectstatic --noinput
+# Ignore static/src/ — that's the Tailwind SOURCE (input.css with @import
+# "tailwindcss" / @source ...). Only the built static/css/app.css is served;
+# collecting the source makes WhiteNoise's manifest post-processor choke on
+# the un-resolvable @import reference.
+$COMPOSE run --rm web python manage.py collectstatic --noinput --ignore=src
 
 echo "==> Starting app (web + worker)"
 $COMPOSE up -d
