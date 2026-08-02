@@ -1,8 +1,11 @@
 # Dev/test dependencies.
+# Versions are pinned so CI (fresh installs) and local (cached) resolve to the
+# SAME toolchain — an unpinned django-stubs/mypy bump once broke CI with new type
+# errors that local podman (older cached stubs) did not catch.
 -r requirements.txt
-pytest>=8.0
-pytest-django>=4.8
+pytest==9.1.1
+pytest-django==4.12.0
 factory-boy>=3.3
-ruff>=0.5
-mypy>=1.10
-django-stubs>=5.0
+ruff==0.16.1
+mypy==2.3.0
+django-stubs==6.0.7
