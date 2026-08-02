@@ -33,6 +33,8 @@ from apps.core.forms import (
     RoomForm,
     SecuritySettingsForm,
     SettlementForm,
+    WishlistForm,
+    WishlistReplyForm,
 )
 from apps.core.models import (
     AdminFee,
@@ -48,6 +50,8 @@ from apps.core.models import (
     MeterReading,
     Room,
     TaxDue,
+    WishlistItem,
+    WishlistMessage,
 )
 from apps.core.services.counters import counters_matrix
 from apps.core.services.estimate import estimate_flat_readings
@@ -1081,6 +1085,57 @@ def user_settings(request: HttpRequest) -> HttpResponse:
         "core/settings.html",
         {"pwd_form": pwd_form, "mail_form": mail_form, "sec_form": sec_form},
     )
+
+
+@login_required
+def wishlist(request: HttpRequest) -> HttpResponse:
+    """User feedback page: submit problems/wishes and track their status."""
+    user = cast(User, request.user)
+    wish_form = WishlistForm()
+    if request.method == "POST":
+        wish_form = WishlistForm(request.POST)
+        if wish_form.is_valid():
+            item = wish_form.save(commit=False)
+            item.user = user
+            item.save()
+            messages.success(request, "Zgłoszenie zostało wysłane. Dziękujemy!")
+            return redirect("core:wishlist")
+    items = (
+        WishlistItem.objects.filter(user=user)
+        .prefetch_related("messages", "messages__author")
+    )
+    return render(
+        request,
+        "core/wishlist.html",
+        {
+            "wish_form": wish_form,
+            "wishlist": items,
+            "reply_form": WishlistReplyForm(),
+        },
+    )
+
+
+@login_required
+@require_POST
+def wishlist_reply(request: HttpRequest, pk: int) -> HttpResponse:
+    """Add a follow-up message to one of the user's own wishlist items."""
+    user = cast(User, request.user)
+    item = get_object_or_404(WishlistItem, pk=pk, user=user)
+    form = WishlistReplyForm(request.POST)
+    if form.is_valid():
+        WishlistMessage.objects.create(
+            item=item,
+            author=user,
+            from_staff=False,
+            body=form.cleaned_data["body"],
+        )
+        # Reopen a resolved item when the user comes back with more to say.
+        if item.status in (WishlistItem.Status.DONE, WishlistItem.Status.CLOSED):
+            item.status = WishlistItem.Status.OPEN
+            item.save(update_fields=["status", "updated"])
+        messages.success(request, "Odpowiedź została dodana.")
+    return redirect("core:wishlist")
+
 
 
 @login_required

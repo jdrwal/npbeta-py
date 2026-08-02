@@ -1,4 +1,11 @@
+from typing import cast
+
 from django.contrib import admin
+from django.db.models.query import QuerySet
+from django.forms.models import BaseInlineFormSet
+from django.http import HttpRequest
+
+from apps.accounts.models import User
 
 from .models import (
     AdminFee,
@@ -15,6 +22,8 @@ from .models import (
     Room,
     TaxDue,
     TaxMode,
+    WishlistItem,
+    WishlistMessage,
 )
 
 
@@ -128,3 +137,46 @@ class TaxModeAdmin(admin.ModelAdmin):
 @admin.register(TaxDue)
 class TaxDueAdmin(admin.ModelAdmin):
     list_display = ("id", "period", "tax_date", "tax_amount")
+
+
+class WishlistMessageInline(admin.TabularInline):
+    model = WishlistMessage
+    extra = 1
+    fields = ("from_staff", "author", "body", "created")
+    readonly_fields = ("created",)
+
+
+@admin.register(WishlistItem)
+class WishlistItemAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "kind", "status", "user", "created", "updated")
+    list_filter = ("status", "kind")
+    list_editable = ("status",)
+    search_fields = ("subject", "body", "user__username", "user__email")
+    date_hierarchy = "created"
+    readonly_fields = ("user", "kind", "subject", "body", "created", "updated")
+    inlines = (WishlistMessageInline,)
+
+    def save_formset(
+        self, request: HttpRequest, form: object, formset: BaseInlineFormSet, change: bool
+    ) -> None:
+        """Stamp new inline replies as staff messages authored by the admin."""
+        instances = formset.save(commit=False)
+        for obj in instances:
+            if isinstance(obj, WishlistMessage) and obj.author_id is None:
+                obj.author = cast(User, request.user)
+                obj.from_staff = True
+            obj.save()
+        for obj in formset.deleted_objects:
+            obj.delete()
+        formset.save_m2m()
+
+
+@admin.register(WishlistMessage)
+class WishlistMessageAdmin(admin.ModelAdmin):
+    list_display = ("id", "item", "from_staff", "author", "created")
+    list_filter = ("from_staff",)
+    search_fields = ("body",)
+    date_hierarchy = "created"
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet:
+        return super().get_queryset(request).select_related("item", "author")

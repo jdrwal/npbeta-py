@@ -56,6 +56,7 @@ def test_send_settlement_emails(calc_with_tenant: FeeCalculation) -> None:
     assert sent == 1
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == ["tenant@example.com"]
+    assert mail.outbox[0].bcc == ["owner@example.com"]
     assert "Prad" in mail.outbox[0].body
     assert "Total: 50.00 PLN" in mail.outbox[0].body
 

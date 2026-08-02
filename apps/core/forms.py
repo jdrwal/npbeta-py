@@ -21,6 +21,7 @@ from apps.core.models import (
     MeterPrice,
     MeterReading,
     Room,
+    WishlistItem,
 )
 
 _DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
@@ -460,4 +461,32 @@ class SecuritySettingsForm(forms.ModelForm):
     def clean_session_timeout_minutes(self) -> int:
         value = int(self.cleaned_data["session_timeout_minutes"])
         return max(self.MIN_MINUTES, min(self.MAX_MINUTES, value))
+
+
+class WishlistForm(forms.ModelForm):
+    """Lets a user submit a problem report or feature wish from settings."""
+
+    class Meta:
+        model = WishlistItem
+        fields = ["kind", "subject", "body"]
+        widgets = {
+            "body": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "kind": "Rodzaj",
+            "subject": "Temat",
+            "body": "Opis",
+        }
+        help_texts = {
+            "body": "Opisz problem lub życzenie tak dokładnie, jak potrafisz.",
+        }
+
+
+class WishlistReplyForm(forms.Form):
+    """A follow-up message the user adds to their own wishlist item."""
+
+    body = forms.CharField(
+        label="Odpowiedź",
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Napisz odpowiedź…"}),
+    )
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.mail import get_connection, send_mail
+from django.core.mail import EmailMessage, get_connection
 
 from apps.core.models import FeeCalculation, FeeCalculationTenant
 
@@ -48,16 +48,22 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
         connection = None
         from_email = settings.DEFAULT_FROM_EMAIL
 
+    # BCC the account owner on every message so they keep a copy of what was
+    # sent to their tenants. The login username doubles as the email address,
+    # so fall back to it when the dedicated email field is empty.
+    owner_email = calc.owner.email or calc.owner.get_username()
+    bcc = [owner_email] if "@" in owner_email else []
+
     for tenant in calc.tenants.all():
         if not tenant.email:
             continue
-        send_mail(
+        EmailMessage(
             subject=subject,
-            message=_body(tenant),
+            body=_body(tenant),
             from_email=from_email,
-            recipient_list=[tenant.email],
-            fail_silently=False,
+            to=[tenant.email],
+            bcc=bcc,
             connection=connection,
-        )
+        ).send(fail_silently=False)
         sent += 1
     return sent

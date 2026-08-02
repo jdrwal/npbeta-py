@@ -104,6 +104,12 @@ urlpatterns = [
     ),
     path("forecast/", views.forecast, name="forecast"),
     path("settings/", views.user_settings, name="settings"),
+    path("settings/wishlist/", views.wishlist, name="wishlist"),
+    path(
+        "settings/wishlist/<int:pk>/reply/",
+        views.wishlist_reply,
+        name="wishlist_reply",
+    ),
     path("contracts/<int:pk>/invites/", views.contract_invites, name="contract_invites"),
     path("contracts/<int:pk>/invites/new/", views.create_invite, name="create_invite"),
     path("portal/", views.portal, name="portal"),

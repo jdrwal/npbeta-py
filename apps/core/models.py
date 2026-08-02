@@ -434,3 +434,80 @@ class TaxDue(models.Model):
 
     def __str__(self) -> str:
         return f"{self.period}: {self.tax_amount}"
+
+
+# --- Wishlist / feedback -------------------------------------------------------
+class WishlistItem(models.Model):
+    """A problem report or feature wish submitted by a user from settings.
+
+    Stored in the database and managed by staff from the admin (the eventual
+    superadmin panel): status can be advanced and staff can reply, forming a
+    conversation thread with the user (see ``WishlistMessage``).
+    """
+
+    class Kind(models.TextChoices):
+        PROBLEM = "problem", "Problem / błąd"
+        WISH = "wish", "Życzenie / pomysł"
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Nowe"
+        IN_PROGRESS = "in_progress", "W trakcie"
+        DONE = "done", "Zrobione"
+        REJECTED = "rejected", "Odrzucone"
+        CLOSED = "closed", "Zamknięte"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="wishlist_items",
+    )
+    kind = models.CharField(
+        max_length=16, choices=Kind.choices, default=Kind.WISH
+    )
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.OPEN
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created"]
+
+    def __str__(self) -> str:
+        return f"[{self.get_status_display()}] {self.subject}"
+
+    @property
+    def is_open(self) -> bool:
+        return self.status not in (self.Status.DONE, self.Status.CLOSED)
+
+
+class WishlistMessage(models.Model):
+    """A single message in a wishlist item's conversation thread.
+
+    Written either by the reporting user or by staff answering from the admin.
+    ``from_staff`` snapshots who wrote it so replies keep their side even if the
+    author account is later removed.
+    """
+
+    item = models.ForeignKey(
+        WishlistItem, on_delete=models.CASCADE, related_name="messages"
+    )
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="wishlist_messages",
+    )
+    from_staff = models.BooleanField(default=False)
+    body = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created"]
+
+    def __str__(self) -> str:
+        who = "staff" if self.from_staff else "user"
+        return f"{who} on {self.item_id}: {self.body[:40]}"
