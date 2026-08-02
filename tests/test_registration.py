@@ -6,7 +6,6 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.test import Client
@@ -14,14 +13,13 @@ from django.urls import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+from apps.accounts.models import User
 from apps.core.models import Contract, ContractInvite, Flat, Room
-
-User = get_user_model()
 
 STRONG_PW = "Trawa-9284-Xylo"
 
 
-def _landlord() -> object:
+def _landlord() -> User:
     return User.objects.create_user(
         username="owner@example.com",
         email="owner@example.com",
@@ -30,7 +28,7 @@ def _landlord() -> object:
     )
 
 
-def _flat_room(owner: object) -> tuple[Flat, Room]:
+def _flat_room(owner: User) -> tuple[Flat, Room]:
     flat = Flat.objects.create(owner=owner, city="Kraków", street="Główna", building_no="1")
     room = Room.objects.create(owner=owner, flat=flat, room_no=1, beds=1)
     return flat, room
@@ -165,13 +163,13 @@ def test_role_routing_and_access_control() -> None:
     # Tenant is redirected away from landlord pages to the portal.
     client = Client()
     client.force_login(tenant)
-    assert client.get(reverse("core:dashboard")).url == reverse("core:portal")
+    assert client.get(reverse("core:dashboard"))["Location"] == reverse("core:portal")
     assert client.get(reverse("core:portal")).status_code == 200
 
     # Landlord is redirected out of the portal to the dashboard.
     client2 = Client()
     client2.force_login(owner)
-    assert client2.get(reverse("core:portal")).url == reverse("core:dashboard")
+    assert client2.get(reverse("core:portal"))["Location"] == reverse("core:dashboard")
     assert client2.get(reverse("core:dashboard")).status_code == 200
 
 

@@ -92,6 +92,7 @@ def test_record_create_and_delete(setup: tuple) -> None:
     )
     assert response.status_code == 302
     entry = LedgerEntry.objects.get(owner=user, short_desc="Rent")
+    assert entry.billing_period is not None
     assert entry.billing_period.isoformat() == "2026-01-01"
 
     response = client.post(reverse("core:delete_record", args=[entry.pk]))
@@ -191,9 +192,11 @@ def test_flat_fees_management(setup: tuple) -> None:
 
     # Delete a price of each, then the fee and the meter.
     p = AdminFeePrice.objects.filter(admin_fee=fee).first()
+    assert p is not None
     client.post(reverse("core:delete_fee_price", args=[flat.pk, p.pk]))
     assert not AdminFeePrice.objects.filter(pk=p.pk).exists()
     mp = MeterPrice.objects.filter(meter=meter).first()
+    assert mp is not None
     client.post(reverse("core:delete_meter_price", args=[flat.pk, mp.pk]))
     assert not MeterPrice.objects.filter(pk=mp.pk).exists()
     client.post(reverse("core:delete_fee", args=[flat.pk, fee.pk]))
