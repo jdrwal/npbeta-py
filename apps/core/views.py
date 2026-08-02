@@ -19,9 +19,11 @@ from django.views.generic import CreateView, DeleteView, UpdateView
 
 from apps.accounts.models import MailSettings, User
 from apps.core.forms import (
+    AdHocEmailForm,
     AdminFeeForm,
     AdminFeePriceForm,
     ContractForm,
+    EmailTemplateForm,
     FeeCreateForm,
     FlatForm,
     LedgerEntryForm,
@@ -41,6 +43,8 @@ from apps.core.models import (
     AdminFeePrice,
     Contract,
     ContractInvite,
+    EmailLog,
+    EmailTemplate,
     FeeCalculation,
     FeeCalculationTenant,
     Flat,
@@ -1136,6 +1140,104 @@ def wishlist_reply(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Odpowiedź została dodana.")
     return redirect("core:wishlist")
 
+
+@login_required
+def communication(request: HttpRequest) -> HttpResponse:
+    """Landlord communication hub: templates, ad-hoc send and history."""
+    user = cast(User, request.user)
+    templates = EmailTemplate.objects.filter(owner=user)
+    logs = EmailLog.objects.filter(owner=user)[:50]
+    adhoc_form = AdHocEmailForm(user=user)
+    return render(
+        request,
+        "core/communication.html",
+        {
+            "templates": templates,
+            "logs": logs,
+            "adhoc_form": adhoc_form,
+        },
+    )
+
+
+@login_required
+def email_template_add(request: HttpRequest) -> HttpResponse:
+    """Create a new e-mail template owned by the landlord."""
+    user = cast(User, request.user)
+    form = EmailTemplateForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        tpl = form.save(commit=False)
+        tpl.owner = user
+        tpl.save()
+        messages.success(request, "Szablon zapisany.")
+        return redirect(f"{reverse('core:communication')}#templates")
+    return render(
+        request,
+        "core/form.html",
+        {"form": form, "title": "Nowy szablon", "subtitle": "Komunikacja"},
+    )
+
+
+@login_required
+def email_template_edit(request: HttpRequest, pk: int) -> HttpResponse:
+    """Edit one of the landlord's own e-mail templates."""
+    user = cast(User, request.user)
+    tpl = get_object_or_404(EmailTemplate, pk=pk, owner=user)
+    form = EmailTemplateForm(request.POST or None, instance=tpl)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Szablon zaktualizowany.")
+        return redirect(f"{reverse('core:communication')}#templates")
+    return render(
+        request,
+        "core/form.html",
+        {"form": form, "title": "Edytuj szablon", "subtitle": "Komunikacja"},
+    )
+
+
+@login_required
+@require_POST
+def email_template_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    """Delete one of the landlord's own e-mail templates."""
+    user = cast(User, request.user)
+    tpl = get_object_or_404(EmailTemplate, pk=pk, owner=user)
+    tpl.delete()
+    messages.success(request, "Szablon usunięty.")
+    return redirect(f"{reverse('core:communication')}#templates")
+
+
+@login_required
+@require_POST
+def send_adhoc(request: HttpRequest) -> HttpResponse:
+    """Send an ad-hoc notification to all active tenants of a flat (BCC)."""
+    from apps.core.services.mailer import render_text
+    from apps.core.tasks import send_flat_broadcast_task
+
+    user = cast(User, request.user)
+    form = AdHocEmailForm(request.POST, user=user)
+    if form.is_valid():
+        flat = form.cleaned_data["flat"]
+        tpl = form.cleaned_data.get("template")
+        ctx = {"flat": str(flat), "owner_name": user.get_full_name() or user.get_username()}
+        subject = render_text(form.cleaned_data["subject"], ctx)
+        body = render_text(form.cleaned_data["body"], ctx)
+        send_flat_broadcast_task.delay(
+            user.pk, flat.pk, subject, body, tpl.pk if tpl else None
+        )
+        messages.success(request, "Wiadomość została skierowana do wysyłki.")
+        return redirect(f"{reverse('core:communication')}#send")
+    # Re-render the hub with the invalid form so errors are visible.
+    templates = EmailTemplate.objects.filter(owner=user)
+    logs = EmailLog.objects.filter(owner=user)[:50]
+    return render(
+        request,
+        "core/communication.html",
+        {
+            "templates": templates,
+            "logs": logs,
+            "adhoc_form": form,
+            "open_tab": "send",
+        },
+    )
 
 
 @login_required

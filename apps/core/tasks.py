@@ -28,3 +28,31 @@ def email_settlement_task(calc_id: int) -> int:
 
     calc = FeeCalculation.objects.get(pk=calc_id)
     return send_settlement_emails(calc)
+
+
+@shared_task
+def send_flat_broadcast_task(
+    owner_id: int,
+    flat_id: int,
+    subject: str,
+    body: str,
+    template_id: int | None = None,
+) -> int:
+    """Send an ad-hoc broadcast to all active tenants of a flat (tenants in BCC).
+
+    Returns the number of tenant addresses reached (0 if none / not sent).
+    """
+    from apps.accounts.models import User
+    from apps.core.models import EmailTemplate, Flat
+    from apps.core.services.mailer import send_flat_broadcast
+
+    owner = User.objects.get(pk=owner_id)
+    flat = Flat.objects.get(pk=flat_id, owner=owner)
+    template = (
+        EmailTemplate.objects.filter(pk=template_id, owner=owner).first()
+        if template_id
+        else None
+    )
+    log = send_flat_broadcast(owner, flat, subject, body, template=template)
+    return len(log.bcc) if log is not None else 0
+

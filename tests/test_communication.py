@@ -1,0 +1,126 @@
+"""Tests for landlord e-mail communication: templates, ad-hoc broadcast, mailer."""
+
+from datetime import date, timedelta
+
+import pytest
+from django.core import mail
+from django.test import Client
+from django.urls import reverse
+from django.utils import timezone
+
+from apps.accounts.models import User
+from apps.core.models import Contract, EmailLog, EmailTemplate, Flat, Room
+from apps.core.services.mailer import (
+    active_tenant_emails,
+    render_text,
+    send_flat_broadcast,
+)
+
+
+@pytest.fixture
+def landlord(db: None) -> User:
+    return User.objects.create_user(username="owner@example.com", password="pw")
+
+
+@pytest.fixture
+def flat_with_tenants(landlord: User) -> Flat:
+    flat = Flat.objects.create(owner=landlord, city="C", street="S", code="X")
+    room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
+    today = timezone.now().date()
+    Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="A", email="a@example.com",
+        contract_start=today - timedelta(days=10), contract_end=today + timedelta(days=10),
+    )
+    Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="B", email="b@example.com",
+        contract_start=today - timedelta(days=10), contract_end=None,
+    )
+    # Expired contract — must be excluded.
+    Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="C", email="c@example.com",
+        contract_start=date(2000, 1, 1), contract_end=date(2000, 2, 1),
+    )
+    return flat
+
+
+def test_render_text_replaces_known_tokens() -> None:
+    out = render_text("Cześć {tenant_name}, {flat}", {"tenant_name": "Jan", "flat": "M1"})
+    assert out == "Cześć Jan, M1"
+
+
+@pytest.mark.django_db
+def test_active_tenant_emails_only_active(flat_with_tenants: Flat) -> None:
+    emails = active_tenant_emails(flat_with_tenants)
+    assert emails == ["a@example.com", "b@example.com"]
+
+
+@pytest.mark.django_db
+def test_send_flat_broadcast_bcc_and_owner_to(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    log = send_flat_broadcast(landlord, flat_with_tenants, "Temat", "Treść")
+    assert log is not None
+    assert len(mail.outbox) == 1
+    msg = mail.outbox[0]
+    assert msg.to == ["owner@example.com"]
+    assert sorted(msg.bcc) == ["a@example.com", "b@example.com"]
+    assert log.status == EmailLog.Status.SENT
+
+
+@pytest.mark.django_db
+def test_broadcast_none_without_tenants(landlord: User) -> None:
+    flat = Flat.objects.create(owner=landlord, city="C", street="S", code="Y")
+    assert send_flat_broadcast(landlord, flat, "s", "b") is None
+    assert len(mail.outbox) == 0
+
+
+@pytest.mark.django_db
+def test_template_crud(landlord: User) -> None:
+    client = Client()
+    client.force_login(landlord)
+    resp = client.post(
+        reverse("core:email_template_add"),
+        {
+            "kind": EmailTemplate.Kind.CUSTOM,
+            "name": "Powiadomienie",
+            "subject": "Cześć",
+            "body": "Treść {flat}",
+            "is_active": "on",
+        },
+    )
+    assert resp.status_code == 302
+    tpl = EmailTemplate.objects.get(owner=landlord)
+    assert tpl.name == "Powiadomienie"
+
+    client.post(
+        reverse("core:email_template_delete", args=[tpl.pk])
+    )
+    assert EmailTemplate.objects.filter(pk=tpl.pk).count() == 0
+
+
+@pytest.mark.django_db
+def test_send_adhoc_enqueues_and_sends(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    client = Client()
+    client.force_login(landlord)
+    resp = client.post(
+        reverse("core:send_adhoc"),
+        {"flat": flat_with_tenants.pk, "subject": "Awaria wody", "body": "Jutro."},
+    )
+    assert resp.status_code == 302
+    assert len(mail.outbox) == 1
+    assert sorted(mail.outbox[0].bcc) == ["a@example.com", "b@example.com"]
+
+
+@pytest.mark.django_db
+def test_template_owner_scoped(landlord: User) -> None:
+    other = User.objects.create_user(username="other@example.com", password="pw")
+    tpl = EmailTemplate.objects.create(
+        owner=other, kind=EmailTemplate.Kind.CUSTOM, name="X", subject="s", body="b"
+    )
+    client = Client()
+    client.force_login(landlord)
+    assert client.get(
+        reverse("core:email_template_edit", args=[tpl.pk])
+    ).status_code == 404

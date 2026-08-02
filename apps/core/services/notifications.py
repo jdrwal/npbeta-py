@@ -4,10 +4,17 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from django.conf import settings
-from django.core.mail import EmailMessage, get_connection
-
 from apps.core.models import FeeCalculation, FeeCalculationTenant
+from apps.core.services.mailer import (
+    owner_address,
+    owner_connection,
+    render_text,
+    send_owner_email,
+)
+
+
+def _period_label(calc: FeeCalculation) -> str:
+    return f"{calc.period_start:%Y-%m-%d} – {calc.period_end:%Y-%m-%d}"
 
 
 def _body(tenant: FeeCalculationTenant) -> str:
@@ -26,44 +33,36 @@ def _body(tenant: FeeCalculationTenant) -> str:
 
 
 def send_settlement_emails(calc: FeeCalculation) -> int:
-    """Email each tenant with an address their settlement breakdown. Returns count."""
-    sent = 0
-    subject = (
-        f"Utility settlement — {calc.flat} "
-        f"({calc.period_start:%Y-%m-%d} – {calc.period_end:%Y-%m-%d})"
-    )
-    # Prefer the owner's custom SMTP; fall back to the project default backend.
-    mail_cfg = getattr(calc.owner, "mail_settings", None)
-    if mail_cfg is not None and mail_cfg.use_custom:
-        connection = get_connection(
-            host=mail_cfg.smtp_host,
-            port=mail_cfg.smtp_port,
-            username=mail_cfg.smtp_user or None,
-            password=mail_cfg.smtp_password or None,
-            use_tls=mail_cfg.use_tls,
-            use_ssl=mail_cfg.use_ssl,
-        )
-        from_email = mail_cfg.from_email or settings.DEFAULT_FROM_EMAIL
-    else:
-        connection = None
-        from_email = settings.DEFAULT_FROM_EMAIL
+    """Email each tenant their settlement breakdown (owner in CC). Returns count."""
+    from apps.core.models import EmailTemplate
+    from apps.core.services.mailer import get_template
 
-    # BCC the account owner on every message so they keep a copy of what was
-    # sent to their tenants. The login username doubles as the email address,
-    # so fall back to it when the dedicated email field is empty.
-    owner_email = calc.owner.email or calc.owner.get_username()
-    bcc = [owner_email] if "@" in owner_email else []
+    sent = 0
+    # Subject may be customised via the owner's SETTLEMENT template.
+    tpl_subject, _ = get_template(calc.owner, EmailTemplate.Kind.SETTLEMENT)
+    subject = render_text(
+        tpl_subject or "Utility settlement — {flat} ({period})",
+        {"flat": str(calc.flat), "period": _period_label(calc)},
+    )
+    # Reuse one SMTP connection across the batch.
+    connection, _ = owner_connection(calc.owner)
+
+    # CC the account owner so they keep a copy of each tenant mailing.
+    owner_cc = owner_address(calc.owner)
+    cc = [owner_cc] if owner_cc else []
 
     for tenant in calc.tenants.all():
         if not tenant.email:
             continue
-        EmailMessage(
+        send_owner_email(
+            calc.owner,
             subject=subject,
             body=_body(tenant),
-            from_email=from_email,
             to=[tenant.email],
-            bcc=bcc,
+            cc=cc,
+            flat=calc.flat,
             connection=connection,
-        ).send(fail_silently=False)
+        )
         sent += 1
     return sent
+

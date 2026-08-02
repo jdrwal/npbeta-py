@@ -511,3 +511,84 @@ class WishlistMessage(models.Model):
     def __str__(self) -> str:
         who = "staff" if self.from_staff else "user"
         return f"{who} on {self.item_id}: {self.body[:40]}"
+
+
+# --- Email communication -------------------------------------------------------
+class EmailTemplate(models.Model):
+    """A reusable e-mail template owned by a landlord.
+
+    ``subject`` and ``body`` may contain ``{placeholder}`` tokens (e.g.
+    ``{tenant_name}``, ``{flat}``, ``{period}``) filled in at send time. The two
+    standard kinds have built-in defaults in ``services/mailer.py``; a stored
+    active template of that kind overrides the default.
+    """
+
+    class Kind(models.TextChoices):
+        CONTRACT_RENEWAL = "contract_renewal", "Przedłużenie umowy"
+        SETTLEMENT = "settlement", "Rozliczenie / rachunek"
+        CUSTOM = "custom", "Własny"
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="email_templates",
+    )
+    kind = models.CharField(
+        max_length=32, choices=Kind.choices, default=Kind.CUSTOM
+    )
+    name = models.CharField(max_length=120)
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["kind", "name"]
+
+    def __str__(self) -> str:
+        return f"{self.get_kind_display()}: {self.name}"
+
+
+class EmailLog(models.Model):
+    """A record of one e-mail the app sent on a landlord's behalf (audit trail)."""
+
+    class Status(models.TextChoices):
+        SENT = "sent", "Wysłano"
+        FAILED = "failed", "Błąd"
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="email_logs",
+    )
+    flat = models.ForeignKey(
+        Flat, on_delete=models.SET_NULL, null=True, blank=True, related_name="email_logs"
+    )
+    template = models.ForeignKey(
+        "EmailTemplate",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="logs",
+    )
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    to = models.JSONField(default=list)
+    cc = models.JSONField(default=list)
+    bcc = models.JSONField(default=list)
+    status = models.CharField(
+        max_length=8, choices=Status.choices, default=Status.SENT
+    )
+    error = models.TextField(blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created"]
+
+    def __str__(self) -> str:
+        return f"[{self.status}] {self.subject} → {len(self.to) + len(self.bcc)}"
+
+    @property
+    def recipient_count(self) -> int:
+        return len(self.to) + len(self.cc) + len(self.bcc)

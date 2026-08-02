@@ -110,6 +110,23 @@ urlpatterns = [
         views.wishlist_reply,
         name="wishlist_reply",
     ),
+    path("communication/", views.communication, name="communication"),
+    path(
+        "communication/templates/add/",
+        views.email_template_add,
+        name="email_template_add",
+    ),
+    path(
+        "communication/templates/<int:pk>/edit/",
+        views.email_template_edit,
+        name="email_template_edit",
+    ),
+    path(
+        "communication/templates/<int:pk>/delete/",
+        views.email_template_delete,
+        name="email_template_delete",
+    ),
+    path("communication/send/", views.send_adhoc, name="send_adhoc"),
     path("contracts/<int:pk>/invites/", views.contract_invites, name="contract_invites"),
     path("contracts/<int:pk>/invites/new/", views.create_invite, name="create_invite"),
     path("portal/", views.portal, name="portal"),

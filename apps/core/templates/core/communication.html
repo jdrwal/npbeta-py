@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Komunikacja — Rozlicz Najem{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m22 6-10 7L2 6"/></svg>
+    </span>
+    <div>
+        <h1>Komunikacja</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Szablony wiadomości, wysyłka do najemców i historia</p>
+    </div>
+</div>
+
+<div class="mb-5 flex flex-wrap gap-2" id="comm-tabs">
+    <button type="button" data-tab="templates" class="comm-tab-btn rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Szablony</button>
+    <button type="button" data-tab="send" class="comm-tab-btn rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Wyślij</button>
+    <button type="button" data-tab="history" class="comm-tab-btn rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Historia</button>
+</div>
+
+{# --- Templates tab --- #}
+<section id="tab-templates" class="comm-tab-panel">
+    <div class="mb-4 flex items-center justify-between gap-3">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Twoje szablony</h2>
+        <a href="{% url 'core:email_template_add' %}" class="btn">Nowy szablon</a>
+    </div>
+    {% if templates %}
+    <div class="grid gap-3">
+        {% for tpl in templates %}
+        <div class="card flex flex-wrap items-start justify-between gap-3">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="pill bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">{{ tpl.get_kind_display }}</span>
+                    <span class="font-medium text-gray-900 dark:text-white">{{ tpl.name }}</span>
+                    {% if not tpl.is_active %}<span class="pill bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">nieaktywny</span>{% endif %}
+                </div>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ tpl.subject }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'core:email_template_edit' tpl.pk %}" class="act"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edytuj</a>
+                <form method="post" action="{% url 'core:email_template_delete' tpl.pk %}" onsubmit="return confirm('Usunąć szablon?');">
+                    {% csrf_token %}
+                    <button type="submit" class="act act-danger"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Usuń</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-500 dark:text-gray-400">Nie masz jeszcze żadnych szablonów. Standardowe treści (przedłużenie umowy, rozliczenie) są używane automatycznie — dodaj szablon, aby je nadpisać własną treścią.</p>
+    {% endif %}
+</section>
+
+{# --- Send tab --- #}
+<section id="tab-send" class="comm-tab-panel hidden">
+    <div class="card max-w-2xl space-y-4">
+        <div>
+            <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wyślij do najemców mieszkania</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Wiadomość trafi do wszystkich aktywnych najemców wybranego mieszkania. Adresy najemców są ukryte (BCC), a kopia trafia do Ciebie.</p>
+        </div>
+        <form method="post" action="{% url 'core:send_adhoc' %}" class="space-y-4">
+            {% csrf_token %}
+            {% if adhoc_form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ adhoc_form.non_field_errors }}</div>{% endif %}
+            <div class="grid gap-4 sm:grid-cols-2">
+                {% include "core/_field.html" with field=adhoc_form.flat %}
+                {% include "core/_field.html" with field=adhoc_form.template %}
+            </div>
+            {% include "core/_field.html" with field=adhoc_form.subject %}
+            {% include "core/_field.html" with field=adhoc_form.body %}
+            <button type="submit">Wyślij wiadomość</button>
+        </form>
+    </div>
+</section>
+
+{# --- History tab --- #}
+<section id="tab-history" class="comm-tab-panel hidden">
+    <h2 class="mb-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Ostatnie wiadomości</h2>
+    {% if logs %}
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-100 text-left text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                <tr><th>Data</th><th>Temat</th><th>Mieszkanie</th><th>Odbiorcy</th><th>Status</th></tr>
+            </thead>
+            <tbody class="text-gray-700 dark:text-gray-300">
+                {% for log in logs %}
+                <tr class="border-t border-gray-100 dark:border-gray-800">
+                    <td class="whitespace-nowrap text-gray-500 dark:text-gray-400">{{ log.created|date:"j M Y, H:i" }}</td>
+                    <td class="text-gray-900 dark:text-gray-100">{{ log.subject }}</td>
+                    <td>{{ log.flat|default:"—" }}</td>
+                    <td>{{ log.recipient_count }}</td>
+                    <td>
+                        {% if log.status == 'sent' %}
+                        <span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">{{ log.get_status_display }}</span>
+                        {% else %}
+                        <span class="pill bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">{{ log.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-500 dark:text-gray-400">Brak wysłanych wiadomości.</p>
+    {% endif %}
+</section>
+
+<script id="template-data" type="application/json">
+{
+{% for tpl in templates %}"{{ tpl.pk }}": {"subject": "{{ tpl.subject|escapejs }}", "body": "{{ tpl.body|escapejs }}"}{% if not forloop.last %},{% endif %}
+{% endfor %}
+}
+</script>
+<script>
+    (function () {
+        const openTab = "{{ open_tab|default:'templates' }}";
+        const buttons = document.querySelectorAll('.comm-tab-btn');
+        const panels = {
+            templates: document.getElementById('tab-templates'),
+            send: document.getElementById('tab-send'),
+            history: document.getElementById('tab-history'),
+        };
+        const active = 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300';
+        function show(name) {
+            Object.keys(panels).forEach(function (k) {
+                if (panels[k]) { panels[k].classList.toggle('hidden', k !== name); }
+            });
+            buttons.forEach(function (b) {
+                const on = b.dataset.tab === name;
+                active.split(' ').forEach(function (c) { b.classList.toggle(c, on); });
+            });
+            if (history.replaceState) { history.replaceState(null, '', '#' + name); }
+        }
+        buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+        const hash = (location.hash || '').replace('#', '');
+        show(panels[hash] ? hash : openTab);
+
+        // Prefill subject/body when an e-mail template is picked.
+        const map = JSON.parse(document.getElementById('template-data').textContent || '{}');
+        const sel = document.getElementById('id_template');
+        const subj = document.getElementById('id_subject');
+        const body = document.getElementById('id_body');
+        if (sel) {
+            sel.addEventListener('change', function () {
+                const t = map[sel.value];
+                if (t) { if (subj) { subj.value = t.subject; } if (body) { body.value = t.body; } }
+            });
+        }
+    })();
+</script>
+{% endblock %}

@@ -11,6 +11,8 @@ from .models import (
     AdminFee,
     AdminFeePrice,
     Contract,
+    EmailLog,
+    EmailTemplate,
     FeeCalculation,
     FeeCalculationItem,
     FeeCalculationTenant,
@@ -180,3 +182,22 @@ class WishlistMessageAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request: HttpRequest) -> QuerySet:
         return super().get_queryset(request).select_related("item", "author")
+
+
+@admin.register(EmailTemplate)
+class EmailTemplateAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "kind", "owner", "is_active", "updated")
+    list_filter = ("kind", "is_active")
+    search_fields = ("name", "subject", "owner__username")
+
+
+@admin.register(EmailLog)
+class EmailLogAdmin(admin.ModelAdmin):
+    list_display = ("id", "created", "subject", "owner", "flat", "status")
+    list_filter = ("status",)
+    search_fields = ("subject", "owner__username")
+    date_hierarchy = "created"
+    readonly_fields = (
+        "owner", "flat", "template", "subject", "body",
+        "to", "cc", "bcc", "status", "error", "created",
+    )

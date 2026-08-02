@@ -15,6 +15,7 @@ from apps.core.models import (
     AdminFee,
     AdminFeePrice,
     Contract,
+    EmailTemplate,
     Flat,
     LedgerEntry,
     MeterDefinition,
@@ -489,4 +490,51 @@ class WishlistReplyForm(forms.Form):
         label="Odpowiedź",
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Napisz odpowiedź…"}),
     )
+
+
+class EmailTemplateForm(forms.ModelForm):
+    """Create/edit a reusable e-mail template owned by the landlord."""
+
+    class Meta:
+        model = EmailTemplate
+        fields = ["kind", "name", "subject", "body", "is_active"]
+        widgets = {
+            "body": forms.Textarea(attrs={"rows": 8}),
+        }
+        labels = {
+            "kind": "Rodzaj",
+            "name": "Nazwa",
+            "subject": "Temat",
+            "body": "Treść",
+            "is_active": "Aktywny",
+        }
+        help_texts = {
+            "body": (
+                "Możesz użyć znaczników: {tenant_name}, {flat}, "
+                "{contract_number}, {contract_end}, {period}, {owner_name}."
+            ),
+        }
+
+
+class AdHocEmailForm(forms.Form):
+    """Compose an ad-hoc notification to all active tenants of a flat."""
+
+    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Mieszkanie")
+    template = forms.ModelChoiceField(
+        queryset=EmailTemplate.objects.none(),
+        required=False,
+        label="Szablon (opcjonalnie)",
+    )
+    subject = forms.CharField(max_length=200, label="Temat")
+    body = forms.CharField(label="Treść", widget=forms.Textarea(attrs={"rows": 8}))
+
+    def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            cast(forms.ModelChoiceField, self.fields["flat"]).queryset = (
+                Flat.objects.filter(owner=user)
+            )
+            cast(forms.ModelChoiceField, self.fields["template"]).queryset = (
+                EmailTemplate.objects.filter(owner=user)
+            )
 
