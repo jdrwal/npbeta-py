@@ -86,6 +86,12 @@ def _date(value: Any) -> date | None:
     return value
 
 
+def _first_of_month(value: Any) -> date | None:
+    """Billing period = the first day of the payment's calendar month."""
+    d = _date(value)
+    return d.replace(day=1) if d else None
+
+
 def _dt_req(value: Any) -> datetime:
     """Like _dt but for NOT NULL columns (asserts a value is present)."""
     result = _dt(value)
@@ -435,26 +441,47 @@ class Command(BaseCommand):
         self._report("calc items", len(items), len(src) - len(items))
 
         # 13. Ledger entries
-        ledger = [
-            LedgerEntry(
-                id=r["id"],
-                owner_id=owner(r["uid"]),
-                flat_id=r["flat_id"],
-                room_id=_fk(r["room_id"]) if _fk(r["room_id"]) in room_ids else None,
-                contract_id=(
-                    _fk(r["cont_id"]) if _fk(r["cont_id"]) in contract_ids else None
-                ),
-                short_desc=r["short_desc"] or "",
-                notes=r["notes"] or "",
-                record_date=_dt(r["record_date"]),
-                created=_dt(r["created"]),
-                modified=_dt(r["modified"]),
-                amount_in_taxable=_dec(r["amount_in_taxable"], 2),
-                is_mortgage=None if r["mort"] is None else bool(r["mort"]),
+        #
+        # The legacy `records` table mixes rent income (a non-zero
+        # `amount_in_taxable`) with landlord expenses and mortgage instalments
+        # (whose `amount_out`/`cost` columns no longer exist in the model). We
+        # classify each row so that only real rent counts as taxable income:
+        #   * kind = RENT when there is a taxable amount, else FEE;
+        #   * billing_period = first day of the payment month, which the paid /
+        #     arrears detection matches against (a NULL here makes every month
+        #     look unpaid).
+        ledger = []
+        for r in self._rows(cur, "records"):
+            if r["flat_id"] not in flat_ids:
+                continue
+            taxable = _dec(r["amount_in_taxable"], 2)
+            kind = (
+                LedgerEntry.Kind.RENT
+                if taxable is not None and taxable != 0
+                else LedgerEntry.Kind.FEE
             )
-            for r in self._rows(cur, "records")
-            if r["flat_id"] in flat_ids
-        ]
+            ledger.append(
+                LedgerEntry(
+                    id=r["id"],
+                    owner_id=owner(r["uid"]),
+                    flat_id=r["flat_id"],
+                    room_id=(
+                        _fk(r["room_id"]) if _fk(r["room_id"]) in room_ids else None
+                    ),
+                    contract_id=(
+                        _fk(r["cont_id"]) if _fk(r["cont_id"]) in contract_ids else None
+                    ),
+                    short_desc=r["short_desc"] or "",
+                    notes=r["notes"] or "",
+                    record_date=_dt(r["record_date"]),
+                    billing_period=_first_of_month(r["record_date"]),
+                    created=_dt(r["created"]),
+                    modified=_dt(r["modified"]),
+                    amount_in_taxable=taxable,
+                    is_mortgage=None if r["mort"] is None else bool(r["mort"]),
+                    kind=kind,
+                )
+            )
         LedgerEntry.objects.bulk_create(ledger, batch_size=BATCH)
         self._report("ledger entries", len(ledger))
 
