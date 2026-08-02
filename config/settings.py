@@ -28,6 +28,9 @@ if env_file.exists():
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-dev-key-change-me")
 DEBUG = env("DJANGO_DEBUG")
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
+# Required by Django's CSRF check for HTTPS POSTs behind a reverse proxy.
+# e.g. DJANGO_CSRF_TRUSTED_ORIGINS=https://rozlicz-najem.pl,https://www.rozlicz-najem.pl
+CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 # --- Applications ---
 INSTALLED_APPS = [
