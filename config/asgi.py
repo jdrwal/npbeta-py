@@ -1,4 +1,4 @@
-"""ASGI config for the npbeta project (for future async/websocket needs)."""
+"""ASGI config for the Rozlicz Najem project (for future async/websocket needs)."""
 
 import os
 

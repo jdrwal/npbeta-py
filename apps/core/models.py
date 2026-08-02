@@ -1,4 +1,4 @@
-"""Domain models for the npbeta rental-management app.
+"""Domain models for the Rozlicz Najem rental-management app.
 
 Modelled from the live database schema (data-migration/20260730_np_dump.sql),
 which is the source of truth. Notable choices vs. the legacy MariaDB schema:

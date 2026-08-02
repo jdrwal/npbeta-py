@@ -1,6 +1,6 @@
-# npbeta (Python/Django rewrite)
+# Rozlicz Najem
 
-Modern rewrite of the legacy PHP `npbeta` rental-property management app.
+Rental-property management app (Django).
 
 **Stack:** Django 5 · PostgreSQL 16 · Redis + Celery · HTMX + Django templates ·
 Gunicorn (prod) · pytest / ruff / mypy · Docker Compose.

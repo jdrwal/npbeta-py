@@ -26,7 +26,7 @@ def send_activation_email_task(user_id: int, activation_url: str) -> None:
         {"user": user, "link": activation_url},
     )
     send_mail(
-        subject="Aktywacja konta — npbeta",
+        subject="Aktywacja konta — Rozlicz Najem",
         message=body,
         from_email=None,
         recipient_list=[user.email],

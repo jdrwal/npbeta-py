@@ -1,4 +1,4 @@
-"""Django settings for the npbeta project.
+"""Django settings for the Rozlicz Najem project.
 
 Configuration is driven by environment variables (see .env.example) so the same
 image runs locally and on the VPS with only the .env file differing.

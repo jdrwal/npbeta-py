@@ -1,7 +1,7 @@
 [project]
-name = "npbeta"
+name = "rozlicz-najem"
 version = "0.1.0"
-description = "Rental property management (Python/Django rewrite of the legacy PHP npbeta app)"
+description = "Rental property management (Python/Django rewrite of the legacy PHP rental app)"
 requires-python = ">=3.12"
 dependencies = [
     "Django>=5.0,<5.2",

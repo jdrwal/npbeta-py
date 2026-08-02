@@ -1,4 +1,4 @@
-"""Config package for the npbeta Django project."""
+"""Config package for the Rozlicz Najem Django project."""
 
 from .celery import app as celery_app
 

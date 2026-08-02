@@ -1,4 +1,4 @@
-"""URL configuration for the npbeta project."""
+"""URL configuration for the Rozlicz Najem project."""
 
 from django.contrib import admin
 from django.contrib.auth import views as auth_views

@@ -1,4 +1,4 @@
-"""WSGI config for the npbeta project (used by Gunicorn in production)."""
+"""WSGI config for the Rozlicz Najem project (used by Gunicorn in production)."""
 
 import os
 
