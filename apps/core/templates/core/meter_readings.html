@@ -11,7 +11,7 @@
         {% for r in readings %}
         <tr>
             <td>{{ r.read_date|date:"Y-m-d" }}</td>
-            <td>{{ r.value }}</td>
+            <td>{{ r.value }}{% if r.is_estimated %} <span class="pill ml-1 bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300" title="Odczyt szacowany">szac.</span>{% endif %}</td>
             <td>
                 <div class="inline-flex items-center gap-1.5">
                     <a href="{% url 'core:edit_reading' r.pk %}" class="act !px-1.5 !py-1" title="Edytuj" aria-label="Edytuj">

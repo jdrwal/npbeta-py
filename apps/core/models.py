@@ -219,6 +219,9 @@ class MeterReading(models.Model):
     )
     read_date = models.DateField()
     value = _reading()
+    # True when the value was estimated from past usage instead of read off the
+    # physical meter. Existing (imported) readings are real, hence default False.
+    is_estimated = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["meter", "read_date"]

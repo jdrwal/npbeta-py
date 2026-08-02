@@ -48,8 +48,8 @@
                     <th rowspan="3" scope="rowgroup" class="whitespace-nowrap border-t-2 border-gray-200 px-3 py-2 text-left align-top font-semibold text-gray-800 dark:border-gray-800 dark:text-gray-100">{{ row.date|date:"Y-m-d" }}</th>
                     <td class="border-l border-gray-200 px-3 py-1.5 text-left text-gray-400 dark:border-gray-700 dark:text-gray-500">Odczyt</td>
                     {% for c in row.cells %}
-                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5 dark:border-gray-700">
-                        {% if c.reading is not None %}{{ c.reading|floatformat:3|intcomma }} <span class="text-gray-400 dark:text-gray-500">{{ c.unit }}</span>{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
+                    <td class="whitespace-nowrap border-l border-gray-200 px-3 py-1.5 dark:border-gray-700 {% if c.estimated %}bg-amber-50/60 dark:bg-amber-500/10{% endif %}">
+                        {% if c.reading is not None %}{{ c.reading|floatformat:3|intcomma }} <span class="text-gray-400 dark:text-gray-500">{{ c.unit }}</span>{% if c.estimated %} <span class="pill ml-1 bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300" title="Odczyt szacowany">szac.</span>{% endif %}{% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     {% endfor %}
                     <td rowspan="3" class="whitespace-nowrap border-l border-gray-200 px-3 py-2 align-middle font-semibold text-gray-900 dark:border-gray-700 dark:text-white">

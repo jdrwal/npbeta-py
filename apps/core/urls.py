@@ -74,6 +74,7 @@ urlpatterns = [
         name="email_settlement",
     ),
     path("readings/add/", views.add_reading, name="add_reading"),
+    path("readings/estimate/", views.estimate_readings, name="estimate_readings"),
     path("readings/<int:pk>/edit/", views.ReadingUpdate.as_view(), name="edit_reading"),
     path(
         "readings/<int:pk>/delete/",

@@ -106,6 +106,9 @@
   .np-slider {
     @apply w-full cursor-pointer accent-indigo-600 !border-0 !bg-transparent !px-0 !py-2 !shadow-none;
   }
+  .est-on {
+    @apply !border-amber-400 !bg-amber-50 !text-amber-900 focus:!ring-amber-300 dark:!border-amber-500/50 dark:!bg-amber-500/15 dark:!text-amber-100;
+  }
   .theme-toggle {
     @apply relative inline-flex h-7 w-14 shrink-0 items-center rounded-full !bg-gray-200 !p-0 !text-inherit !shadow-inner transition-colors hover:!bg-gray-300 dark:!bg-gray-700 dark:hover:!bg-gray-600;
   }

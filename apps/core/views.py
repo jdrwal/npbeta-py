@@ -50,6 +50,7 @@ from apps.core.models import (
     TaxDue,
 )
 from apps.core.services.counters import counters_matrix
+from apps.core.services.estimate import estimate_flat_readings
 from apps.core.services.fees import save_settlement
 from apps.core.services.forecast import (
     contract_ratio,
@@ -803,6 +804,7 @@ def _reading_flat_data(flats: Any, post: Any) -> list[dict[str, Any]]:
                 {
                     "meter": meter,
                     "value": post.get(f"value_{meter.pk}", "") if post else "",
+                    "estimated": post.get(f"estimated_{meter.pk}") == "1" if post else False,
                     "last": last,
                 }
             )
@@ -844,12 +846,13 @@ def add_reading(request: HttpRequest) -> HttpResponse:
                 except (InvalidOperation, ValueError):
                     errors.append(f"Nieprawidłowa wartość dla „{meter.name}”.")
                     continue
+                is_estimated = post.get(f"estimated_{meter.pk}") == "1"
                 MeterReading.objects.update_or_create(
                     owner=user,
                     flat=flat,
                     meter=meter,
                     read_date=read_date,
-                    defaults={"value": value},
+                    defaults={"value": value, "is_estimated": is_estimated},
                 )
                 created += 1
             if not errors and created == 0:
@@ -873,6 +876,25 @@ def add_reading(request: HttpRequest) -> HttpResponse:
             "selected_flat_id": selected_flat_id,
             "read_date_value": read_date_value,
         },
+    )
+
+
+@login_required
+def estimate_readings(request: HttpRequest) -> JsonResponse:
+    """Return estimated meter values for a flat as JSON (used by "Oszacuj")."""
+    user = cast(User, request.user)
+    flat = get_object_or_404(Flat, pk=request.GET.get("flat"), owner=user)
+
+    read_date = parse_date(request.GET.get("read_date", "") or "") or timezone.localdate()
+    try:
+        months = int(request.GET.get("months", "12"))
+    except ValueError:
+        months = 12
+    months = max(6, min(12, months))
+
+    estimates = estimate_flat_readings(flat, read_date, months)
+    return JsonResponse(
+        {"estimates": {str(mid): f"{value:.3f}" for mid, value in estimates.items()}}
     )
 
 

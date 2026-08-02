@@ -47,6 +47,26 @@
         <p id="no-flat-hint" class="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-500 {% if selected_flat_id %}hidden{% endif %}">
             Najpierw wybierz mieszkanie powyżej.
         </p>
+
+        <div id="estimate-bar" class="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10 {% if not selected_flat_id %}hidden{% endif %}">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <div class="mr-auto flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200">
+                    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+                    <span class="font-medium">Brak odczytu? Oszacuj z historii zużycia</span>
+                </div>
+                <label class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                    <span class="whitespace-nowrap">Okres</span>
+                    <input type="range" id="estimate-months" min="6" max="12" step="1" value="12" class="np-slider w-36 align-middle">
+                    <span id="estimate-months-label" class="w-16 whitespace-nowrap font-mono font-medium text-gray-800 dark:text-gray-100">12 mies.</span>
+                </label>
+                <button type="button" id="estimate-btn" class="act whitespace-nowrap">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    Oszacuj
+                </button>
+            </div>
+            <p id="estimate-msg" class="mt-2 text-xs text-amber-700 empty:hidden dark:text-amber-300"></p>
+        </div>
+
         {% for fd in flat_data %}
         <div id="panel-{{ fd.flat.pk }}" class="reading-panel {% if fd.flat.pk != selected_flat_id %}hidden{% endif %}">
             <div class="card">
@@ -57,7 +77,8 @@
                         <div class="grid grid-cols-[1fr_12rem] items-center gap-3">
                             <label class="!mb-0 font-medium text-gray-800 dark:text-gray-100" for="value_{{ row.meter.pk }}">{{ row.meter.name }}</label>
                             <div class="relative">
-                                <input type="text" inputmode="decimal" id="value_{{ row.meter.pk }}" name="value_{{ row.meter.pk }}" value="{{ row.value }}" placeholder="Wartość" class="!pr-14 text-right font-mono">
+                                <input type="text" inputmode="decimal" id="value_{{ row.meter.pk }}" name="value_{{ row.meter.pk }}" data-meter="{{ row.meter.pk }}" value="{{ row.value }}" placeholder="Wartość" class="reading-value !pr-14 text-right font-mono {% if row.estimated %}est-on{% endif %}">
+                                <input type="hidden" id="estimated_{{ row.meter.pk }}" name="estimated_{{ row.meter.pk }}" value="{% if row.estimated %}1{% else %}0{% endif %}">
                                 <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500">{{ row.meter.unit }}</span>
                             </div>
                         </div>
@@ -91,8 +112,12 @@
         const radios = document.querySelectorAll('input[name="flat"]');
         const panels = document.querySelectorAll('.reading-panel');
         const hint = document.getElementById('no-flat-hint');
+        const estimateBar = document.getElementById('estimate-bar');
+        let currentFlat = null;
         function show(flatId) {
+            currentFlat = flatId;
             if (hint) hint.classList.add('hidden');
+            if (estimateBar) estimateBar.classList.remove('hidden');
             panels.forEach(function (p) {
                 p.classList.toggle('hidden', p.id !== 'panel-' + flatId);
             });
@@ -102,6 +127,65 @@
         });
         const checked = document.querySelector('input[name="flat"]:checked');
         if (checked) show(checked.value);
+
+        // Slider label
+        const monthsInput = document.getElementById('estimate-months');
+        const monthsLabel = document.getElementById('estimate-months-label');
+        if (monthsInput && monthsLabel) {
+            monthsInput.addEventListener('input', function () {
+                monthsLabel.textContent = monthsInput.value + ' mies.';
+            });
+        }
+
+        // Clear the estimate flag/highlight when a value is edited by hand.
+        document.querySelectorAll('.reading-value').forEach(function (input) {
+            input.addEventListener('input', function () {
+                input.classList.remove('est-on');
+                const hidden = document.getElementById('estimated_' + input.dataset.meter);
+                if (hidden) hidden.value = '0';
+            });
+        });
+
+        // "Oszacuj" — fetch estimates for the selected flat and fill the fields.
+        const estimateBtn = document.getElementById('estimate-btn');
+        const estimateMsg = document.getElementById('estimate-msg');
+        if (estimateBtn) {
+            estimateBtn.addEventListener('click', function () {
+                if (!currentFlat) { return; }
+                const readDate = document.querySelector('input[name="read_date"]').value;
+                const months = monthsInput ? monthsInput.value : '12';
+                const params = new URLSearchParams({ flat: currentFlat, months: months, read_date: readDate });
+                estimateBtn.disabled = true;
+                if (estimateMsg) estimateMsg.textContent = 'Liczę…';
+                fetch('{% url "core:estimate_readings" %}?' + params.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                })
+                    .then(function (resp) { return resp.json(); })
+                    .then(function (data) {
+                        let filled = 0;
+                        const estimates = data.estimates || {};
+                        Object.keys(estimates).forEach(function (meterId) {
+                            const input = document.getElementById('value_' + meterId);
+                            const hidden = document.getElementById('estimated_' + meterId);
+                            if (input) {
+                                input.value = estimates[meterId];
+                                input.classList.add('est-on');
+                                if (hidden) hidden.value = '1';
+                                filled++;
+                            }
+                        });
+                        if (estimateMsg) {
+                            estimateMsg.textContent = filled
+                                ? 'Oszacowano ' + filled + ' licznik(i). Sprawdź i zapisz.'
+                                : 'Za mało danych, aby oszacować.';
+                        }
+                    })
+                    .catch(function () {
+                        if (estimateMsg) estimateMsg.textContent = 'Nie udało się oszacować.';
+                    })
+                    .finally(function () { estimateBtn.disabled = false; });
+            });
+        }
     })();
 </script>
 {% else %}

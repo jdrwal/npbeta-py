@@ -198,12 +198,13 @@ class LedgerEntryForm(forms.ModelForm):
 class MeterReadingForm(forms.ModelForm):
     class Meta:
         model = MeterReading
-        fields = ["meter", "read_date", "value"]
+        fields = ["meter", "read_date", "value", "is_estimated"]
         widgets = {"read_date": forms.DateInput(attrs={"type": "date"})}
         labels = {
             "meter": "Licznik",
             "read_date": "Data odczytu",
             "value": "Wartość",
+            "is_estimated": "Odczyt szacowany",
         }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:

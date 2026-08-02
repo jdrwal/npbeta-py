@@ -25,6 +25,7 @@ class MeterCell:
     usage: Decimal | None
     cost: Decimal | None
     unit: str
+    estimated: bool = False
 
 
 @dataclass
@@ -93,9 +94,11 @@ def counters_matrix(user: User) -> list[FlatMeters]:
 
         price_fns = {m.id: _price_lookup(m) for m in meters}
         values: dict[int, dict[date, Decimal]] = {m.id: {} for m in meters}
+        estimated_map: dict[int, dict[date, bool]] = {m.id: {} for m in meters}
         dates_set: set[date] = set()
         for r in MeterReading.objects.filter(flat=flat, meter__in=meters):
             values[r.meter_id][r.read_date] = r.value
+            estimated_map[r.meter_id][r.read_date] = r.is_estimated
             dates_set.add(r.read_date)
 
         dates = sorted(dates_set, reverse=True)
@@ -118,7 +121,13 @@ def counters_matrix(user: User) -> list[FlatMeters]:
                             total += cost
                             has_cost = True
                 cells.append(
-                    MeterCell(reading=reading, usage=usage, cost=cost, unit=m.unit)
+                    MeterCell(
+                        reading=reading,
+                        usage=usage,
+                        cost=cost,
+                        unit=m.unit,
+                        estimated=estimated_map[m.id].get(day, False),
+                    )
                 )
             rows.append(
                 MeterRow(date=day, cells=cells, total=total if has_cost else None)
