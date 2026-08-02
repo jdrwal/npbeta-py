@@ -114,6 +114,22 @@ def test_send_adhoc_enqueues_and_sends(
 
 
 @pytest.mark.django_db
+def test_communication_seeds_default_templates(landlord: User) -> None:
+    client = Client()
+    client.force_login(landlord)
+    resp = client.get(reverse("core:communication"))
+    assert resp.status_code == 200
+    kinds = set(
+        EmailTemplate.objects.filter(owner=landlord).values_list("kind", flat=True)
+    )
+    assert EmailTemplate.Kind.CONTRACT_RENEWAL in kinds
+    assert EmailTemplate.Kind.SETTLEMENT in kinds
+    # Idempotent: a second visit does not duplicate them.
+    client.get(reverse("core:communication"))
+    assert EmailTemplate.objects.filter(owner=landlord).count() == 2
+
+
+@pytest.mark.django_db
 def test_template_owner_scoped(landlord: User) -> None:
     other = User.objects.create_user(username="other@example.com", password="pw")
     tpl = EmailTemplate.objects.create(

@@ -1144,7 +1144,10 @@ def wishlist_reply(request: HttpRequest, pk: int) -> HttpResponse:
 @login_required
 def communication(request: HttpRequest) -> HttpResponse:
     """Landlord communication hub: templates, ad-hoc send and history."""
+    from apps.core.services.mailer import ensure_default_templates
+
     user = cast(User, request.user)
+    ensure_default_templates(user)
     templates = EmailTemplate.objects.filter(owner=user)
     logs = EmailLog.objects.filter(owner=user)[:50]
     adhoc_form = AdHocEmailForm(user=user)
@@ -1169,7 +1172,7 @@ def email_template_add(request: HttpRequest) -> HttpResponse:
         tpl.owner = user
         tpl.save()
         messages.success(request, "Szablon zapisany.")
-        return redirect(f"{reverse('core:communication')}#templates")
+        return redirect(f"{reverse('core:communication')}#tab-templates")
     return render(
         request,
         "core/form.html",
@@ -1186,7 +1189,7 @@ def email_template_edit(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Szablon zaktualizowany.")
-        return redirect(f"{reverse('core:communication')}#templates")
+        return redirect(f"{reverse('core:communication')}#tab-templates")
     return render(
         request,
         "core/form.html",
@@ -1202,7 +1205,7 @@ def email_template_delete(request: HttpRequest, pk: int) -> HttpResponse:
     tpl = get_object_or_404(EmailTemplate, pk=pk, owner=user)
     tpl.delete()
     messages.success(request, "Szablon usunięty.")
-    return redirect(f"{reverse('core:communication')}#templates")
+    return redirect(f"{reverse('core:communication')}#tab-templates")
 
 
 @login_required
@@ -1224,7 +1227,7 @@ def send_adhoc(request: HttpRequest) -> HttpResponse:
             user.pk, flat.pk, subject, body, tpl.pk if tpl else None
         )
         messages.success(request, "Wiadomość została skierowana do wysyłki.")
-        return redirect(f"{reverse('core:communication')}#send")
+        return redirect(f"{reverse('core:communication')}#tab-send")
     # Re-render the hub with the invalid form so errors are visible.
     templates = EmailTemplate.objects.filter(owner=user)
     logs = EmailLog.objects.filter(owner=user)[:50]
@@ -1235,7 +1238,7 @@ def send_adhoc(request: HttpRequest) -> HttpResponse:
             "templates": templates,
             "logs": logs,
             "adhoc_form": form,
-            "open_tab": "send",
+            "open_tab": "tab-send",
         },
     )
 

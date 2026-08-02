@@ -104,6 +104,26 @@ def get_template(owner: User, kind: str) -> tuple[str, str]:
     return DEFAULT_TEMPLATES.get(kind, ("", ""))
 
 
+# Human-readable names for the seeded standard templates.
+_DEFAULT_TEMPLATE_NAMES: dict[str, str] = {
+    EmailTemplate.Kind.CONTRACT_RENEWAL: "Przedłużenie umowy",
+    EmailTemplate.Kind.SETTLEMENT: "Rozliczenie / rachunek",
+}
+
+
+def ensure_default_templates(owner: User) -> None:
+    """Create the standard templates as editable rows if the owner lacks them."""
+    for kind, (subject, body) in DEFAULT_TEMPLATES.items():
+        if not EmailTemplate.objects.filter(owner=owner, kind=kind).exists():
+            EmailTemplate.objects.create(
+                owner=owner,
+                kind=kind,
+                name=_DEFAULT_TEMPLATE_NAMES.get(kind, "Szablon"),
+                subject=subject,
+                body=body,
+            )
+
+
 def send_owner_email(
     owner: User,
     *,

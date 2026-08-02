@@ -11,14 +11,14 @@
     </div>
 </div>
 
-<div class="mb-5 flex flex-wrap gap-2" id="comm-tabs">
-    <button type="button" data-tab="templates" class="comm-tab-btn rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Szablony</button>
-    <button type="button" data-tab="send" class="comm-tab-btn rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Wyślij</button>
-    <button type="button" data-tab="history" class="comm-tab-btn rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Historia</button>
+<div class="mb-5 flex flex-wrap gap-2">
+    <button type="button" data-tab="tab-templates" class="tab-btn rounded-lg border px-4 py-2 text-sm font-medium transition-colors {% if open_tab|default:'tab-templates' == 'tab-templates' %}border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white{% endif %}">Szablony</button>
+    <button type="button" data-tab="tab-send" class="tab-btn rounded-lg border px-4 py-2 text-sm font-medium transition-colors {% if open_tab == 'tab-send' %}border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white{% endif %}">Wyślij</button>
+    <button type="button" data-tab="tab-history" class="tab-btn rounded-lg border px-4 py-2 text-sm font-medium transition-colors {% if open_tab == 'tab-history' %}border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300{% else %}border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white{% endif %}">Historia</button>
 </div>
 
 {# --- Templates tab --- #}
-<section id="tab-templates" class="comm-tab-panel">
+<section id="tab-templates" class="tab-panel {% if open_tab|default:'tab-templates' != 'tab-templates' %}hidden{% endif %}">
     <div class="mb-4 flex items-center justify-between gap-3">
         <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Twoje szablony</h2>
         <a href="{% url 'core:email_template_add' %}" class="btn">Nowy szablon</a>
@@ -51,7 +51,7 @@
 </section>
 
 {# --- Send tab --- #}
-<section id="tab-send" class="comm-tab-panel hidden">
+<section id="tab-send" class="tab-panel {% if open_tab != 'tab-send' %}hidden{% endif %}">
     <div class="card max-w-2xl space-y-4">
         <div>
             <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wyślij do najemców mieszkania</h2>
@@ -72,7 +72,7 @@
 </section>
 
 {# --- History tab --- #}
-<section id="tab-history" class="comm-tab-panel hidden">
+<section id="tab-history" class="tab-panel {% if open_tab != 'tab-history' %}hidden{% endif %}">
     <h2 class="mb-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Ostatnie wiadomości</h2>
     {% if logs %}
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
@@ -112,27 +112,24 @@
 </script>
 <script>
     (function () {
-        const openTab = "{{ open_tab|default:'templates' }}";
-        const buttons = document.querySelectorAll('.comm-tab-btn');
-        const panels = {
-            templates: document.getElementById('tab-templates'),
-            send: document.getElementById('tab-send'),
-            history: document.getElementById('tab-history'),
-        };
-        const active = 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-300';
-        function show(name) {
-            Object.keys(panels).forEach(function (k) {
-                if (panels[k]) { panels[k].classList.toggle('hidden', k !== name); }
-            });
+        const buttons = document.querySelectorAll('.tab-btn');
+        const panels = document.querySelectorAll('.tab-panel');
+        const ACTIVE = ['border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:border-indigo-500/60', 'dark:bg-indigo-500/15', 'dark:text-indigo-300'];
+        const INACTIVE = ['border-gray-200', 'bg-white', 'text-gray-600', 'dark:border-gray-700', 'dark:bg-gray-900', 'dark:text-gray-300'];
+        function activate(id) {
+            panels.forEach(p => p.classList.toggle('hidden', p.id !== id));
             buttons.forEach(function (b) {
-                const on = b.dataset.tab === name;
-                active.split(' ').forEach(function (c) { b.classList.toggle(c, on); });
+                const on = b.dataset.tab === id;
+                ACTIVE.forEach(c => b.classList.toggle(c, on));
+                INACTIVE.forEach(c => b.classList.toggle(c, !on));
             });
-            if (history.replaceState) { history.replaceState(null, '', '#' + name); }
+            if (history.replaceState) { history.replaceState(null, '', '#' + id); }
         }
-        buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+        buttons.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
         const hash = (location.hash || '').replace('#', '');
-        show(panels[hash] ? hash : openTab);
+        if (document.getElementById(hash) && [...buttons].some(b => b.dataset.tab === hash)) {
+            activate(hash);
+        }
 
         // Prefill subject/body when an e-mail template is picked.
         const map = JSON.parse(document.getElementById('template-data').textContent || '{}');
