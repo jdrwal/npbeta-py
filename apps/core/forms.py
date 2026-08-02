@@ -508,12 +508,6 @@ class EmailTemplateForm(forms.ModelForm):
             "body": "Treść",
             "is_active": "Aktywny",
         }
-        help_texts = {
-            "body": (
-                "Możesz użyć znaczników: {tenant_name}, {flat}, "
-                "{contract_number}, {contract_end}, {period}, {owner_name}."
-            ),
-        }
 
 
 class AdHocEmailForm(forms.Form):

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — Rozlicz Najem{% endblock %}
+{% block content %}
+<div class="mb-6 flex items-center gap-3">
+    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    </span>
+    <div>
+        <h1>{{ title }}</h1>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Komunikacja · szablon e-mail</p>
+    </div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+    {# --- Editor --- #}
+    <form method="post" class="card space-y-4">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ form.non_field_errors }}</div>{% endif %}
+        {% include "core/_field.html" with field=form.kind %}
+        {% include "core/_field.html" with field=form.name %}
+
+        <div>
+            <div class="mb-1 flex items-center justify-between gap-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Dostępne znaczniki</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500">kliknij, aby wstawić</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+                {% for tag, desc, sample in tags %}
+                <button type="button" class="tag-chip rounded-md border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-xs text-gray-700 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-indigo-500/60 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300" data-tag="{{ tag }}" title="{{ desc }}">{{ tag }}</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% include "core/_field.html" with field=form.subject %}
+        {% include "core/_field.html" with field=form.body %}
+        <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ form.is_active }} {{ form.is_active.label }}
+        </label>
+        <div class="flex items-center gap-3 pt-2">
+            <button type="submit">Zapisz</button>
+            <a href="{% url 'core:communication' %}#tab-templates" class="text-sm">Anuluj</a>
+        </div>
+    </form>
+
+    {# --- Live preview --- #}
+    <div class="lg:sticky lg:top-4 lg:self-start">
+        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            Podgląd wiadomości
+        </div>
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div class="border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/60">
+                <p class="text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500">Temat</p>
+                <p id="preview-subject" class="mt-0.5 font-medium text-gray-900 dark:text-white"></p>
+            </div>
+            <pre id="preview-body" class="whitespace-pre-wrap px-4 py-4 font-sans text-sm leading-relaxed text-gray-700 dark:text-gray-300"></pre>
+        </div>
+        <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">Znaczniki są podstawione przykładowymi danymi — tak zobaczy to najemca.</p>
+    </div>
+</div>
+
+{{ samples|json_script:"tag-samples" }}
+<script>
+    (function () {
+        const samples = JSON.parse(document.getElementById('tag-samples').textContent || '{}');
+        const subject = document.getElementById('id_subject');
+        const body = document.getElementById('id_body');
+        const pvSubject = document.getElementById('preview-subject');
+        const pvBody = document.getElementById('preview-body');
+
+        function fill(text) {
+            let out = text || '';
+            Object.keys(samples).forEach(function (key) {
+                out = out.split('{' + key + '}').join(samples[key]);
+            });
+            return out;
+        }
+        function render() {
+            pvSubject.textContent = fill(subject ? subject.value : '') || '(brak tematu)';
+            pvBody.textContent = fill(body ? body.value : '') || '(brak treści)';
+        }
+        if (subject) { subject.addEventListener('input', render); }
+        if (body) { body.addEventListener('input', render); }
+        render();
+
+        // Insert a tag at the cursor of the last-focused field (defaults to body).
+        let target = body;
+        [subject, body].forEach(function (el) {
+            if (el) { el.addEventListener('focus', function () { target = el; }); }
+        });
+        document.querySelectorAll('.tag-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                const el = target || body || subject;
+                if (!el) { return; }
+                const tag = chip.dataset.tag;
+                const start = el.selectionStart ?? el.value.length;
+                const end = el.selectionEnd ?? el.value.length;
+                el.value = el.value.slice(0, start) + tag + el.value.slice(end);
+                const pos = start + tag.length;
+                el.focus();
+                el.setSelectionRange(pos, pos);
+                render();
+            });
+        });
+    })();
+</script>
+{% endblock %}

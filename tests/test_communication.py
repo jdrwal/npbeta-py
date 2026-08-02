@@ -130,6 +130,20 @@ def test_communication_seeds_default_templates(landlord: User) -> None:
 
 
 @pytest.mark.django_db
+def test_template_editor_shows_tags_and_preview(landlord: User) -> None:
+    tpl = EmailTemplate.objects.create(
+        owner=landlord, kind=EmailTemplate.Kind.CUSTOM,
+        name="X", subject="Cześć {tenant_name}", body="Treść",
+    )
+    client = Client()
+    client.force_login(landlord)
+    resp = client.get(reverse("core:email_template_edit", args=[tpl.pk]))
+    assert resp.status_code == 200
+    assert b"{tenant_name}" in resp.content  # tag chip
+    assert b'id="preview-body"' in resp.content  # live preview pane
+
+
+@pytest.mark.django_db
 def test_template_owner_scoped(landlord: User) -> None:
     other = User.objects.create_user(username="other@example.com", password="pw")
     tpl = EmailTemplate.objects.create(

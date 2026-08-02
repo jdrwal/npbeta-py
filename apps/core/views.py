@@ -1165,6 +1165,8 @@ def communication(request: HttpRequest) -> HttpResponse:
 @login_required
 def email_template_add(request: HttpRequest) -> HttpResponse:
     """Create a new e-mail template owned by the landlord."""
+    from apps.core.services.mailer import TEMPLATE_TAGS, preview_context
+
     user = cast(User, request.user)
     form = EmailTemplateForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -1175,14 +1177,21 @@ def email_template_add(request: HttpRequest) -> HttpResponse:
         return redirect(f"{reverse('core:communication')}#tab-templates")
     return render(
         request,
-        "core/form.html",
-        {"form": form, "title": "Nowy szablon", "subtitle": "Komunikacja"},
+        "core/email_template_form.html",
+        {
+            "form": form,
+            "title": "Nowy szablon",
+            "tags": TEMPLATE_TAGS,
+            "samples": preview_context(user),
+        },
     )
 
 
 @login_required
 def email_template_edit(request: HttpRequest, pk: int) -> HttpResponse:
     """Edit one of the landlord's own e-mail templates."""
+    from apps.core.services.mailer import TEMPLATE_TAGS, preview_context
+
     user = cast(User, request.user)
     tpl = get_object_or_404(EmailTemplate, pk=pk, owner=user)
     form = EmailTemplateForm(request.POST or None, instance=tpl)
@@ -1192,8 +1201,13 @@ def email_template_edit(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect(f"{reverse('core:communication')}#tab-templates")
     return render(
         request,
-        "core/form.html",
-        {"form": form, "title": "Edytuj szablon", "subtitle": "Komunikacja"},
+        "core/email_template_form.html",
+        {
+            "form": form,
+            "title": "Edytuj szablon",
+            "tags": TEMPLATE_TAGS,
+            "samples": preview_context(user),
+        },
     )
 
 

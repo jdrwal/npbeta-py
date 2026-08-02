@@ -38,6 +38,25 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
     ),
 }
 
+# Placeholders usable in templates, with a human description and a sample value
+# used for the live preview. ``{owner_name}`` sample is filled per request.
+TEMPLATE_TAGS: list[tuple[str, str, str]] = [
+    ("{tenant_name}", "Imię i nazwisko najemcy", "Jan Kowalski"),
+    ("{flat}", "Adres mieszkania / obiektu", "ul. Przykładowa 1/2, Warszawa"),
+    ("{contract_number}", "Numer umowy", "L123/2026/01"),
+    ("{contract_end}", "Data zakończenia umowy", "2026-12-31"),
+    ("{period}", "Okres rozliczenia", "2026-07"),
+    ("{payment_day}", "Dzień płatności", "10"),
+    ("{owner_name}", "Twoje imię / nazwa", "Właściciel"),
+]
+
+
+def preview_context(owner: User) -> dict[str, str]:
+    """Sample values for rendering a template preview."""
+    ctx = {tag.strip("{}"): sample for tag, _desc, sample in TEMPLATE_TAGS}
+    ctx["owner_name"] = owner.get_full_name() or owner.get_username()
+    return ctx
+
 
 def owner_address(owner: User) -> str:
     """The owner's e-mail address (username doubles as login e-mail)."""
