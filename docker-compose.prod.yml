@@ -3,9 +3,12 @@
 
 services:
   web:
-    # Migrations + collectstatic run once in deploy.sh (NOT here), so multiple
-    # container starts / workers never race to create the schema.
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    # collectstatic runs here so files land in the SAME container gunicorn serves
+    # from (WhiteNoise reads /app/staticfiles). migrate is NOT here — it runs once
+    # in deploy.sh to avoid concurrent-migrate races on boot.
+    command: >
+      sh -c "python manage.py collectstatic --noinput --ignore=src &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
     restart: unless-stopped
     ports:
       - "127.0.0.1:8000:8000"
