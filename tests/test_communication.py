@@ -316,3 +316,33 @@ def test_send_message_reflects_test_mode(landlord: User) -> None:
     assert "Tryb testowy" in data["message"]  # message names test mode
     assert "audyt@przyklad.pl" in data["message"]  # and the real recipient
     assert mail.outbox[0].to == ["audyt@przyklad.pl"]  # actually redirected there
+
+
+@pytest.mark.django_db
+def test_email_log_detail_returns_stored_body(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    log = send_flat_broadcast(landlord, flat_with_tenants, "Temat testowy", "Treść X")
+    assert log is not None
+    client = Client()
+    client.force_login(landlord)
+    resp = client.get(reverse("core:email_log_detail", args=[log.pk]))
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["subject"] == "Temat testowy"
+    assert "Treść X" in data["body"]  # full stored body is returned
+    assert "owner@example.com" in data["to"]
+
+
+@pytest.mark.django_db
+def test_email_log_detail_owner_scoped(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    log = send_flat_broadcast(landlord, flat_with_tenants, "s", "b")
+    assert log is not None
+    other = User.objects.create_user(username="x@example.com", password="pw")
+    client = Client()
+    client.force_login(other)
+    assert client.get(
+        reverse("core:email_log_detail", args=[log.pk])
+    ).status_code == 404

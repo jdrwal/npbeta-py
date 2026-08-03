@@ -1295,6 +1295,26 @@ def communication(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
+def email_log_detail(request: HttpRequest, pk: int) -> JsonResponse:
+    """Full stored content of one sent e-mail (owner-scoped audit view)."""
+    user = cast(User, request.user)
+    log = get_object_or_404(EmailLog, pk=pk, owner=user)
+    return JsonResponse(
+        {
+            "subject": log.subject,
+            "body": log.body,
+            "to": log.to,
+            "cc": log.cc,
+            "bcc": log.bcc,
+            "status": log.get_status_display(),
+            "error": log.error,
+            "created": timezone.localtime(log.created).strftime("%Y-%m-%d %H:%M"),
+            "flat": str(log.flat) if log.flat else "",
+        }
+    )
+
+
+@login_required
 def email_template_add(request: HttpRequest) -> HttpResponse:
     """Create a new e-mail template owned by the landlord."""
     from apps.core.services.mailer import TEMPLATE_TAGS, preview_context

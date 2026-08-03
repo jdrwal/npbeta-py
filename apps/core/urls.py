@@ -152,6 +152,11 @@ urlpatterns = [
         name="email_template_delete",
     ),
     path("communication/send/", views.send_adhoc, name="send_adhoc"),
+    path(
+        "communication/logs/<int:pk>/",
+        views.email_log_detail,
+        name="email_log_detail",
+    ),
     path("contracts/<int:pk>/invites/", views.contract_invites, name="contract_invites"),
     path("contracts/<int:pk>/invites/new/", views.create_invite, name="create_invite"),
     path("portal/", views.portal, name="portal"),
