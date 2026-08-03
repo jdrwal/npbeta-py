@@ -127,12 +127,12 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
 def _renewal_fallback(contract: Contract) -> str:
     """Built-in renewal reminder body, used when the template renders empty."""
     end = contract.contract_end.isoformat() if contract.contract_end else ""
+    owner = contract.owner
     return (
         "Dzień dobry,\n\n"
-        f"umowa najmu {contract.contract_number} dotycząca {contract.flat} "
-        f"kończy się {end}. Prosimy o informację, czy chcą Państwo ją "
-        "przedłużyć.\n\n"
-        "Pozdrawiam"
+        f"Umowa Najmu {contract.contract_number} dot. {contract.flat} wygasa "
+        f"z dniem {end}. Proszę o informację, czy będziemy ją przedłużać.\n\n"
+        f"Pozdrawiam,\n{owner.get_full_name() or owner.get_username()}"
     )
 
 
@@ -159,7 +159,8 @@ def render_renewal_email(contract: Contract) -> tuple[str, str]:
         "owner_name": owner.get_full_name() or owner.get_username(),
     }
     subject = render_text(
-        subject_tpl or "Twoja umowa najmu wkrótce się kończy", context
+        subject_tpl or "Umowa najmu {contract_number} — informacja o wygaśnięciu",
+        context,
     )
     body = render_text(body_tpl or "", context).strip()
     if not body:

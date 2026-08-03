@@ -224,8 +224,19 @@ def test_contract_send_renewal(landlord: User) -> None:
     )
     client = Client()
     client.force_login(landlord)
+
+    # Preview must not send.
+    prev = client.get(reverse("core:contract_renewal_preview", args=[contract.pk]))
+    assert prev.status_code == 200
+    data = prev.json()
+    assert "Z/1" in data["body"]
+    assert "wygasa z dniem" in data["body"]  # formal wording
+    assert len(mail.outbox) == 0
+
+    # Send returns JSON and mails the tenant with owner reply-to.
     resp = client.post(reverse("core:contract_send_renewal", args=[contract.pk]))
-    assert resp.status_code == 302
+    assert resp.status_code == 200
+    assert resp.json()["sent"] is True
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == ["t@example.com"]
     assert mail.outbox[0].reply_to == ["owner@example.com"]

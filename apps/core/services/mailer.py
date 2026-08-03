@@ -24,10 +24,10 @@ from apps.core.models import Contract, EmailLog, EmailTemplate, Flat
 # EmailTemplate of the same kind overrides these.
 DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
     EmailTemplate.Kind.CONTRACT_RENEWAL: (
-        "Twoja umowa najmu wkrótce się kończy",
+        "Umowa najmu {contract_number} — informacja o wygaśnięciu",
         "Dzień dobry,\n\n"
-        "Umowa najmu {contract_number} dotycząca {flat} kończy się "
-        "{contract_end}. Jeśli chcesz ją przedłużyć, daj proszę znać.\n\n"
+        "Umowa Najmu {contract_number} dot. {flat} wygasa z dniem "
+        "{contract_end}. Proszę o informację, czy będziemy ją przedłużać.\n\n"
         "Pozdrawiam,\n{owner_name}",
     ),
     EmailTemplate.Kind.SETTLEMENT: (

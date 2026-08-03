@@ -57,6 +57,11 @@ urlpatterns = [
         name="contract_send_renewal",
     ),
     path(
+        "contracts/<int:pk>/renewal/preview/",
+        views.contract_renewal_preview,
+        name="contract_renewal_preview",
+    ),
+    path(
         "contracts/<int:pk>/delete/",
         views.ContractDelete.as_view(),
         name="delete_contract",

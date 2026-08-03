@@ -748,25 +748,46 @@ def settlement_email_send_one(
 
 
 @login_required
+def contract_renewal_preview(request: HttpRequest, pk: int) -> JsonResponse:
+    """Preview the renewal reminder email for one contract."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    from apps.core.services.mailer import with_footer
+    from apps.core.services.notifications import render_renewal_email
+
+    subject, body = render_renewal_email(contract)
+    return JsonResponse(
+        {
+            "tenant_name": contract.tenant_name,
+            "email": contract.email,
+            "subject": subject,
+            "body": with_footer(body),
+        }
+    )
+
+
+@login_required
 @require_POST
-def contract_send_renewal(request: HttpRequest, pk: int) -> HttpResponse:
+def contract_send_renewal(request: HttpRequest, pk: int) -> JsonResponse:
     """Email the tenant that their contract is expiring, asking about renewal."""
     user = cast(User, request.user)
     contract = get_object_or_404(Contract, pk=pk, owner=user)
     if not contract.email:
-        messages.error(request, "Ta umowa nie ma adresu e-mail najemcy.")
-        return redirect("core:contracts")
+        return JsonResponse(
+            {"sent": False, "message": "Ta umowa nie ma adresu e-mail najemcy."},
+            status=400,
+        )
     from apps.core.services.notifications import send_renewal_email
 
     try:
         send_renewal_email(contract)
-    except Exception as exc:  # noqa: BLE001 - surface the send failure to the user
-        messages.error(request, f"Nie udało się wysłać: {exc}")
-        return redirect("core:contracts")
-    messages.success(
-        request, f"Wysłano przypomnienie o umowie do {contract.email}."
+    except Exception as exc:  # noqa: BLE001 - surface the send failure to the UI
+        return JsonResponse(
+            {"sent": False, "message": f"Nie udało się wysłać: {exc}"}, status=502
+        )
+    return JsonResponse(
+        {"sent": True, "message": f"Wysłano do {contract.email}."}
     )
-    return redirect("core:contracts")
 
 
 def healthz(request: HttpRequest) -> JsonResponse:
