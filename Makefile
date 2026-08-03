@@ -33,6 +33,10 @@ makemigrations: ## Generate migrations
 superuser: ## Create an admin user
 	$(COMPOSE) run --rm web python manage.py createsuperuser
 
+.PHONY: seed-demo
+seed-demo: ## Seed fictional demo data (landlord+tenant+4y history); idempotent, dev only
+	$(COMPOSE) run --rm web python manage.py seed_demo
+
 .PHONY: shell
 shell: ## Django shell
 	$(COMPOSE) run --rm web python manage.py shell
