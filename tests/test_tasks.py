@@ -124,6 +124,44 @@ def test_settlement_email_preview_owner_scoped(
 
 
 @pytest.mark.django_db
+def test_settlement_email_send_one_endpoint(
+    client: Client, calc_with_tenant: FeeCalculation
+) -> None:
+    from django.urls import reverse
+
+    calc = calc_with_tenant
+    tenant = calc.tenants.get()
+    client.force_login(calc.owner)
+    url = reverse("core:settlement_email_send_one", args=[calc.pk, tenant.pk])
+    resp = client.post(url)
+    assert resp.status_code == 200
+    assert resp.json()["sent"] is True
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == ["tenant@example.com"]
+
+
+@pytest.mark.django_db
+def test_settlement_email_send_one_no_address(
+    client: Client, calc_with_tenant: FeeCalculation
+) -> None:
+    from django.urls import reverse
+
+    from apps.core.models import FeeCalculationTenant
+
+    calc = calc_with_tenant
+    no_addr = FeeCalculationTenant.objects.create(
+        owner=calc.owner, flat=calc.flat, calculation=calc,
+        tenant_name="No Mail", email="",
+    )
+    client.force_login(calc.owner)
+    url = reverse("core:settlement_email_send_one", args=[calc.pk, no_addr.pk])
+    resp = client.post(url)
+    assert resp.status_code == 400
+    assert resp.json()["sent"] is False
+    assert len(mail.outbox) == 0
+
+
+@pytest.mark.django_db
 def test_email_settlement_task_runs(calc_with_tenant: FeeCalculation) -> None:
     result = email_settlement_task.delay(calc_with_tenant.pk)
     assert result.get() == 1

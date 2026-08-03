@@ -13,13 +13,19 @@
             </p>
         </div>
     </div>
-    <div class="flex shrink-0 gap-2">
+    <div class="flex shrink-0 items-center gap-2">
         <form method="post" action="{% url 'core:email_settlement' calc.pk %}">
-            {% csrf_token %}<button type="submit" class="btn-ghost">Wyślij e-mail</button>
+            {% csrf_token %}<button type="submit" class="btn-ghost">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                Wyślij wszystko
+            </button>
         </form>
         <form method="post" action="{% url 'core:delete_settlement' calc.pk %}"
               onsubmit="return confirm('Usunąć to rozliczenie?');">
-            {% csrf_token %}<button type="submit" class="btn-danger">Usuń</button>
+            {% csrf_token %}<button type="submit" class="act act-danger">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                Usuń
+            </button>
         </form>
     </div>
 </div>
@@ -32,6 +38,7 @@
     </h2>
     <button type="button" class="act email-preview-btn"
             data-url="{% url 'core:settlement_email_preview' calc.pk row.tenant.pk %}"
+            data-send-url="{% url 'core:settlement_email_send_one' calc.pk row.tenant.pk %}"
             data-name="{{ row.tenant.tenant_name }}">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
         Podgląd maila
@@ -71,6 +78,13 @@
             <div class="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Treść</div>
             <pre id="mail-modal-body" class="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-sans text-sm leading-relaxed text-gray-700 dark:bg-gray-800 dark:text-gray-300"></pre>
         </div>
+        <div class="flex items-center justify-between gap-3 border-t border-gray-200 px-5 py-3 dark:border-gray-800">
+            <span id="mail-modal-status" class="min-w-0 truncate text-xs text-gray-500 dark:text-gray-400"></span>
+            <button type="button" id="mail-modal-send" class="btn shrink-0">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>
+                Wyślij do tego najemcy
+            </button>
+        </div>
     </div>
 </div>
 
@@ -80,13 +94,31 @@
     const to = document.getElementById('mail-modal-to');
     const subj = document.getElementById('mail-modal-subject');
     const body = document.getElementById('mail-modal-body');
+    const status = document.getElementById('mail-modal-status');
+    const sendBtn = document.getElementById('mail-modal-send');
+    const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrf = csrfEl ? csrfEl.value : '';
+    let sendUrl = null;
+
     function open() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
     function close() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    function setStatus(text, tone) {
+        status.textContent = text || '';
+        status.className = 'min-w-0 truncate text-xs ' + (
+            tone === 'ok' ? 'text-emerald-600 dark:text-emerald-400'
+            : tone === 'err' ? 'text-rose-600 dark:text-rose-400'
+            : 'text-gray-500 dark:text-gray-400'
+        );
+    }
+
     document.querySelectorAll('.email-preview-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
+            sendUrl = btn.dataset.sendUrl || null;
             subj.textContent = 'Ładowanie…';
             body.textContent = '';
             to.textContent = btn.dataset.name || '';
+            setStatus('', '');
+            sendBtn.disabled = true;
             open();
             fetch(btn.dataset.url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function (r) { return r.json(); })
@@ -94,10 +126,37 @@
                     subj.textContent = d.subject || '';
                     body.textContent = d.body || '';
                     to.textContent = (d.tenant_name || '') + (d.email ? ' · ' + d.email : ' · (brak adresu e-mail)');
+                    if (d.email) {
+                        sendBtn.disabled = false;
+                    } else {
+                        sendBtn.disabled = true;
+                        setStatus('Brak adresu e-mail — nie można wysłać.', 'err');
+                    }
                 })
                 .catch(function () { subj.textContent = 'Nie udało się załadować podglądu.'; });
         });
     });
+
+    sendBtn.addEventListener('click', function () {
+        if (!sendUrl) { return; }
+        sendBtn.disabled = true;
+        setStatus('Wysyłanie…', '');
+        fetch(sendUrl, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+            .then(function (res) {
+                if (res.ok && res.d.sent) {
+                    setStatus(res.d.message || 'Wysłano.', 'ok');
+                } else {
+                    setStatus(res.d.message || 'Nie udało się wysłać.', 'err');
+                    sendBtn.disabled = false;
+                }
+            })
+            .catch(function () { setStatus('Błąd połączenia.', 'err'); sendBtn.disabled = false; });
+    });
+
     document.getElementById('mail-modal-close').addEventListener('click', close);
     modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });

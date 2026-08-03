@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from django.core.mail.backends.base import BaseEmailBackend
+
 from apps.core.models import FeeCalculation, FeeCalculationTenant
 from apps.core.services.mailer import (
     owner_address,
@@ -73,6 +75,35 @@ def render_settlement_email(
     return subject, body
 
 
+def send_settlement_email_to(
+    calc: FeeCalculation,
+    tenant: FeeCalculationTenant,
+    *,
+    connection: BaseEmailBackend | None = None,
+    cc: list[str] | None = None,
+) -> bool:
+    """Send the settlement email to a single tenant. Returns False if no address.
+
+    ``connection`` and ``cc`` may be supplied to reuse them across a batch.
+    """
+    if not tenant.email:
+        return False
+    if cc is None:
+        owner_cc = owner_address(calc.owner)
+        cc = [owner_cc] if owner_cc else []
+    subject, body = render_settlement_email(calc, tenant)
+    send_owner_email(
+        calc.owner,
+        subject=subject,
+        body=body,
+        to=[tenant.email],
+        cc=cc,
+        flat=calc.flat,
+        connection=connection,
+    )
+    return True
+
+
 def send_settlement_emails(calc: FeeCalculation) -> int:
     """Email each tenant their settlement breakdown (owner in CC). Returns count.
 
@@ -80,29 +111,15 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
     (falling back to the built-in default). The per-tenant fee breakdown and
     total are injected via the ``{items}`` and ``{total}`` placeholders.
     """
-    sent = 0
     owner = calc.owner
-
-    # Reuse one SMTP connection across the batch.
+    # Reuse one SMTP connection and the same owner CC across the batch.
     connection, _ = owner_connection(owner)
-
-    # CC the account owner so they keep a copy of each tenant mailing.
     owner_cc = owner_address(owner)
     cc = [owner_cc] if owner_cc else []
 
+    sent = 0
     for tenant in calc.tenants.all():
-        if not tenant.email:
-            continue
-        subject, body = render_settlement_email(calc, tenant)
-        send_owner_email(
-            owner,
-            subject=subject,
-            body=body,
-            to=[tenant.email],
-            cc=cc,
-            flat=calc.flat,
-            connection=connection,
-        )
-        sent += 1
+        if send_settlement_email_to(calc, tenant, connection=connection, cc=cc):
+            sent += 1
     return sent
 

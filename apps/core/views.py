@@ -710,6 +710,35 @@ def settlement_email_preview(
     )
 
 
+@login_required
+@require_POST
+def settlement_email_send_one(
+    request: HttpRequest, pk: int, tenant_pk: int
+) -> JsonResponse:
+    """Send the settlement email to a single tenant (owner in CC)."""
+    user = cast(User, request.user)
+    calc = get_object_or_404(
+        FeeCalculation.objects.select_related("flat"), pk=pk, owner=user
+    )
+    tenant = get_object_or_404(calc.tenants, pk=tenant_pk)
+    if not tenant.email:
+        return JsonResponse(
+            {"sent": False, "message": "Ten najemca nie ma adresu e-mail."},
+            status=400,
+        )
+    from apps.core.services.notifications import send_settlement_email_to
+
+    try:
+        send_settlement_email_to(calc, tenant)
+    except Exception as exc:  # noqa: BLE001 - surface the send failure to the UI
+        return JsonResponse(
+            {"sent": False, "message": f"Nie udało się wysłać: {exc}"}, status=502
+        )
+    return JsonResponse(
+        {"sent": True, "message": f"Wysłano do {tenant.email}."}
+    )
+
+
 def healthz(request: HttpRequest) -> JsonResponse:
     """Liveness probe used by Docker/monitoring."""
     return JsonResponse({"status": "ok"})
