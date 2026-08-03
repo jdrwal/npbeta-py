@@ -17,6 +17,9 @@ from .models import (
     FeeCalculationItem,
     FeeCalculationTenant,
     Flat,
+    Fund,
+    FundContribution,
+    FundExpense,
     LedgerEntry,
     MeterDefinition,
     MeterPrice,
@@ -87,6 +90,37 @@ class AdminFeeAdmin(admin.ModelAdmin):
 class AdminFeePriceAdmin(admin.ModelAdmin):
     list_display = ("id", "admin_fee", "price_date", "price")
     list_filter = ("admin_fee",)
+
+
+class FundContributionInline(admin.TabularInline):
+    model = FundContribution
+    extra = 0
+
+
+class FundExpenseInline(admin.TabularInline):
+    model = FundExpense
+    extra = 0
+
+
+@admin.register(Fund)
+class FundAdmin(admin.ModelAdmin):
+    list_display = ("id", "flat", "name", "monthly_amount", "start_date", "end_date")
+    list_filter = ("flat",)
+    inlines = [FundContributionInline, FundExpenseInline]
+
+
+@admin.register(FundContribution)
+class FundContributionAdmin(admin.ModelAdmin):
+    list_display = ("id", "fund", "contributed_on", "amount", "note")
+    list_filter = ("fund",)
+    date_hierarchy = "contributed_on"
+
+
+@admin.register(FundExpense)
+class FundExpenseAdmin(admin.ModelAdmin):
+    list_display = ("id", "fund", "spent_on", "amount", "description")
+    list_filter = ("fund",)
+    date_hierarchy = "spent_on"
 
 
 class FeeCalculationItemInline(admin.TabularInline):

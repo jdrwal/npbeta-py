@@ -54,25 +54,19 @@
             {% if mail_form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ mail_form.non_field_errors }}</div>{% endif %}
             <div class="flex flex-col gap-2">
                 {% for radio in mail_form.mail_mode %}
-                <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
-                    {{ radio.tag }} {{ radio.choice_label }}
+                <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                    {{ radio.tag }}
+                    <span>{{ radio.choice_label }}{% if radio.data.value == 'default' %} <span class="font-normal text-gray-400 dark:text-gray-500">(wysyłka z: {{ default_from_email }})</span>{% elif radio.data.value == 'test' %} <span class="font-normal text-gray-400 dark:text-gray-500">(bezpieczny test end-to-end)</span>{% endif %}</span>
                 </label>
                 {% endfor %}
             </div>
-            <div>
-                {% include "core/_field.html" with field=mail_form.reply_to %}
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Puste pole = odpowiedzi trafią na <span class="font-medium text-gray-700 dark:text-gray-200">{{ owner_email }}</span>.</p>
+
+            <div id="test-fields" class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+                {% include "core/_field.html" with field=mail_form.test_recipient %}
+                <p class="mt-1 text-xs text-amber-700 dark:text-amber-300">W trybie testowym <span class="font-semibold">wszystkie</span> maile trafią wyłącznie na ten adres — najemcy nic nie dostaną.</p>
             </div>
-            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-                <label class="flex cursor-pointer items-start gap-2 text-sm font-medium text-amber-800 dark:text-amber-200">
-                    {{ mail_form.test_mode }}
-                    <span>
-                        {{ mail_form.test_mode.label }}
-                        <span class="mt-0.5 block font-normal text-amber-700 dark:text-amber-300">Wszystkie maile trafią wyłącznie na <span class="font-semibold">{{ owner_email }}</span> — bezpieczny test end-to-end; najemcy nie dostaną wiadomości.</span>
-                    </span>
-                </label>
-            </div>
-            <div id="smtp-fields" class="space-y-4 border-t border-gray-100 pt-4">
+
+            <div id="smtp-fields" class="space-y-4 border-t border-gray-100 pt-4 dark:border-gray-800">
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div class="sm:col-span-2">{% include "core/_field.html" with field=mail_form.smtp_host %}</div>
                     {% include "core/_field.html" with field=mail_form.smtp_port %}
@@ -91,6 +85,11 @@
                     </label>
                 </div>
             </div>
+
+            <div class="border-t border-gray-100 pt-4 dark:border-gray-800">
+                {% include "core/_field.html" with field=mail_form.reply_to %}
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Puste pole = odpowiedzi trafią na <span class="font-medium text-gray-700 dark:text-gray-200">{{ owner_email }}</span>.</p>
+            </div>
             <button type="submit" name="save_mail" value="1">Zapisz ustawienia poczty</button>
         </form>
     </section>
@@ -98,11 +97,13 @@
 <script>
     (function () {
         const radios = document.querySelectorAll('input[name="mail_mode"]');
-        const block = document.getElementById('smtp-fields');
+        const smtp = document.getElementById('smtp-fields');
+        const test = document.getElementById('test-fields');
         function sync() {
-            const custom = document.querySelector('input[name="mail_mode"]:checked');
-            const show = custom && custom.value === 'custom';
-            block.style.display = show ? '' : 'none';
+            const sel = document.querySelector('input[name="mail_mode"]:checked');
+            const mode = sel ? sel.value : 'default';
+            smtp.style.display = mode === 'custom' ? '' : 'none';
+            test.style.display = mode === 'test' ? '' : 'none';
         }
         radios.forEach(function (r) { r.addEventListener('change', sync); });
         sync();

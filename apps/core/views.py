@@ -26,6 +26,10 @@ from apps.core.forms import (
     EmailTemplateForm,
     FeeCreateForm,
     FlatForm,
+    FundContributionForm,
+    FundDetailsForm,
+    FundExpenseForm,
+    FundForm,
     LedgerEntryForm,
     MailSettingsForm,
     MeterDefinitionForm,
@@ -48,6 +52,9 @@ from apps.core.models import (
     FeeCalculation,
     FeeCalculationTenant,
     Flat,
+    Fund,
+    FundContribution,
+    FundExpense,
     LedgerEntry,
     MeterDefinition,
     MeterPrice,
@@ -67,6 +74,7 @@ from apps.core.services.forecast import (
     rent_arrears,
     rent_due_status,
 )
+from apps.core.services.funds import fund_balance
 from apps.core.services.mortgage import is_mortgaged, mortgage_schedule
 from apps.core.services.stats import (
     RoomOccupancy,
@@ -462,6 +470,151 @@ def delete_fee_price(request: HttpRequest, pk: int, price_id: int) -> HttpRespon
     price.delete()
     messages.success(request, "Stawka usunięta.")
     return redirect("core:flat_fees", pk=pk)
+
+
+# --- Contribution funds --------------------------------------------------------
+@login_required
+def funds(request: HttpRequest) -> HttpResponse:
+    """Overview of contribution funds grouped by flat, with running balances."""
+    user = cast(User, request.user)
+    today = timezone.localdate()
+    groups = []
+    grand_balance = Decimal("0")
+    for flat in Flat.objects.filter(owner=user):
+        flat_funds = []
+        flat_total = Decimal("0")
+        for fund in Fund.objects.filter(flat=flat).order_by("name", "id"):
+            bal = fund_balance(fund, today)
+            flat_funds.append(
+                {
+                    "fund": fund,
+                    "balance": bal,
+                    "contributions": list(fund.contributions.all()[:12]),
+                    "expenses": list(fund.expenses.all()[:12]),
+                }
+            )
+            flat_total += bal.balance
+        if flat_funds:
+            groups.append({"flat": flat, "funds": flat_funds, "balance": flat_total})
+            grand_balance += flat_total
+    return render(
+        request,
+        "core/funds.html",
+        {
+            "groups": groups,
+            "has_flats": Flat.objects.filter(owner=user).exists(),
+            "grand_balance": grand_balance,
+            "today": today,
+        },
+    )
+
+
+@login_required
+def fund_add(request: HttpRequest) -> HttpResponse:
+    user = cast(User, request.user)
+    if request.method == "POST":
+        form = FundForm(request.POST, user=user)
+        if form.is_valid():
+            fund = form.save(commit=False)
+            fund.owner = user
+            fund.save()
+            messages.success(request, "Fundusz dodany.")
+            return redirect("core:funds")
+    else:
+        initial = {}
+        flat_id = request.GET.get("flat")
+        if flat_id:
+            initial["flat"] = flat_id
+        form = FundForm(user=user, initial=initial)
+    return render(
+        request,
+        "core/form.html",
+        {
+            "form": form,
+            "title": "Dodaj fundusz",
+            "subtitle": "Pula składek na mieszkanie (np. na sprzątanie)",
+        },
+    )
+
+
+@login_required
+@require_POST
+def fund_edit(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    fund = get_object_or_404(Fund, pk=pk, owner=user)
+    form = FundDetailsForm(request.POST, instance=fund)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Fundusz zaktualizowany.")
+    else:
+        messages.error(request, "Nie udało się zapisać funduszu.")
+    return redirect("core:funds")
+
+
+@login_required
+@require_POST
+def fund_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    fund = get_object_or_404(Fund, pk=pk, owner=user)
+    fund.delete()
+    messages.success(request, "Fundusz usunięty.")
+    return redirect("core:funds")
+
+
+@login_required
+@require_POST
+def fund_add_contribution(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    fund = get_object_or_404(Fund, pk=pk, owner=user)
+    form = FundContributionForm(request.POST)
+    if form.is_valid():
+        contribution = form.save(commit=False)
+        contribution.owner = user
+        contribution.flat = fund.flat
+        contribution.fund = fund
+        contribution.save()
+        messages.success(request, "Wpłata zapisana.")
+    else:
+        messages.error(request, "Podaj poprawną kwotę i datę.")
+    return redirect("core:funds")
+
+
+@login_required
+@require_POST
+def fund_delete_contribution(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    contribution = get_object_or_404(FundContribution, pk=pk, owner=user)
+    contribution.delete()
+    messages.success(request, "Wpłata usunięta.")
+    return redirect("core:funds")
+
+
+@login_required
+@require_POST
+def fund_add_expense(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    fund = get_object_or_404(Fund, pk=pk, owner=user)
+    form = FundExpenseForm(request.POST)
+    if form.is_valid():
+        expense = form.save(commit=False)
+        expense.owner = user
+        expense.flat = fund.flat
+        expense.fund = fund
+        expense.save()
+        messages.success(request, "Wydatek zapisany.")
+    else:
+        messages.error(request, "Podaj poprawną kwotę, datę i opis.")
+    return redirect("core:funds")
+
+
+@login_required
+@require_POST
+def fund_delete_expense(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    expense = get_object_or_404(FundExpense, pk=pk, owner=user)
+    expense.delete()
+    messages.success(request, "Wydatek usunięty.")
+    return redirect("core:funds")
 
 
 @login_required

@@ -61,9 +61,11 @@ class MailSettings(models.Model):
     reply_to = models.EmailField(max_length=255, blank=True)
     use_tls = models.BooleanField(default=True)
     use_ssl = models.BooleanField(default=False)
-    # Test mode: redirect every outgoing mail to the owner's own address so the
+    # Test mode: redirect every outgoing mail to a single address so the
     # landlord can safely verify end-to-end delivery without mailing tenants.
     test_mode = models.BooleanField(default=False)
+    # Where test-mode mail is redirected; blank falls back to the account address.
+    test_recipient = models.EmailField(max_length=255, blank=True)
     # When True, fall back to the project's default mail backend instead of the
     # custom SMTP fields above.
     use_default = models.BooleanField(default=True)

@@ -111,6 +111,26 @@ urlpatterns = [
     path("counters/<int:pk>/edit/", views.MeterUpdate.as_view(), name="edit_meter"),
     path("counters/<int:pk>/delete/", views.MeterDelete.as_view(), name="delete_meter"),
     path("counters/<int:pk>/readings/", views.meter_readings, name="meter_readings"),
+    path("funds/", views.funds, name="funds"),
+    path("funds/add/", views.fund_add, name="fund_add"),
+    path("funds/<int:pk>/edit/", views.fund_edit, name="fund_edit"),
+    path("funds/<int:pk>/delete/", views.fund_delete, name="fund_delete"),
+    path(
+        "funds/<int:pk>/contribution/",
+        views.fund_add_contribution,
+        name="fund_add_contribution",
+    ),
+    path(
+        "funds/contribution/<int:pk>/delete/",
+        views.fund_delete_contribution,
+        name="fund_delete_contribution",
+    ),
+    path("funds/<int:pk>/expense/", views.fund_add_expense, name="fund_add_expense"),
+    path(
+        "funds/expense/<int:pk>/delete/",
+        views.fund_delete_expense,
+        name="fund_delete_expense",
+    ),
     path("tax/", views.tax, name="tax"),
     path(
         "tax/pay/<int:year>/<int:month>/",

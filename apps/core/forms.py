@@ -17,6 +17,9 @@ from apps.core.models import (
     Contract,
     EmailTemplate,
     Flat,
+    Fund,
+    FundContribution,
+    FundExpense,
     LedgerEntry,
     MeterDefinition,
     MeterPrice,
@@ -283,6 +286,7 @@ class MailSettingsForm(forms.ModelForm):
     MODE_CHOICES = [
         ("default", "Konto domyślne serwera"),
         ("custom", "Własne ustawienia SMTP"),
+        ("test", "Tryb testowy"),
     ]
     mail_mode = forms.ChoiceField(
         choices=MODE_CHOICES,
@@ -293,8 +297,7 @@ class MailSettingsForm(forms.ModelForm):
     class Meta:
         model = MailSettings
         fields = [
-            "reply_to",
-            "test_mode",
+            "test_recipient",
             "smtp_host",
             "smtp_port",
             "smtp_user",
@@ -302,6 +305,7 @@ class MailSettingsForm(forms.ModelForm):
             "from_email",
             "use_tls",
             "use_ssl",
+            "reply_to",
         ]
         widgets = {
             "smtp_password": forms.PasswordInput(
@@ -309,8 +313,8 @@ class MailSettingsForm(forms.ModelForm):
             ),
         }
         labels = {
+            "test_recipient": "Adres docelowy (tryb testowy)",
             "reply_to": "Adres do odpowiedzi (Reply-To)",
-            "test_mode": "Tryb testowy SMTP",
             "smtp_host": "Serwer SMTP",
             "smtp_port": "Port",
             "smtp_user": "Użytkownik (login)",
@@ -320,6 +324,8 @@ class MailSettingsForm(forms.ModelForm):
             "use_ssl": "Użyj SSL",
         }
         help_texts = {
+            "test_recipient": "Na ten adres trafią WSZYSTKIE maile w trybie "
+            "testowym (najemcy nic nie dostaną).",
             "reply_to": "Gdy najemca odpowie na maila, trafi na ten adres. "
             "Puste = adres e-mail Twojego konta.",
             "smtp_password": "Zostaw puste, aby nie zmieniać zapisanego hasła.",
@@ -328,11 +334,23 @@ class MailSettingsForm(forms.ModelForm):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        use_default = not self.instance.pk or self.instance.use_default
-        self.fields["mail_mode"].initial = "default" if use_default else "custom"
-        # SMTP fields are only required in custom mode (validated in clean()).
-        for name in ("smtp_host", "smtp_port"):
+        inst = self.instance
+        if inst.pk and inst.test_mode:
+            mode = "test"
+        elif not inst.pk or inst.use_default:
+            mode = "default"
+        else:
+            mode = "custom"
+        self.fields["mail_mode"].initial = mode
+        # These are only required in their respective modes (checked in clean()).
+        for name in ("smtp_host", "smtp_port", "test_recipient"):
             self.fields[name].required = False
+        # Prefill the test recipient with the owner's own address for convenience.
+        owner = getattr(inst, "user", None)
+        if owner is not None and not inst.test_recipient:
+            addr = owner.email or owner.get_username()
+            if "@" in addr:
+                self.initial["test_recipient"] = addr
 
     def clean_smtp_password(self) -> str:
         value = self.cleaned_data.get("smtp_password", "")
@@ -349,7 +367,10 @@ class MailSettingsForm(forms.ModelForm):
 
     def save(self, commit: bool = True) -> MailSettings:
         obj = cast(MailSettings, super().save(commit=False))
-        obj.use_default = self.cleaned_data.get("mail_mode") == "default"
+        mode = self.cleaned_data.get("mail_mode")
+        obj.test_mode = mode == "test"
+        # Test mode sends through the default server account (just redirected).
+        obj.use_default = mode in ("default", "test")
         if commit:
             obj.save()
         return obj
@@ -439,6 +460,92 @@ class FeeCreateForm(forms.Form):
             cast(forms.ModelChoiceField, self.fields["flat"]).queryset = (
                 Flat.objects.filter(owner=user)
             )
+
+
+class FundForm(forms.ModelForm):
+    """Create a contribution fund for a flat."""
+
+    class Meta:
+        model = Fund
+        fields = ["flat", "name", "monthly_amount", "start_date", "end_date"]
+        widgets = {"start_date": _DATE, "end_date": _DATE}
+        labels = {
+            "flat": "Mieszkanie",
+            "name": "Nazwa funduszu",
+            "monthly_amount": "Składka (zł / miesiąc)",
+            "start_date": "Naliczana od",
+            "end_date": "Naliczana do (opcjonalnie)",
+        }
+
+    def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            _scope(self, "flat", Flat.objects.filter(owner=user))
+        if not self.instance.pk and not self.initial.get("start_date"):
+            self.fields["start_date"].initial = timezone.localdate().replace(day=1)
+
+    def clean(self) -> dict[str, Any]:
+        cleaned = super().clean() or {}
+        start = cleaned.get("start_date")
+        end = cleaned.get("end_date")
+        if start and end and end < start:
+            self.add_error("end_date", "Data końca nie może być wcześniejsza niż początek.")
+        return cleaned
+
+
+class FundDetailsForm(forms.ModelForm):
+    """Inline edit of a fund's own fields (flat is fixed)."""
+
+    class Meta:
+        model = Fund
+        fields = ["name", "monthly_amount", "start_date", "end_date"]
+        widgets = {"start_date": _DATE, "end_date": _DATE}
+
+    def clean(self) -> dict[str, Any]:
+        cleaned = super().clean() or {}
+        start = cleaned.get("start_date")
+        end = cleaned.get("end_date")
+        if start and end and end < start:
+            self.add_error("end_date", "Data końca nie może być wcześniejsza niż początek.")
+        return cleaned
+
+
+class FundContributionForm(forms.ModelForm):
+    """An ad-hoc contribution paid into a fund."""
+
+    class Meta:
+        model = FundContribution
+        fields = ["contributed_on", "amount", "note"]
+        widgets = {"contributed_on": _DATE}
+        labels = {
+            "contributed_on": "Data wpłaty",
+            "amount": "Kwota (zł)",
+            "note": "Opis (opcjonalnie)",
+        }
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if not self.initial.get("contributed_on"):
+            self.fields["contributed_on"].initial = timezone.localdate()
+
+
+class FundExpenseForm(forms.ModelForm):
+    """A payout from a fund."""
+
+    class Meta:
+        model = FundExpense
+        fields = ["spent_on", "amount", "description"]
+        widgets = {"spent_on": _DATE}
+        labels = {
+            "spent_on": "Data wydatku",
+            "amount": "Kwota (zł)",
+            "description": "Na co",
+        }
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if not self.initial.get("spent_on"):
+            self.fields["spent_on"].initial = timezone.localdate()
 
 
 class SecuritySettingsForm(forms.ModelForm):

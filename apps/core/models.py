@@ -287,6 +287,88 @@ class AdminFeePrice(models.Model):
         return f"{self.admin_fee} from {self.price_date}: {self.price}"
 
 
+# --- Contribution funds --------------------------------------------------------
+class Fund(models.Model):
+    """A per-flat contribution pool (e.g. a cleaning fund).
+
+    Tenants pay a fixed monthly contribution (``monthly_amount``, collected
+    together with the utility bills) into the pool. The contribution accrues
+    automatically month by month; the landlord also records ad-hoc
+    contributions and the expenses paid out of the pool. The running balance is
+    tracked independently of rental income — it is NOT taxable rent and does not
+    appear in income/tax/ledger reports.
+    """
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="funds"
+    )
+    flat = models.ForeignKey(Flat, on_delete=models.CASCADE, related_name="funds")
+    name = models.CharField(max_length=32)
+    # Fixed monthly contribution (składka / miesiąc).
+    monthly_amount = _money()
+    # First month the contribution accrues from.
+    start_date = models.DateField()
+    # Optional close month; after it the fund stops accruing (freezes balance).
+    end_date = models.DateField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["flat", "name"]
+
+    def __str__(self) -> str:
+        return f"{self.name} @ {self.flat}"
+
+
+class FundContribution(models.Model):
+    """An ad-hoc contribution paid into a fund (top-up or correction)."""
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="fund_contributions",
+    )
+    flat = models.ForeignKey(
+        Flat, on_delete=models.CASCADE, related_name="fund_contributions"
+    )
+    fund = models.ForeignKey(
+        Fund, on_delete=models.CASCADE, related_name="contributions"
+    )
+    contributed_on = models.DateField()
+    amount = _money()
+    note = models.CharField(max_length=64, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-contributed_on", "-id"]
+
+    def __str__(self) -> str:
+        return f"{self.fund}: +{self.amount} ({self.contributed_on})"
+
+
+class FundExpense(models.Model):
+    """A payout from a fund (e.g. cleaning supplies bought for the pool)."""
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="fund_expenses",
+    )
+    flat = models.ForeignKey(
+        Flat, on_delete=models.CASCADE, related_name="fund_expenses"
+    )
+    fund = models.ForeignKey(Fund, on_delete=models.CASCADE, related_name="expenses")
+    spent_on = models.DateField()
+    amount = _money()
+    description = models.CharField(max_length=64)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-spent_on", "-id"]
+
+    def __str__(self) -> str:
+        return f"{self.fund}: -{self.amount} ({self.spent_on})"
+
+
 # --- Saved fee calculations ----------------------------------------------------
 class FeeCalculation(models.Model):
     """A saved utility settlement for a flat and period (legacy `duecalc`)."""

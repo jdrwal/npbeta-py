@@ -83,6 +83,13 @@ def owner_test_mode(owner: User) -> bool:
     return bool(getattr(mail_cfg, "test_mode", False))
 
 
+def owner_test_recipient(owner: User) -> str:
+    """Address that test-mode mail is redirected to (configured, else account)."""
+    mail_cfg = getattr(owner, "mail_settings", None)
+    configured = getattr(mail_cfg, "test_recipient", "") if mail_cfg else ""
+    return configured or owner_address(owner)
+
+
 def owner_connection(owner: User) -> tuple[BaseEmailBackend | None, str]:
     """Return (connection, from_email) for ``owner``.
 
@@ -205,7 +212,7 @@ def send_owner_email(
 
     # Test mode: redirect everything to the owner so no tenant is mailed.
     if owner_test_mode(owner):
-        redirect_to = owner_address(owner) or (reply_to[0] if reply_to else "")
+        redirect_to = owner_test_recipient(owner) or (reply_to[0] if reply_to else "")
         if redirect_to:
             intended = []
             if to:
