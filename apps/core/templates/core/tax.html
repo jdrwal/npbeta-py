@@ -70,7 +70,11 @@
                     <span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">brak podatku</span>
                     {% else %}
                     <div class="inline-flex items-center gap-2">
-                        <span class="pill bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">niezapłacony</span>
+                        {% if m.deadline < today %}
+                        <span class="pill bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" title="Niezapłacony po terminie">zaległy</span>
+                        {% else %}
+                        <span class="pill bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" title="Do zapłaty do {{ m.deadline|date:'Y-m-d' }}">należny</span>
+                        {% endif %}
                         <form method="post" action="{% url 'core:confirm_tax_payment' m.year m.month %}" class="inline-flex">
                             {% csrf_token %}
                             <button type="submit" class="act" title="Zapisz zapłatę podatku">

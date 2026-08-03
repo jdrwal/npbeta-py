@@ -150,14 +150,19 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     )
     net_avg = sum(net_values, Decimal(0)) / count if count else Decimal(0)
 
-    # Arrears alert: unpaid tax (overdue completed months) + overdue rent.
-    tax_arrears = [
+    # Arrears alert: unpaid tax split into overdue (zaległy, past its deadline)
+    # and merely due (należny, not yet past its deadline), plus overdue rent.
+    today = now.date()
+    unpaid_tax = [
         m
         for months in tax_table(user).values()
         for m in months
-        if m.tax > 0 and m.paid_date is None and m.deadline < now.date()
+        if m.tax > 0 and m.paid_date is None
     ]
+    tax_arrears = [m for m in unpaid_tax if m.deadline < today]  # zaległy
+    tax_due = [m for m in unpaid_tax if m.deadline >= today]  # należny
     tax_arrears_total = sum((m.tax for m in tax_arrears), 0)
+    tax_due_total = sum((m.tax for m in tax_due), 0)
     rent_arrear_items = rent_arrears(user, months=12)
     rent_arrears_total = sum((i.amount for i in rent_arrear_items), Decimal(0))
     arrears_total = Decimal(tax_arrears_total) + rent_arrears_total
@@ -179,6 +184,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "net_avg": net_avg,
             "tax_arrears": tax_arrears,
             "tax_arrears_total": tax_arrears_total,
+            "tax_due": tax_due,
+            "tax_due_total": tax_due_total,
             "rent_arrears": rent_arrear_items,
             "rent_arrears_total": rent_arrears_total,
             "arrears_total": arrears_total,
@@ -428,8 +435,8 @@ def contracts(request: HttpRequest) -> HttpResponse:
     for c in rows:
         is_active = bool(
             c.contract_start
-            and c.contract_end
-            and c.contract_start <= today <= c.contract_end
+            and c.contract_start <= today
+            and (c.contract_end is None or today <= c.contract_end)
         )
         (active if is_active else past).append(c)
     return render(
@@ -1014,6 +1021,7 @@ def tax(request: HttpRequest) -> HttpResponse:
             "years": years,
             "newer_year": newer_year,
             "older_year": older_year,
+            "today": timezone.now().date(),
             "year_taxable": sum((m.taxable for m in months), Decimal(0)),
             "year_tax": sum(m.tax for m in months),
         },
