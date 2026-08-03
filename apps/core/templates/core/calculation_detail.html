@@ -79,7 +79,7 @@
             <pre id="mail-modal-body" class="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-sans text-sm leading-relaxed text-gray-700 dark:bg-gray-800 dark:text-gray-300"></pre>
         </div>
         <div class="flex items-center justify-between gap-3 border-t border-gray-200 px-5 py-3 dark:border-gray-800">
-            <span id="mail-modal-status" class="min-w-0 truncate text-xs text-gray-500 dark:text-gray-400"></span>
+            <span id="mail-modal-status" class="min-w-0 flex-1 break-words text-xs text-gray-500 dark:text-gray-400"></span>
             <button type="button" id="mail-modal-send" class="btn shrink-0">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>
                 Wyślij do tego najemcy
@@ -99,12 +99,15 @@
     const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
     const csrf = csrfEl ? csrfEl.value : '';
     let sendUrl = null;
+    const SEND_IDLE = sendBtn.innerHTML;
+    const SEND_SPIN = '<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path></svg> Wysyłanie…';
+    const SEND_DONE = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Wysłano';
 
     function open() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
     function close() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
     function setStatus(text, tone) {
         status.textContent = text || '';
-        status.className = 'min-w-0 truncate text-xs ' + (
+        status.className = 'min-w-0 flex-1 break-words text-xs ' + (
             tone === 'ok' ? 'text-emerald-600 dark:text-emerald-400'
             : tone === 'err' ? 'text-rose-600 dark:text-rose-400'
             : 'text-gray-500 dark:text-gray-400'
@@ -118,6 +121,7 @@
             body.textContent = '';
             to.textContent = btn.dataset.name || '';
             setStatus('', '');
+            sendBtn.innerHTML = SEND_IDLE;
             sendBtn.disabled = true;
             open();
             fetch(btn.dataset.url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -140,6 +144,7 @@
     sendBtn.addEventListener('click', function () {
         if (!sendUrl) { return; }
         sendBtn.disabled = true;
+        sendBtn.innerHTML = SEND_SPIN;
         setStatus('Wysyłanie…', '');
         fetch(sendUrl, {
             method: 'POST',
@@ -149,12 +154,14 @@
             .then(function (res) {
                 if (res.ok && res.d.sent) {
                     setStatus(res.d.message || 'Wysłano.', 'ok');
+                    sendBtn.innerHTML = SEND_DONE;
                 } else {
                     setStatus(res.d.message || 'Nie udało się wysłać.', 'err');
+                    sendBtn.innerHTML = SEND_IDLE;
                     sendBtn.disabled = false;
                 }
             })
-            .catch(function () { setStatus('Błąd połączenia.', 'err'); sendBtn.disabled = false; });
+            .catch(function () { setStatus('Błąd połączenia.', 'err'); sendBtn.innerHTML = SEND_IDLE; sendBtn.disabled = false; });
     });
 
     document.getElementById('mail-modal-close').addEventListener('click', close);
