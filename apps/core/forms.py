@@ -294,6 +294,7 @@ class MailSettingsForm(forms.ModelForm):
         model = MailSettings
         fields = [
             "reply_to",
+            "test_mode",
             "smtp_host",
             "smtp_port",
             "smtp_user",
@@ -309,6 +310,7 @@ class MailSettingsForm(forms.ModelForm):
         }
         labels = {
             "reply_to": "Adres do odpowiedzi (Reply-To)",
+            "test_mode": "Tryb testowy SMTP",
             "smtp_host": "Serwer SMTP",
             "smtp_port": "Port",
             "smtp_user": "Użytkownik (login)",

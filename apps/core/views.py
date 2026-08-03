@@ -1168,6 +1168,8 @@ def delete_tax_payment(request: HttpRequest, pk: int) -> HttpResponse:
 @login_required
 def user_settings(request: HttpRequest) -> HttpResponse:
     """Account settings: change password and configure outgoing SMTP mail."""
+    from apps.core.services.mailer import owner_address
+
     user = cast(User, request.user)
     mail, _ = MailSettings.objects.get_or_create(user=user)
     pwd_form = PasswordChangeForm(user)
@@ -1199,7 +1201,12 @@ def user_settings(request: HttpRequest) -> HttpResponse:
     return render(
         request,
         "core/settings.html",
-        {"pwd_form": pwd_form, "mail_form": mail_form, "sec_form": sec_form},
+        {
+            "pwd_form": pwd_form,
+            "mail_form": mail_form,
+            "sec_form": sec_form,
+            "owner_email": owner_address(user),
+        },
     )
 
 

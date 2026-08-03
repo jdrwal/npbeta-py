@@ -77,6 +77,12 @@ def owner_reply_to(owner: User) -> list[str]:
     return [addr] if addr and "@" in addr else []
 
 
+def owner_test_mode(owner: User) -> bool:
+    """Whether the owner has SMTP test mode on (redirect all mail to self)."""
+    mail_cfg = getattr(owner, "mail_settings", None)
+    return bool(getattr(mail_cfg, "test_mode", False))
+
+
 def owner_connection(owner: User) -> tuple[BaseEmailBackend | None, str]:
     """Return (connection, from_email) for ``owner``.
 
@@ -196,6 +202,26 @@ def send_owner_email(
         connection, from_email = owner_connection(owner)
     else:
         _, from_email = owner_connection(owner)
+
+    # Test mode: redirect everything to the owner so no tenant is mailed.
+    if owner_test_mode(owner):
+        redirect_to = owner_address(owner) or (reply_to[0] if reply_to else "")
+        if redirect_to:
+            intended = []
+            if to:
+                intended.append("To: " + ", ".join(to))
+            if cc:
+                intended.append("CC: " + ", ".join(cc))
+            if bcc:
+                intended.append("BCC: " + ", ".join(bcc))
+            notice = (
+                "[TRYB TESTOWY] W zwykłym trybie ta wiadomość trafiłaby do:\n"
+                + ("\n".join("  " + line for line in intended) or "  (brak odbiorców)")
+                + "\n\n"
+            )
+            subject = "[TEST] " + subject
+            body = notice + body
+            to, cc, bcc = [redirect_to], [], []
 
     log = EmailLog(
         owner=owner,

@@ -212,6 +212,24 @@ def test_email_reply_to_custom_override(
 
 
 @pytest.mark.django_db
+def test_test_mode_redirects_all_mail_to_owner(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    from apps.accounts.models import MailSettings
+
+    MailSettings.objects.update_or_create(
+        user=landlord, defaults={"test_mode": True}
+    )
+    send_flat_broadcast(landlord, flat_with_tenants, "Temat", "Treść")
+    msg = mail.outbox[0]
+    assert msg.to == ["owner@example.com"]  # redirected to the owner
+    assert msg.bcc == []  # tenants no longer receive it
+    assert msg.subject.startswith("[TEST]")
+    assert "[TRYB TESTOWY]" in msg.body
+    assert "a@example.com" in msg.body  # original recipients listed in the notice
+
+
+@pytest.mark.django_db
 def test_contract_send_renewal(landlord: User) -> None:
     flat = Flat.objects.create(owner=landlord, city="C", street="S", code="Z")
     room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
