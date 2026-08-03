@@ -19,7 +19,7 @@ def client_logged_in(db: None) -> Client:
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "url_name",
-    ["core:flats", "core:contracts", "core:records", "core:calculations"],
+    ["core:flats", "core:contracts", "core:records", "core:calculations", "core:arrears"],
 )
 def test_list_views_render(client_logged_in: Client, url_name: str) -> None:
     response = client_logged_in.get(reverse(url_name))
@@ -29,7 +29,7 @@ def test_list_views_render(client_logged_in: Client, url_name: str) -> None:
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "url_name",
-    ["core:flats", "core:contracts", "core:records", "core:calculations"],
+    ["core:flats", "core:contracts", "core:records", "core:calculations", "core:arrears"],
 )
 def test_list_views_require_login(url_name: str) -> None:
     response = Client().get(reverse(url_name))

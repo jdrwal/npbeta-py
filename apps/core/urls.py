@@ -123,6 +123,7 @@ urlpatterns = [
         name="delete_tax_payment",
     ),
     path("forecast/", views.forecast, name="forecast"),
+    path("arrears/", views.arrears, name="arrears"),
     path("settings/", views.user_settings, name="settings"),
     path("settings/wishlist/", views.wishlist, name="wishlist"),
     path(

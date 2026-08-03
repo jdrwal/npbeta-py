@@ -171,20 +171,13 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     # Pozostałe opłaty: saved settlements computed but not yet confirmed as paid.
     fee_arrear_items = unconfirmed_fees(user)
     fee_arrears_total = sum((i.amount for i in fee_arrear_items), Decimal(0))
-    fee_arrears_json = [
-        {
-            "tenant": i.tenant_name,
-            "flat": str(i.flat),
-            "period": i.period_label,
-            "amount": f"{i.amount:.2f}",
-            "calc_url": reverse("core:calculation_detail", args=[i.calc_id]),
-            "records_url": (
-                f"{reverse('core:records')}?year={i.bill_year}"
-                f"&month={i.bill_month}&flat={i.flat_id}"
-            ),
-        }
-        for i in fee_arrear_items
-    ]
+
+    # Consolidated: everything unsettled (tenant rent + fees + landlord tax).
+    tax_unpaid_total = tax_arrears_total + tax_due_total
+    arrears_grand_total = (
+        rent_arrears_total + fee_arrears_total + Decimal(tax_unpaid_total)
+    )
+    has_any_arrears = bool(rent_arrear_items or fee_arrear_items or unpaid_tax)
 
     return render(
         request,
@@ -210,9 +203,89 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "arrears_total": arrears_total,
             "has_arrears": bool(tax_arrears or rent_arrear_items),
             "fee_arrears_total": fee_arrears_total,
-            "fee_arrears_count": len(fee_arrear_items),
-            "fee_arrears_json": fee_arrears_json,
-            "has_fee_arrears": bool(fee_arrear_items),
+            "tax_unpaid_total": tax_unpaid_total,
+            "arrears_grand_total": arrears_grand_total,
+            "has_any_arrears": has_any_arrears,
+        },
+    )
+
+
+@login_required
+def arrears(request: HttpRequest) -> HttpResponse:
+    """All outstanding amounts on one page: rent, fees and tax."""
+    user = cast(User, request.user)
+    today = timezone.now().date()
+
+    # Rent (tenant owes) — overdue rent, each linking to its Ewidencja month.
+    rent_items = rent_arrears(user, months=12)
+    rent_rows = []
+    for i in rent_items:
+        mm, _, yy = i.period.partition("/")
+        rent_rows.append(
+            {
+                "tenant": i.contract.tenant_name,
+                "flat": str(i.contract.flat),
+                "period": i.period,
+                "amount": i.amount,
+                "status": i.status,
+                "url": (
+                    f"{reverse('core:records')}?year={yy}&month={int(mm)}"
+                    f"&flat={i.contract.flat_id}"
+                ),
+            }
+        )
+    rent_total = sum((i.amount for i in rent_items), Decimal(0))
+
+    # Fees (tenant owes) — unconfirmed settlements with links.
+    fee_items = unconfirmed_fees(user)
+    fee_rows = [
+        {
+            "tenant": i.tenant_name,
+            "flat": str(i.flat),
+            "period": i.period_label,
+            "amount": i.amount,
+            "calc_url": reverse("core:calculation_detail", args=[i.calc_id]),
+            "records_url": (
+                f"{reverse('core:records')}?year={i.bill_year}"
+                f"&month={i.bill_month}&flat={i.flat_id}"
+            ),
+        }
+        for i in fee_items
+    ]
+    fee_total = sum((i.amount for i in fee_items), Decimal(0))
+
+    # Tax (landlord owes) — unpaid months, marked overdue vs merely due.
+    unpaid_tax = [
+        m
+        for months in tax_table(user).values()
+        for m in months
+        if m.tax > 0 and m.paid_date is None
+    ]
+    unpaid_tax.sort(key=lambda m: (m.year, m.month), reverse=True)
+    tax_rows = [
+        {
+            "period": f"{m.month:02d}/{m.year}",
+            "amount": m.tax,
+            "deadline": m.deadline,
+            "overdue": m.deadline < today,
+            "url": f"{reverse('core:tax')}?year={m.year}",
+        }
+        for m in unpaid_tax
+    ]
+    tax_total = sum(m.tax for m in unpaid_tax)
+
+    grand_total = rent_total + fee_total + Decimal(tax_total)
+    return render(
+        request,
+        "core/arrears.html",
+        {
+            "rent_rows": rent_rows,
+            "rent_total": rent_total,
+            "fee_rows": fee_rows,
+            "fee_total": fee_total,
+            "tax_rows": tax_rows,
+            "tax_total": tax_total,
+            "grand_total": grand_total,
         },
     )
 
