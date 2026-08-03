@@ -20,6 +20,11 @@
 </head>
 <body class="h-screen">
 <div class="flex h-screen flex-col">
+    {% if is_dev %}
+    <div class="shrink-0 bg-red-600 px-4 py-1.5 text-center text-xs font-bold uppercase tracking-widest text-white">
+        ⚠ Instancja DEV — dane testowe, nie produkcja
+    </div>
+    {% endif %}
     {% if user.is_authenticated %}
     <header class="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-5 dark:border-gray-800 dark:bg-gray-900">
         <div class="flex items-center gap-2.5">

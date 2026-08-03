@@ -2,7 +2,7 @@
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 
 
@@ -31,3 +31,17 @@ def test_dashboard_ok_when_logged_in() -> None:
     client.force_login(user)
     response = client.get(reverse("core:dashboard"))
     assert response.status_code == 200
+
+
+@override_settings(DEBUG=True)
+@pytest.mark.django_db
+def test_dev_banner_shown_when_debug() -> None:
+    response = Client().get(reverse("login"))
+    assert b"Instancja DEV" in response.content
+
+
+@override_settings(DEBUG=False)
+@pytest.mark.django_db
+def test_dev_banner_hidden_in_prod() -> None:
+    response = Client().get(reverse("login"))
+    assert b"Instancja DEV" not in response.content
