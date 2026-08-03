@@ -24,6 +24,8 @@ from django.utils import timezone
 
 from apps.accounts.models import User
 from apps.core.models import (
+    AdminFee,
+    AdminFeePrice,
     Contract,
     Flat,
     LedgerEntry,
@@ -170,6 +172,8 @@ class Command(BaseCommand):
 
             # --- Meters (electricity + cold water) with a price and readings ---
             self._seed_meters(landlord, flat, rng, start_of_history, today)
+            # --- Fixed monthly admin fees (internet, heating, funds) ------------
+            self._seed_admin_fees(landlord, flat, start_of_history)
 
             # --- Rooms: whole flat as one unit, or several rooms let separately -
             if n_rooms == 1:
@@ -304,6 +308,21 @@ class Command(BaseCommand):
             taxes_paid += 1
         taxes_unpaid = len(monthly) - taxes_paid
 
+        # --- Settlements: compute a few recent months per flat ------------------
+        from apps.core.services.fees import save_settlement
+
+        settle_months = 3
+        settlements = 0
+        for flat in flats:
+            for offset in range(1, settle_months + 1):
+                ps = _add_months(date(today.year, today.month, 1), -offset)
+                pe = _add_months(ps, 1) - timedelta(days=1)
+                calc = save_settlement(flat, ps, pe)
+                if calc.tenants.exists():
+                    settlements += 1
+                else:
+                    calc.delete()  # no active tenants that month -> drop the empty calc
+
         self.stdout.write(self.style.SUCCESS("Demo data seeded:"))
         self.stdout.write(f"  Landlord : {LANDLORD_EMAIL} / {DEMO_PASSWORD}")
         self.stdout.write(f"  Tenant   : {TENANT_EMAIL} / {DEMO_PASSWORD}")
@@ -317,6 +336,9 @@ class Command(BaseCommand):
         self.stdout.write(
             f"  Tax: {taxes_paid} months paid, {taxes_unpaid} unpaid."
         )
+        self.stdout.write(
+            f"  Settlements: {settlements} (up to {settle_months} months per flat)."
+        )
 
     # -- helpers ----------------------------------------------------------------
     def _seed_meters(
@@ -329,7 +351,9 @@ class Command(BaseCommand):
     ) -> None:
         specs = [
             ("Prąd", MeterDefinition.Unit.KWH, Decimal("0.9200"), 30, 90),
+            ("Gaz", MeterDefinition.Unit.M3, Decimal("2.8000"), 5, 20),
             ("Zimna woda", MeterDefinition.Unit.M3, Decimal("12.5000"), 2, 6),
+            ("Ciepła woda", MeterDefinition.Unit.M3, Decimal("35.0000"), 1, 4),
         ]
         for name, unit, price, lo, hi in specs:
             meter = MeterDefinition.objects.create(
@@ -355,6 +379,26 @@ class Command(BaseCommand):
                 )
                 value += Decimal(rng.randint(lo, hi) * 6)
                 read_day = _add_months(read_day, 6)
+
+    def _seed_admin_fees(self, landlord: User, flat: Flat, start: date) -> None:
+        """Fixed monthly admin fees (internet, heating, funds) with a price."""
+        fees = [
+            ("Internet", Decimal("60.00")),
+            ("Ogrzewanie (ryczałt)", Decimal("200.00")),
+            ("Fundusz remontowy", Decimal("80.00")),
+            ("Eksploatacja", Decimal("150.00")),
+        ]
+        for title, price in fees:
+            fee = AdminFee.objects.create(
+                owner=landlord, flat=flat, title=title, is_individual=False
+            )
+            AdminFeePrice.objects.create(
+                owner=landlord,
+                flat=flat,
+                admin_fee=fee,
+                price_date=_aware(start),
+                price=price,
+            )
 
     def _seed_contracts(
         self,
