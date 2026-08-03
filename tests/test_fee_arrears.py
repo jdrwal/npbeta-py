@@ -45,12 +45,12 @@ def fee_setup(db: None) -> tuple:
         owner=user, flat=flat, tenant=tenant,
         fee_type="Admin", name="Internet", value=Decimal("60.00"),
     )
-    return user, flat, contract
+    return user, flat, contract, tenant
 
 
 @pytest.mark.django_db
 def test_unconfirmed_fees_detected(fee_setup: tuple) -> None:
-    user, _flat, _contract = fee_setup
+    user, _flat, _contract, _tenant = fee_setup
     items = unconfirmed_fees(user)
     assert len(items) == 1
     assert items[0].amount == Decimal("60.00")
@@ -60,10 +60,10 @@ def test_unconfirmed_fees_detected(fee_setup: tuple) -> None:
 
 @pytest.mark.django_db
 def test_unconfirmed_fees_excluded_when_confirmed(fee_setup: tuple) -> None:
-    user, flat, contract = fee_setup
-    # A fee ledger entry in the billing month confirms the settlement.
+    user, flat, contract, tenant = fee_setup
+    # A fee ledger entry linked to the settlement tenant confirms it.
     LedgerEntry.objects.create(
-        owner=user, flat=flat, contract=contract,
+        owner=user, flat=flat, contract=contract, settlement_tenant=tenant,
         kind=LedgerEntry.Kind.FEE, billing_period=date(2026, 7, 1),
         record_date=timezone.make_aware(datetime(2026, 7, 10)),
         amount_in_taxable=Decimal("0"),

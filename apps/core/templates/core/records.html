@@ -237,8 +237,8 @@
                     </td>
                     <td class="whitespace-nowrap px-3 py-2 font-mono font-medium text-amber-700 dark:text-amber-300">{{ r.amount|floatformat:2|intcomma }} zł</td>
                     <td class="whitespace-nowrap px-2 py-2 text-center">
-                        <a href="{% url 'core:add_record' %}?flat={{ r.flat.pk }}{% if r.contract %}&contract={{ r.contract.pk }}&room={{ r.contract.room_id }}{% endif %}&billing_period={{ billing_ym }}&amount_in_taxable={{ r.amount }}&short_desc={{ 'Pozostałe opłaty'|urlencode }}&kind=fee"
-                           class="act !px-1.5 !py-1" title="Zatwierdź opłatę — uzupełnij wpis">
+                        <a href="{% url 'core:confirm_fee' r.tenant.pk %}?billing={{ billing_ym }}&year={{ year }}&month={{ month }}{% if selected_flat_id %}&flat={{ selected_flat_id }}{% endif %}"
+                           class="act !px-1.5 !py-1" title="Zatwierdź opłatę">
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
                         </a>
                     </td>

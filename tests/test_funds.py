@@ -175,6 +175,62 @@ def test_fund_appears_as_settlement_line(owner_client: tuple) -> None:
     assert item.value == Decimal("25.00")
 
 
+def _settlement_with_fund(user) -> tuple:
+    flat = _flat(user)
+    room = Room.objects.create(owner=user, flat=flat, room_no=1, beds=1)
+    Contract.objects.create(
+        owner=user, flat=flat, room=room, contract_number="C1",
+        tenant_name="Jan", price=Decimal("1000"),
+        contract_start=date(2026, 2, 1), contract_end=None,
+    )
+    fund = Fund.objects.create(
+        owner=user, flat=flat, name="Sprzątanie",
+        monthly_amount=Decimal("25.00"), start_date=date(2026, 1, 1),
+    )
+    calc = save_settlement(flat, date(2026, 3, 1), date(2026, 3, 31))
+    return flat, fund, calc.tenants.get()
+
+
+@pytest.mark.django_db
+def test_confirm_fee_links_entry_and_feeds_fund(owner_client: tuple) -> None:
+    user, client = owner_client
+    flat, fund, tenant = _settlement_with_fund(user)
+    resp = client.post(
+        reverse("core:confirm_fee", args=[tenant.pk]),
+        {"record_date": "2026-04-05", "billing_period": "2026-04"},
+    )
+    assert resp.status_code == 302
+    entry = LedgerEntry.objects.get(settlement_tenant=tenant)
+    assert entry.kind == LedgerEntry.Kind.FEE
+    assert entry.contract is not None
+    assert entry.contract.contract_number == "C1"
+    assert entry.amount_in_taxable == Decimal("25.00")
+    assert entry.billing_period == date(2026, 4, 1)
+    # The confirmed payment credits the fund (25 × 1 payment).
+    assert fund_balance(fund).accrued == Decimal("25.00")
+
+
+@pytest.mark.django_db
+def test_confirm_fee_is_idempotent(owner_client: tuple) -> None:
+    user, client = owner_client
+    _, _, tenant = _settlement_with_fund(user)
+    url = reverse("core:confirm_fee", args=[tenant.pk])
+    client.post(url, {"record_date": "2026-04-05", "billing_period": "2026-04"})
+    client.post(url, {"record_date": "2026-04-06", "billing_period": "2026-04"})
+    assert LedgerEntry.objects.filter(settlement_tenant=tenant).count() == 1
+
+
+@pytest.mark.django_db
+def test_confirm_fee_owner_scoped_404(owner_client: tuple) -> None:
+    user, client = owner_client
+    other = get_user_model().objects.create_user(
+        username="other2@example.com", password="pw"
+    )
+    _, _, tenant = _settlement_with_fund(other)
+    resp = client.get(reverse("core:confirm_fee", args=[tenant.pk]))
+    assert resp.status_code == 404
+
+
 @pytest.mark.django_db
 def test_funds_page_renders(owner_client: tuple) -> None:
     user, client = owner_client

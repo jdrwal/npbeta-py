@@ -28,6 +28,7 @@ from apps.core.models import (
     AdminFeePrice,
     Contract,
     Flat,
+    Fund,
     LedgerEntry,
     MeterDefinition,
     MeterPrice,
@@ -174,6 +175,14 @@ class Command(BaseCommand):
             self._seed_meters(landlord, flat, rng, start_of_history, today)
             # --- Fixed monthly admin fees (internet, heating, funds) ------------
             self._seed_admin_fees(landlord, flat, start_of_history)
+            # --- Contribution fund (składka na sprzątanie, 25 zł/mc) -----------
+            Fund.objects.create(
+                owner=landlord,
+                flat=flat,
+                name="Sprzątanie",
+                monthly_amount=Decimal("25.00"),
+                start_date=start_of_history,
+            )
 
             # --- Rooms: whole flat as one unit, or several rooms let separately -
             if n_rooms == 1:

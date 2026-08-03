@@ -172,22 +172,17 @@ def _next_month(year: int, month: int) -> tuple[int, int]:
 def unconfirmed_fees(user: User) -> list[FeeArrear]:
     """Saved settlements (Pozostałe opłaty) not yet confirmed as a fee payment.
 
-    Fees are billed in arrears: a settlement for month P is confirmed by a
-    ``fee`` ledger entry in month P+1 for the same contract (matched by
-    ``contract_number``, as in the Ewidencja view). Anything still unconfirmed
-    is surfaced as a dashboard notification.
+    A settlement tenant is confirmed once a ``fee`` ledger entry links back to
+    it (``settlement_tenant``). Anything still unconfirmed is surfaced as a
+    dashboard notification.
     """
-    contracts_by_num = {
-        c.contract_number: c
-        for c in Contract.objects.filter(owner=user)
-        if c.contract_number
-    }
-    confirmed: set[tuple[int, int, int]] = set()
-    for cid, bp in LedgerEntry.objects.filter(
-        owner=user, kind=LedgerEntry.Kind.FEE, contract__isnull=False
-    ).values_list("contract_id", "billing_period"):
-        if bp:
-            confirmed.add((cid, bp.year, bp.month))
+    confirmed_tenant_ids = set(
+        LedgerEntry.objects.filter(
+            owner=user,
+            kind=LedgerEntry.Kind.FEE,
+            settlement_tenant__isnull=False,
+        ).values_list("settlement_tenant_id", flat=True)
+    )
 
     items: list[FeeArrear] = []
     calcs = (
@@ -203,8 +198,7 @@ def unconfirmed_fees(user: User) -> list[FeeArrear]:
             total = sum((it.value for it in tenant.items.all()), Decimal(0))
             if total <= 0:
                 continue
-            contract = contracts_by_num.get(tenant.contract_number)
-            if contract and (contract.pk, bill_year, bill_month) in confirmed:
+            if tenant.pk in confirmed_tenant_ids:
                 continue
             items.append(
                 FeeArrear(

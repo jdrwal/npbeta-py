@@ -455,6 +455,16 @@ class LedgerEntry(models.Model):
         blank=True,
         related_name="ledger_entries",
     )
+    # When this entry confirms a saved settlement (Pozostałe opłaty), it links
+    # back to the exact settlement tenant it settles. This is the reliable key
+    # for "is this fee paid?" — contract numbers are not unique across renewals.
+    settlement_tenant = models.ForeignKey(
+        "FeeCalculationTenant",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ledger_entries",
+    )
     short_desc = models.CharField(max_length=64, blank=True)
     notes = models.TextField(blank=True)
     # Data wpłaty — when the money was received (drives the ryczałt tax point).

@@ -1,5 +1,5 @@
 import calendar
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any, cast
 
@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, UpdateView
 
@@ -822,7 +823,9 @@ def records(request: HttpRequest) -> HttpResponse:
         for c in fee_contracts.select_related("flat", "room")
         if c.contract_number
     }
-    paid_fee_contract_ids = {e.contract_id for e in fee_entries if e.contract_id}
+    paid_fee_tenant_ids = {
+        e.settlement_tenant_id for e in fee_entries if e.settlement_tenant_id
+    }
     fee_rows: list[dict[str, Any]] = []
     fee_calcs = (
         FeeCalculation.objects.filter(owner=user)
@@ -839,9 +842,9 @@ def records(request: HttpRequest) -> HttpResponse:
             total = sum((it.value for it in tenant.items.all()), Decimal(0))
             if total <= 0:
                 continue
-            contract = contracts_by_num.get(tenant.contract_number)
-            if contract and contract.pk in paid_fee_contract_ids:
+            if tenant.pk in paid_fee_tenant_ids:
                 continue
+            contract = contracts_by_num.get(tenant.contract_number)
             fee_rows.append(
                 {
                     "flat": calc.flat,
@@ -880,6 +883,102 @@ def records(request: HttpRequest) -> HttpResponse:
         "next": {"year": next_year, "month": next_month},
     }
     return render(request, "core/records.html", context)
+
+
+def _parse_month(raw: str | None) -> date | None:
+    """Parse a ``YYYY-MM`` string into the first day of that month."""
+    if not raw:
+        return None
+    try:
+        year_s, month_s = raw.split("-")[:2]
+        return date(int(year_s), int(month_s), 1)
+    except (ValueError, TypeError):
+        return None
+
+
+@login_required
+def confirm_fee(request: HttpRequest, tenant_pk: int) -> HttpResponse:
+    """Confirm a settlement's fees as paid for one tenant.
+
+    The flat/room/contract and amount are fixed by the settlement being
+    confirmed; the user only picks the payment date and billing month. The
+    resulting fee ledger entry links back to the settlement tenant so it is
+    never double-confirmed and dedup does not rely on contract numbers.
+    """
+    user = cast(User, request.user)
+    tenant = get_object_or_404(
+        FeeCalculationTenant.objects.select_related("calculation__flat"),
+        pk=tenant_pk,
+        owner=user,
+    )
+    calc = tenant.calculation
+    flat = calc.flat
+    amount = sum((it.value for it in tenant.items.all()), Decimal(0))
+    contract = None
+    if tenant.contract_number:
+        contract = (
+            Contract.objects.filter(
+                owner=user, flat=flat, contract_number=tenant.contract_number
+            )
+            .select_related("room")
+            .order_by("-contract_start")
+            .first()
+        )
+    room = contract.room if contract else None
+    existing = LedgerEntry.objects.filter(
+        owner=user, kind=LedgerEntry.Kind.FEE, settlement_tenant=tenant
+    ).first()
+
+    def _back() -> HttpResponse:
+        params = {
+            k: request.GET[k] for k in ("year", "month", "flat") if request.GET.get(k)
+        }
+        url = reverse("core:records")
+        if params:
+            url += "?" + urlencode(params)
+        return redirect(url)
+
+    if request.method == "POST":
+        if existing:
+            messages.info(request, "Ta opłata została już zatwierdzona.")
+            return _back()
+        rec_date = parse_date(request.POST.get("record_date") or "") or timezone.localdate()
+        billing = _parse_month(request.POST.get("billing_period")) or (
+            timezone.localdate().replace(day=1)
+        )
+        LedgerEntry.objects.create(
+            owner=user,
+            flat=flat,
+            room=room,
+            contract=contract,
+            settlement_tenant=tenant,
+            kind=LedgerEntry.Kind.FEE,
+            short_desc="Pozostałe opłaty",
+            amount_in_taxable=amount,
+            record_date=timezone.make_aware(datetime.combine(rec_date, time.min)),
+            billing_period=billing,
+        )
+        messages.success(request, "Opłata zatwierdzona.")
+        return _back()
+
+    billing_ym = request.GET.get("billing") or ""
+    if not _parse_month(billing_ym):
+        billing_ym = timezone.localdate().strftime("%Y-%m")
+    return render(
+        request,
+        "core/confirm_fee.html",
+        {
+            "tenant": tenant,
+            "calc": calc,
+            "flat": flat,
+            "room": room,
+            "contract": contract,
+            "amount": amount,
+            "record_date": timezone.localdate().strftime("%Y-%m-%d"),
+            "billing_ym": billing_ym,
+            "already": existing,
+        },
+    )
 
 
 _PL_MONTHS = [
