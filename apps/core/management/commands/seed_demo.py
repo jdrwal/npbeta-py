@@ -264,6 +264,25 @@ class Command(BaseCommand):
             update_fields=["tenant_name", "email", "tenant_user"]
         )
 
+        # --- Make one lease expire within a month (for the renewal reminder) ----
+        # Prefer a whole-flat lease other than the tenant's, so the split-flat
+        # rooms stay open-ended. Give it a tenant e-mail so the reminder can send.
+        expiring = next(
+            (
+                c
+                for c in sorted(
+                    active, key=lambda c: 0 if c.flat.room_count == 1 else 1
+                )
+                if c is not tenant_contract
+            ),
+            None,
+        )
+        if expiring is not None:
+            expiring.contract_end = today + timedelta(days=18)
+            if not expiring.email:
+                expiring.email = "najemca.wygasa@example.com"
+            expiring.save(update_fields=["contract_end", "email"])
+
         # --- Tax: settle all completed months except the most recent few --------
         table = tax_service.tax_table(landlord)
         monthly = sorted(
