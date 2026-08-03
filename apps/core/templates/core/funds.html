@@ -8,7 +8,7 @@
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3Z"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1.5"/></svg></span>
         <div>
             <h1>Fundusze</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pule składek na mieszkanie (np. na sprzątanie). Zbierane razem z rachunkami, ale liczone osobno — nie wliczają się do przychodu ani podatku.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pule składek na mieszkanie (np. na sprzątanie). Każdy lokator dopłaca składkę razem z rachunkami — gdy potwierdzisz zapłatę rachunków, składka trafia do puli. Bilans liczony osobno, nie wlicza się do przychodu ani podatku.</p>
         </div>
     </div>
     <a href="{% url 'core:fund_add' %}" class="btn">
@@ -60,7 +60,7 @@
                     <div class="font-mono text-2xl font-semibold {% if item.balance.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ item.balance.balance|floatformat:2|intcomma }} zł</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">Naliczono ({{ item.balance.months }} mies. × {{ item.fund.monthly_amount|floatformat:2 }})</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">Ze składek ({{ item.balance.count }} × {{ item.fund.monthly_amount|floatformat:2 }})</div>
                     <div class="font-mono text-base text-gray-800 dark:text-gray-100">{{ item.balance.accrued|floatformat:2|intcomma }} zł</div>
                 </div>
                 <div>

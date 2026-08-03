@@ -291,12 +291,14 @@ class AdminFeePrice(models.Model):
 class Fund(models.Model):
     """A per-flat contribution pool (e.g. a cleaning fund).
 
-    Tenants pay a fixed monthly contribution (``monthly_amount``, collected
-    together with the utility bills) into the pool. The contribution accrues
-    automatically month by month; the landlord also records ad-hoc
-    contributions and the expenses paid out of the pool. The running balance is
-    tracked independently of rental income — it is NOT taxable rent and does not
-    appear in income/tax/ledger reports.
+    Each tenant pays a fixed contribution (``monthly_amount``) on top of their
+    utility bills. The contribution is credited to the pool when the tenant's
+    bills are confirmed as paid (a ``fee`` ledger entry), so the collected
+    total equals ``monthly_amount`` times the number of confirmed fee payments
+    for the flat within the fund's active window. The landlord also records
+    ad-hoc contributions and the expenses paid out of the pool. The running
+    balance is tracked independently of rental income — it is NOT taxable rent
+    and does not appear in income/tax/ledger reports.
     """
 
     owner = models.ForeignKey(

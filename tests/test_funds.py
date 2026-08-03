@@ -9,8 +9,8 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.core.models import Flat, Fund, FundContribution, FundExpense
-from apps.core.services.funds import accrued_months, fund_balance
+from apps.core.models import Flat, Fund, FundContribution, FundExpense, LedgerEntry
+from apps.core.services.funds import confirmed_payment_count, fund_balance
 
 
 @pytest.fixture
@@ -39,8 +39,18 @@ def _months_ago(months: int) -> date:
     return date(y, m, 1)
 
 
+def _fee(user, flat, billing_period: date) -> LedgerEntry:
+    """A confirmed bills payment (feeds the fund)."""
+    return LedgerEntry.objects.create(
+        owner=user,
+        flat=flat,
+        kind=LedgerEntry.Kind.FEE,
+        billing_period=billing_period,
+    )
+
+
 @pytest.mark.django_db
-def test_accrual_counts_months_inclusive(owner_client: tuple) -> None:
+def test_accrual_counts_confirmed_bill_payments(owner_client: tuple) -> None:
     user, _ = owner_client
     flat = _flat(user)
     fund = Fund.objects.create(
@@ -48,10 +58,23 @@ def test_accrual_counts_months_inclusive(owner_client: tuple) -> None:
         flat=flat,
         name="Sprzątanie",
         monthly_amount=Decimal("25.00"),
-        start_date=_months_ago(2),  # this month + 2 prior = 3 months
+        start_date=_months_ago(2),
     )
-    assert accrued_months(fund, timezone.localdate()) == 3
+    # Three confirmed bill payments within the window -> 3 × 25.
+    _fee(user, flat, _months_ago(2))
+    _fee(user, flat, _months_ago(1))
+    _fee(user, flat, _months_ago(0))
+    # A rent payment must NOT feed the fund.
+    LedgerEntry.objects.create(
+        owner=user, flat=flat, kind=LedgerEntry.Kind.RENT,
+        billing_period=_months_ago(0),
+    )
+    # A fee payment before the fund started must NOT count.
+    _fee(user, flat, _months_ago(5))
+
+    assert confirmed_payment_count(fund, timezone.localdate()) == 3
     bal = fund_balance(fund)
+    assert bal.count == 3
     assert bal.accrued == Decimal("75.00")
     assert bal.balance == Decimal("75.00")
 
@@ -65,8 +88,10 @@ def test_balance_is_contributions_minus_expenses(owner_client: tuple) -> None:
         flat=flat,
         name="Sprzątanie",
         monthly_amount=Decimal("25.00"),
-        start_date=_months_ago(3),  # 4 months accrued = 100
+        start_date=_months_ago(3),
     )
+    for i in range(4):  # 4 confirmed payments = 100
+        _fee(user, flat, _months_ago(i))
     FundContribution.objects.create(
         owner=user, flat=flat, fund=fund, contributed_on=timezone.localdate(),
         amount=Decimal("40.00"),
@@ -83,7 +108,7 @@ def test_balance_is_contributions_minus_expenses(owner_client: tuple) -> None:
 
 
 @pytest.mark.django_db
-def test_end_date_freezes_accrual(owner_client: tuple) -> None:
+def test_end_date_limits_counted_payments(owner_client: tuple) -> None:
     user, _ = owner_client
     flat = _flat(user)
     fund = Fund.objects.create(
@@ -92,10 +117,30 @@ def test_end_date_freezes_accrual(owner_client: tuple) -> None:
         name="Remontowy",
         monthly_amount=Decimal("10.00"),
         start_date=_months_ago(5),
-        end_date=_months_ago(3),  # accrues months -5,-4,-3 = 3 months
+        end_date=_months_ago(3),  # window covers months -5, -4, -3
     )
-    assert accrued_months(fund, timezone.localdate()) == 3
+    _fee(user, flat, _months_ago(5))
+    _fee(user, flat, _months_ago(4))
+    _fee(user, flat, _months_ago(3))
+    _fee(user, flat, _months_ago(2))  # after end_date -> excluded
+    assert confirmed_payment_count(fund, timezone.localdate()) == 3
     assert fund_balance(fund).balance == Decimal("30.00")
+
+
+@pytest.mark.django_db
+def test_other_flat_payments_do_not_count(owner_client: tuple) -> None:
+    user, _ = owner_client
+    flat = _flat(user)
+    other_flat = Flat.objects.create(
+        owner=user, city="Krakow", street="Inna", building_no="2", code="DEF"
+    )
+    fund = Fund.objects.create(
+        owner=user, flat=flat, name="Sprzątanie",
+        monthly_amount=Decimal("25.00"), start_date=_months_ago(2),
+    )
+    _fee(user, other_flat, _months_ago(0))  # different flat -> excluded
+    assert confirmed_payment_count(fund, timezone.localdate()) == 0
+    assert fund_balance(fund).balance == Decimal("0.00")
 
 
 @pytest.mark.django_db
