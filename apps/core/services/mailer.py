@@ -25,14 +25,14 @@ from apps.core.models import Contract, EmailLog, EmailTemplate, Flat
 DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
     EmailTemplate.Kind.CONTRACT_RENEWAL: (
         "Twoja umowa najmu wkrótce się kończy",
-        "Dzień dobry {tenant_name},\n\n"
+        "Dzień dobry,\n\n"
         "Umowa najmu {contract_number} dotycząca {flat} kończy się "
         "{contract_end}. Jeśli chcesz ją przedłużyć, daj proszę znać.\n\n"
         "Pozdrawiam,\n{owner_name}",
     ),
     EmailTemplate.Kind.SETTLEMENT: (
         "Rozliczenie mediów — {flat} ({period})",
-        "Dzień dobry {tenant_name},\n\n"
+        "Dzień dobry,\n\n"
         "poniżej rozliczenie opłat za okres {period} dla {flat}:\n\n"
         "{items}\n\n"
         "SUMA: {total}\n\n"
@@ -43,7 +43,7 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
 # Placeholders usable in templates, with a human description and a sample value
 # used for the live preview. ``{owner_name}`` sample is filled per request.
 TEMPLATE_TAGS: list[tuple[str, str, str]] = [
-    ("{tenant_name}", "Imię i nazwisko najemcy", "Jan Kowalski"),
+    ("{tenant_name}", "Imię i nazwisko najemcy (mianownik, bez odmiany)", "Jan Kowalski"),
     ("{flat}", "Adres mieszkania / obiektu", "ul. Przykładowa 1/2, Warszawa"),
     ("{contract_number}", "Numer umowy", "L123/2026/01"),
     ("{contract_end}", "Data zakończenia umowy", "2026-12-31"),
