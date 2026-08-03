@@ -116,6 +116,20 @@ def render_text(text: str, context: dict[str, str]) -> str:
     return text
 
 
+# Marketing footer appended to every outgoing e-mail (branding).
+MARKETING_FOOTER = (
+    "—\n"
+    "Ta wiadomość została przygotowana i wysłana za pomocą Rozlicz Najem\n"
+    "http://rozlicz-najem.pl — prosty sposób na rozliczanie najmu."
+)
+
+
+def with_footer(body: str) -> str:
+    """Append the standard marketing footer to an e-mail body."""
+    return f"{(body or '').rstrip()}\n\n{MARKETING_FOOTER}\n"
+
+
+
 def get_template(owner: User, kind: str) -> tuple[str, str]:
     """Return (subject, body) for ``kind``: owner's active template or default."""
     tpl = (
@@ -168,6 +182,7 @@ def send_owner_email(
     to = to or []
     cc = cc or []
     bcc = bcc or []
+    body = with_footer(body)
     if connection is None:
         connection, from_email = owner_connection(owner)
     else:

@@ -16,6 +16,8 @@ def send_activation_email_task(user_id: int, activation_url: str) -> None:
     from django.core.mail import send_mail
     from django.template.loader import render_to_string
 
+    from apps.core.services.mailer import with_footer
+
     user_model = get_user_model()
     try:
         user = user_model.objects.get(pk=user_id)
@@ -27,7 +29,7 @@ def send_activation_email_task(user_id: int, activation_url: str) -> None:
     )
     send_mail(
         subject="Aktywacja konta — Rozlicz Najem",
-        message=body,
+        message=with_footer(body),
         from_email=None,
         recipient_list=[user.email],
         fail_silently=False,

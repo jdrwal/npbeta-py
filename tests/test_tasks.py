@@ -60,6 +60,7 @@ def test_send_settlement_emails(calc_with_tenant: FeeCalculation) -> None:
     assert "Prad" in mail.outbox[0].body
     assert "50.00 zł" in mail.outbox[0].body
     assert "SUMA" in mail.outbox[0].body
+    assert "rozlicz-najem.pl" in mail.outbox[0].body  # marketing footer
 
 
 @pytest.mark.django_db
