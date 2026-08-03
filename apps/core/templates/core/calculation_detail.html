@@ -44,21 +44,26 @@
         Podgląd maila
     </button>
 </div>
+{% for section in row.sections %}
+<h3 class="mb-1 mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ section.label }}</h3>
 <table>
     <thead>
-        <tr><th>Typ</th><th>Pozycja</th><th>Zużycie</th><th>Wartość</th></tr>
+        <tr><th>Pozycja</th>{% if section.show_usage %}<th>Zużycie</th>{% endif %}<th>Wartość</th></tr>
     </thead>
     <tbody>
-        {% for item in row.items %}
+        {% for item in section.items %}
         <tr>
-            <td>{{ item.fee_type }}</td>
             <td>{{ item.name }}</td>
-            <td>{{ item.usage }}</td>
+            {% if section.show_usage %}<td>{{ item.usage }}</td>{% endif %}
             <td>{{ item.value }} zł</td>
         </tr>
         {% endfor %}
+        <tr class="font-semibold text-gray-900 dark:text-white">
+            <td>Razem {{ section.label|lower }}</td>{% if section.show_usage %}<td></td>{% endif %}<td>{{ section.subtotal }} zł</td>
+        </tr>
     </tbody>
 </table>
+{% endfor %}
 {% endfor %}
 
 <div id="mail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">

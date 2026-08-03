@@ -931,10 +931,29 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
     tenants = []
     for tenant in calc.tenants.all():
         items = list(tenant.items.all())
+        by_type: dict[str, list] = {"Counter": [], "Admin": [], "Fund": []}
+        for item in items:
+            by_type.setdefault(item.fee_type, []).append(item)
+        sections = [
+            {
+                "label": label,
+                "items": by_type.get(key, []),
+                "subtotal": sum(
+                    (i.value for i in by_type.get(key, [])), start=Decimal(0)
+                ),
+                "show_usage": key != "Fund",
+            }
+            for key, label in (
+                ("Counter", "Opłaty licznikowe"),
+                ("Admin", "Opłaty pozostałe"),
+                ("Fund", "Fundusze"),
+            )
+            if by_type.get(key)
+        ]
         tenants.append(
             {
                 "tenant": tenant,
-                "items": items,
+                "sections": sections,
                 "total": sum((i.value for i in items), start=Decimal(0)),
             }
         )

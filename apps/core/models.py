@@ -396,6 +396,7 @@ class FeeCalculationItem(models.Model):
     class FeeType(models.TextChoices):
         COUNTER = "Counter", "Counter"
         ADMIN = "Admin", "Admin"
+        FUND = "Fund", "Fundusze"
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="calc_items"

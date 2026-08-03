@@ -20,13 +20,29 @@ def _period_label(calc: FeeCalculation) -> str:
 
 
 def _items_block(tenant: FeeCalculationTenant) -> tuple[str, Decimal]:
-    """Rendered per-item breakdown text and its total for one tenant."""
-    lines: list[str] = []
+    """Rendered per-item breakdown text and its total for one tenant.
+
+    Items are grouped into the three settlement sections (meter fees, other
+    fees, funds); empty sections are omitted.
+    """
+    sections = (
+        ("Counter", "Opłaty licznikowe"),
+        ("Admin", "Opłaty pozostałe"),
+        ("Fund", "Fundusze"),
+    )
+    grouped: dict[str, list[str]] = {}
     total = Decimal(0)
     for item in tenant.items.all():
-        lines.append(f"  {item.name}: {item.value:.2f} zł")
+        grouped.setdefault(item.fee_type, []).append(
+            f"  {item.name}: {item.value:.2f} zł"
+        )
         total += item.value
-    return "\n".join(lines), total
+    blocks: list[str] = []
+    for key, label in sections:
+        rows = grouped.get(key)
+        if rows:
+            blocks.append(f"{label}:\n" + "\n".join(rows))
+    return "\n".join(blocks), total
 
 
 def _fallback_body(tenant: FeeCalculationTenant) -> str:

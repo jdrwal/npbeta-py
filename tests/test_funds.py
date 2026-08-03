@@ -9,7 +9,17 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.core.models import Flat, Fund, FundContribution, FundExpense, LedgerEntry
+from apps.core.models import (
+    Contract,
+    FeeCalculationItem,
+    Flat,
+    Fund,
+    FundContribution,
+    FundExpense,
+    LedgerEntry,
+    Room,
+)
+from apps.core.services.fees import save_settlement
 from apps.core.services.funds import confirmed_payment_count, fund_balance
 
 
@@ -141,6 +151,28 @@ def test_other_flat_payments_do_not_count(owner_client: tuple) -> None:
     _fee(user, other_flat, _months_ago(0))  # different flat -> excluded
     assert confirmed_payment_count(fund, timezone.localdate()) == 0
     assert fund_balance(fund).balance == Decimal("0.00")
+
+
+@pytest.mark.django_db
+def test_fund_appears_as_settlement_line(owner_client: tuple) -> None:
+    user, _ = owner_client
+    flat = _flat(user)
+    room = Room.objects.create(owner=user, flat=flat, room_no=1, beds=1)
+    Contract.objects.create(
+        owner=user, flat=flat, room=room, contract_number="C1",
+        tenant_name="Jan", price=Decimal("1000"),
+        contract_start=date(2026, 2, 1), contract_end=None,
+    )
+    Fund.objects.create(
+        owner=user, flat=flat, name="Sprzątanie",
+        monthly_amount=Decimal("25.00"), start_date=date(2026, 1, 1),
+    )
+    save_settlement(flat, date(2026, 3, 1), date(2026, 3, 31))
+    fund_items = FeeCalculationItem.objects.filter(flat=flat, fee_type="Fund")
+    assert fund_items.count() == 1
+    item = fund_items.get()
+    assert item.name == "Sprzątanie"
+    assert item.value == Decimal("25.00")
 
 
 @pytest.mark.django_db

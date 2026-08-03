@@ -40,6 +40,7 @@ from apps.core.models import (
     FeeCalculationItem,
     FeeCalculationTenant,
     Flat,
+    Fund,
     MeterDefinition,
     MeterPrice,
     MeterReading,
@@ -57,7 +58,7 @@ class FeeLine:
     """One settled fee line for a tenant (mirrors a legacy ``duefees`` row)."""
 
     contract_id: int
-    fee_type: str  # "Counter" | "Admin"
+    fee_type: str  # "Counter" | "Admin" | "Fund"
     name: str
     usage: Decimal
     value: Decimal
@@ -160,8 +161,12 @@ def calculate_fees(flat: Flat, period_start: date, period_end: date) -> list[Fee
     """Compute per-tenant fee lines for ``flat`` over the inclusive period."""
     meters = list(MeterDefinition.objects.filter(flat=flat).order_by("id"))
     admin_fees = list(AdminFee.objects.filter(flat=flat).order_by("id"))
+    funds = list(
+        Fund.objects.filter(flat=flat, start_date__lte=period_end)
+        .filter(Q(end_date__gte=period_start) | Q(end_date__isnull=True))
+        .order_by("id")
+    )
     capacity = _capacity(flat)
-
     # tenant_id -> {("Counter", meter_id): [usage, value], ("Admin", fee_id): [...]}
     dues: dict[int, dict[tuple[str, int], list[Decimal]]] = {}
     counter_names = {m.id: m.name for m in meters}
@@ -222,6 +227,18 @@ def calculate_fees(flat: Flat, period_start: date, period_end: date) -> list[Fee
                     name=admin_titles[admin_fee.id],
                     usage=_round(usage, _TEN_THOUSANDTH),
                     value=_round(value, _CENT),
+                )
+            )
+        for fund in funds:
+            # Each tenant pays the fixed contribution once per settlement; the
+            # fund is a flat monthly składka, not prorated day-by-day.
+            lines.append(
+                FeeLine(
+                    contract_id=contract_id,
+                    fee_type="Fund",
+                    name=fund.name,
+                    usage=Decimal(0),
+                    value=_round(fund.monthly_amount, _CENT),
                 )
             )
     return lines
