@@ -33,7 +33,9 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
     EmailTemplate.Kind.SETTLEMENT: (
         "Rozliczenie mediów — {flat} ({period})",
         "Dzień dobry {tenant_name},\n\n"
-        "W załączeniu rozliczenie mediów za okres {period} dla {flat}.\n\n"
+        "poniżej rozliczenie opłat za okres {period} dla {flat}:\n\n"
+        "{items}\n\n"
+        "SUMA: {total}\n\n"
         "Pozdrawiam,\n{owner_name}",
     ),
 }
@@ -46,6 +48,9 @@ TEMPLATE_TAGS: list[tuple[str, str, str]] = [
     ("{contract_number}", "Numer umowy", "L123/2026/01"),
     ("{contract_end}", "Data zakończenia umowy", "2026-12-31"),
     ("{period}", "Okres rozliczenia", "2026-07"),
+    ("{items}", "Rozpiska pozycji rozliczenia (media, opłaty)",
+     "  Prąd: 132.29 zł\n  Woda: 48.10 zł\n  Sprzątanie: 25.00 zł"),
+    ("{total}", "Suma rozliczenia", "205.39 zł"),
     ("{payment_day}", "Dzień płatności", "10"),
     ("{owner_name}", "Twoje imię / nazwa", "Właściciel"),
 ]

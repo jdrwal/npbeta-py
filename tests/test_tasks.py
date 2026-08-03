@@ -58,7 +58,30 @@ def test_send_settlement_emails(calc_with_tenant: FeeCalculation) -> None:
     assert mail.outbox[0].to == ["tenant@example.com"]
     assert mail.outbox[0].cc == ["owner@example.com"]
     assert "Prad" in mail.outbox[0].body
-    assert "Total: 50.00 PLN" in mail.outbox[0].body
+    assert "50.00 zł" in mail.outbox[0].body
+    assert "SUMA" in mail.outbox[0].body
+
+
+@pytest.mark.django_db
+def test_settlement_email_uses_owner_template(
+    calc_with_tenant: FeeCalculation,
+) -> None:
+    from apps.core.models import EmailTemplate
+
+    EmailTemplate.objects.create(
+        owner=calc_with_tenant.owner,
+        kind=EmailTemplate.Kind.SETTLEMENT,
+        name="Custom",
+        subject="Rozliczenie {flat}",
+        body="Cześć {tenant_name},\n{items}\nRazem: {total}\nMój podpis",
+        is_active=True,
+    )
+    send_settlement_emails(calc_with_tenant)
+    body = mail.outbox[0].body
+    assert "Cześć Tenant," in body  # template greeting used
+    assert "Mój podpis" in body  # template signature used
+    assert "Prad: 50.00 zł" in body  # {items} injected
+    assert "Razem: 50.00 zł" in body  # {total} injected
 
 
 @pytest.mark.django_db
