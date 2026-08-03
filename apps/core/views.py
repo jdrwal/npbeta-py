@@ -1222,7 +1222,11 @@ def email_template_add(request: HttpRequest) -> HttpResponse:
 @login_required
 def email_template_edit(request: HttpRequest, pk: int) -> HttpResponse:
     """Edit one of the landlord's own e-mail templates."""
-    from apps.core.services.mailer import TEMPLATE_TAGS, preview_context
+    from apps.core.services.mailer import (
+        DEFAULT_TEMPLATES,
+        TEMPLATE_TAGS,
+        preview_context,
+    )
 
     user = cast(User, request.user)
     tpl = get_object_or_404(EmailTemplate, pk=pk, owner=user)
@@ -1239,8 +1243,28 @@ def email_template_edit(request: HttpRequest, pk: int) -> HttpResponse:
             "title": "Edytuj szablon",
             "tags": TEMPLATE_TAGS,
             "samples": preview_context(user),
+            "template": tpl,
+            "can_restore": tpl.kind in DEFAULT_TEMPLATES,
         },
     )
+
+
+@login_required
+@require_POST
+def email_template_restore(request: HttpRequest, pk: int) -> HttpResponse:
+    """Reset one of the landlord's templates to the built-in default content."""
+    from apps.core.services.mailer import DEFAULT_TEMPLATES
+
+    user = cast(User, request.user)
+    tpl = get_object_or_404(EmailTemplate, pk=pk, owner=user)
+    default = DEFAULT_TEMPLATES.get(tpl.kind)
+    if default is None:
+        messages.info(request, "Ten typ szablonu nie ma wersji domyślnej.")
+    else:
+        tpl.subject, tpl.body = default
+        tpl.save(update_fields=["subject", "body"])
+        messages.success(request, "Przywrócono treść domyślną szablonu.")
+    return redirect("core:email_template_edit", pk=tpl.pk)
 
 
 @login_required

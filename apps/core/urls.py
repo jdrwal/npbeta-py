@@ -127,6 +127,11 @@ urlpatterns = [
         name="email_template_edit",
     ),
     path(
+        "communication/templates/<int:pk>/restore/",
+        views.email_template_restore,
+        name="email_template_restore",
+    ),
+    path(
         "communication/templates/<int:pk>/delete/",
         views.email_template_delete,
         name="email_template_delete",

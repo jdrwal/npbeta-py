@@ -154,3 +154,37 @@ def test_template_owner_scoped(landlord: User) -> None:
     assert client.get(
         reverse("core:email_template_edit", args=[tpl.pk])
     ).status_code == 404
+
+
+@pytest.mark.django_db
+def test_template_restore_resets_to_default(landlord: User) -> None:
+    from apps.core.services.mailer import DEFAULT_TEMPLATES
+
+    tpl = EmailTemplate.objects.create(
+        owner=landlord, kind=EmailTemplate.Kind.SETTLEMENT,
+        name="Rozliczenie", subject="stary temat", body="ręcznie zmieniona treść",
+    )
+    client = Client()
+    client.force_login(landlord)
+    resp = client.post(reverse("core:email_template_restore", args=[tpl.pk]))
+    assert resp.status_code == 302
+    tpl.refresh_from_db()
+    subject, body = DEFAULT_TEMPLATES[EmailTemplate.Kind.SETTLEMENT]
+    assert tpl.subject == subject
+    assert tpl.body == body
+
+
+@pytest.mark.django_db
+def test_template_restore_button_only_when_default_exists(landlord: User) -> None:
+    client = Client()
+    client.force_login(landlord)
+    settlement = EmailTemplate.objects.create(
+        owner=landlord, kind=EmailTemplate.Kind.SETTLEMENT, name="S", subject="s", body="b"
+    )
+    custom = EmailTemplate.objects.create(
+        owner=landlord, kind=EmailTemplate.Kind.CUSTOM, name="C", subject="s", body="b"
+    )
+    r_settlement = client.get(reverse("core:email_template_edit", args=[settlement.pk]))
+    r_custom = client.get(reverse("core:email_template_edit", args=[custom.pk]))
+    assert b"Przywr" in r_settlement.content  # restore button for settlement
+    assert b"Przywr" not in r_custom.content  # no default -> no button
