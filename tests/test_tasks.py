@@ -7,6 +7,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.management import call_command
+from django.test import Client
 from django.utils import timezone
 
 from apps.core.models import (
@@ -83,6 +84,43 @@ def test_settlement_email_uses_owner_template(
     assert "Mój podpis" in body  # template signature used
     assert "Prad: 50.00 zł" in body  # {items} injected
     assert "Razem: 50.00 zł" in body  # {total} injected
+
+
+@pytest.mark.django_db
+def test_settlement_email_preview_endpoint(
+    client: Client, calc_with_tenant: FeeCalculation
+) -> None:
+    from django.urls import reverse
+
+    calc = calc_with_tenant
+    tenant = calc.tenants.get()
+    client.force_login(calc.owner)
+    url = reverse("core:settlement_email_preview", args=[calc.pk, tenant.pk])
+    resp = client.get(url)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["subject"]
+    assert "Prad" in data["body"]
+    assert "50.00 zł" in data["body"]
+    assert "rozlicz-najem.pl" in data["body"]  # footer shown in preview
+    assert len(mail.outbox) == 0  # preview must not send
+
+
+@pytest.mark.django_db
+def test_settlement_email_preview_owner_scoped(
+    client: Client, calc_with_tenant: FeeCalculation
+) -> None:
+    from django.urls import reverse
+
+    calc = calc_with_tenant
+    tenant = calc.tenants.get()
+    other = get_user_model().objects.create_user(
+        username="intruder@example.com", password="pw"
+    )
+    client.force_login(other)
+    url = reverse("core:settlement_email_preview", args=[calc.pk, tenant.pk])
+    resp = client.get(url)
+    assert resp.status_code == 404
 
 
 @pytest.mark.django_db

@@ -25,10 +25,18 @@
 </div>
 
 {% for row in tenants %}
-<h2 style="font-size:1.1rem;margin-top:1.5rem;">
-    {{ row.tenant.tenant_name }}
-    <span class="font-normal text-gray-500 dark:text-gray-400">— {{ row.tenant.contract_number }} · razem {{ row.total }} zł</span>
-</h2>
+<div class="mt-6 flex flex-wrap items-center justify-between gap-2">
+    <h2 style="font-size:1.1rem;">
+        {{ row.tenant.tenant_name }}
+        <span class="font-normal text-gray-500 dark:text-gray-400">— {{ row.tenant.contract_number }} · razem {{ row.total }} zł</span>
+    </h2>
+    <button type="button" class="act email-preview-btn"
+            data-url="{% url 'core:settlement_email_preview' calc.pk row.tenant.pk %}"
+            data-name="{{ row.tenant.tenant_name }}">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        Podgląd maila
+    </button>
+</div>
 <table>
     <thead>
         <tr><th>Typ</th><th>Pozycja</th><th>Zużycie</th><th>Wartość</th></tr>
@@ -45,4 +53,54 @@
     </tbody>
 </table>
 {% endfor %}
+
+<div id="mail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-2xl rounded-xl bg-white shadow-xl dark:bg-gray-900">
+        <div class="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-3 dark:border-gray-800">
+            <div class="min-w-0">
+                <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Podgląd wiadomości</div>
+                <div id="mail-modal-to" class="truncate text-xs text-gray-500 dark:text-gray-400"></div>
+            </div>
+            <button type="button" id="mail-modal-close" class="act !px-2 !py-1" aria-label="Zamknij">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="px-5 py-4">
+            <div class="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Temat</div>
+            <div id="mail-modal-subject" class="mb-4 text-sm font-medium text-gray-900 dark:text-white"></div>
+            <div class="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Treść</div>
+            <pre id="mail-modal-body" class="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-sans text-sm leading-relaxed text-gray-700 dark:bg-gray-800 dark:text-gray-300"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal = document.getElementById('mail-modal');
+    const to = document.getElementById('mail-modal-to');
+    const subj = document.getElementById('mail-modal-subject');
+    const body = document.getElementById('mail-modal-body');
+    function open() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    function close() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    document.querySelectorAll('.email-preview-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            subj.textContent = 'Ładowanie…';
+            body.textContent = '';
+            to.textContent = btn.dataset.name || '';
+            open();
+            fetch(btn.dataset.url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    subj.textContent = d.subject || '';
+                    body.textContent = d.body || '';
+                    to.textContent = (d.tenant_name || '') + (d.email ? ' · ' + d.email : ' · (brak adresu e-mail)');
+                })
+                .catch(function () { subj.textContent = 'Nie udało się załadować podglądu.'; });
+        });
+    });
+    document.getElementById('mail-modal-close').addEventListener('click', close);
+    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
 {% endblock %}

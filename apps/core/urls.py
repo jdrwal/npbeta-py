@@ -64,6 +64,11 @@ urlpatterns = [
     path("calculations/new/", views.run_settlement, name="run_settlement"),
     path("calculations/<int:pk>/", views.calculation_detail, name="calculation_detail"),
     path(
+        "calculations/<int:pk>/preview/<int:tenant_pk>/",
+        views.settlement_email_preview,
+        name="settlement_email_preview",
+    ),
+    path(
         "calculations/<int:pk>/delete/",
         views.delete_settlement,
         name="delete_settlement",

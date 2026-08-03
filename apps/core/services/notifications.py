@@ -39,6 +39,40 @@ def _fallback_body(tenant: FeeCalculationTenant) -> str:
     )
 
 
+def render_settlement_email(
+    calc: FeeCalculation, tenant: FeeCalculationTenant
+) -> tuple[str, str]:
+    """Rendered (subject, body) of the settlement email for one tenant.
+
+    The body does NOT include the shared marketing footer — that is appended by
+    the central send path (and by the preview view) so it appears exactly once.
+    Used by both the actual sending and the on-screen preview so they match.
+    """
+    from apps.core.models import EmailTemplate
+    from apps.core.services.mailer import get_template
+
+    subject_tpl, body_tpl = get_template(calc.owner, EmailTemplate.Kind.SETTLEMENT)
+    owner = calc.owner
+    owner_name = owner.get_full_name() or owner.get_username()
+    items, total = _items_block(tenant)
+    context = {
+        "tenant_name": tenant.tenant_name or "",
+        "contract_number": tenant.contract_number or "",
+        "flat": str(calc.flat),
+        "period": _period_label(calc),
+        "items": items,
+        "total": f"{total:.2f} zł",
+        "owner_name": owner_name,
+    }
+    subject = render_text(
+        subject_tpl or "Rozliczenie mediów — {flat} ({period})", context
+    )
+    body = render_text(body_tpl or "", context).strip()
+    if not body:
+        body = _fallback_body(tenant)
+    return subject, body
+
+
 def send_settlement_emails(calc: FeeCalculation) -> int:
     """Email each tenant their settlement breakdown (owner in CC). Returns count.
 
@@ -46,13 +80,8 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
     (falling back to the built-in default). The per-tenant fee breakdown and
     total are injected via the ``{items}`` and ``{total}`` placeholders.
     """
-    from apps.core.models import EmailTemplate
-    from apps.core.services.mailer import get_template
-
     sent = 0
-    subject_tpl, body_tpl = get_template(calc.owner, EmailTemplate.Kind.SETTLEMENT)
     owner = calc.owner
-    owner_name = owner.get_full_name() or owner.get_username()
 
     # Reuse one SMTP connection across the batch.
     connection, _ = owner_connection(owner)
@@ -64,22 +93,7 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
     for tenant in calc.tenants.all():
         if not tenant.email:
             continue
-        items, total = _items_block(tenant)
-        context = {
-            "tenant_name": tenant.tenant_name or "",
-            "contract_number": tenant.contract_number or "",
-            "flat": str(calc.flat),
-            "period": _period_label(calc),
-            "items": items,
-            "total": f"{total:.2f} zł",
-            "owner_name": owner_name,
-        }
-        subject = render_text(
-            subject_tpl or "Rozliczenie mediów — {flat} ({period})", context
-        )
-        body = render_text(body_tpl or "", context).strip()
-        if not body:
-            body = _fallback_body(tenant)
+        subject, body = render_settlement_email(calc, tenant)
         send_owner_email(
             owner,
             subject=subject,

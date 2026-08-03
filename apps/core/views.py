@@ -686,6 +686,30 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
+@login_required
+def settlement_email_preview(
+    request: HttpRequest, pk: int, tenant_pk: int
+) -> JsonResponse:
+    """Preview the settlement email that a single tenant would receive."""
+    user = cast(User, request.user)
+    calc = get_object_or_404(
+        FeeCalculation.objects.select_related("flat"), pk=pk, owner=user
+    )
+    tenant = get_object_or_404(calc.tenants, pk=tenant_pk)
+    from apps.core.services.mailer import with_footer
+    from apps.core.services.notifications import render_settlement_email
+
+    subject, body = render_settlement_email(calc, tenant)
+    return JsonResponse(
+        {
+            "tenant_name": tenant.tenant_name,
+            "email": tenant.email,
+            "subject": subject,
+            "body": with_footer(body),
+        }
+    )
+
+
 def healthz(request: HttpRequest) -> JsonResponse:
     """Liveness probe used by Docker/monitoring."""
     return JsonResponse({"status": "ok"})
