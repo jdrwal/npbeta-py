@@ -59,6 +59,7 @@
                 </label>
                 {% endfor %}
             </div>
+            {% include "core/_field.html" with field=mail_form.reply_to %}
             <div id="smtp-fields" class="space-y-4 border-t border-gray-100 pt-4">
                 <div class="grid gap-4 sm:grid-cols-3">
                     <div class="sm:col-span-2">{% include "core/_field.html" with field=mail_form.smtp_host %}</div>

@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from django.core.mail.backends.base import BaseEmailBackend
 
-from apps.core.models import FeeCalculation, FeeCalculationTenant
+from apps.core.models import Contract, FeeCalculation, FeeCalculationTenant
 from apps.core.services.mailer import (
     owner_address,
     owner_connection,
@@ -122,4 +122,65 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
         if send_settlement_email_to(calc, tenant, connection=connection, cc=cc):
             sent += 1
     return sent
+
+
+def _renewal_fallback(contract: Contract) -> str:
+    """Built-in renewal reminder body, used when the template renders empty."""
+    end = contract.contract_end.isoformat() if contract.contract_end else ""
+    return (
+        "Dzień dobry,\n\n"
+        f"umowa najmu {contract.contract_number} dotycząca {contract.flat} "
+        f"kończy się {end}. Prosimy o informację, czy chcą Państwo ją "
+        "przedłużyć.\n\n"
+        "Pozdrawiam"
+    )
+
+
+def render_renewal_email(contract: Contract) -> tuple[str, str]:
+    """Rendered (subject, body) of the contract-renewal reminder for a tenant.
+
+    The body excludes the marketing footer (added by the send path).
+    """
+    from apps.core.models import EmailTemplate
+    from apps.core.services.mailer import get_template
+
+    subject_tpl, body_tpl = get_template(
+        contract.owner, EmailTemplate.Kind.CONTRACT_RENEWAL
+    )
+    owner = contract.owner
+    context = {
+        "tenant_name": contract.tenant_name or "",
+        "contract_number": contract.contract_number or "",
+        "flat": str(contract.flat),
+        "contract_end": (
+            contract.contract_end.isoformat() if contract.contract_end else ""
+        ),
+        "payment_day": str(contract.payment_day or ""),
+        "owner_name": owner.get_full_name() or owner.get_username(),
+    }
+    subject = render_text(
+        subject_tpl or "Twoja umowa najmu wkrótce się kończy", context
+    )
+    body = render_text(body_tpl or "", context).strip()
+    if not body:
+        body = _renewal_fallback(contract)
+    return subject, body
+
+
+def send_renewal_email(contract: Contract) -> bool:
+    """Send the renewal reminder to the tenant (owner in CC). False if no address."""
+    if not contract.email:
+        return False
+    subject, body = render_renewal_email(contract)
+    owner_cc = owner_address(contract.owner)
+    cc = [owner_cc] if owner_cc else []
+    send_owner_email(
+        contract.owner,
+        subject=subject,
+        body=body,
+        to=[contract.email],
+        cc=cc,
+        flat=contract.flat,
+    )
+    return True
 

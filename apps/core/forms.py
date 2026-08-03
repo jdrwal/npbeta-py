@@ -293,6 +293,7 @@ class MailSettingsForm(forms.ModelForm):
     class Meta:
         model = MailSettings
         fields = [
+            "reply_to",
             "smtp_host",
             "smtp_port",
             "smtp_user",
@@ -307,6 +308,7 @@ class MailSettingsForm(forms.ModelForm):
             ),
         }
         labels = {
+            "reply_to": "Adres do odpowiedzi (Reply-To)",
             "smtp_host": "Serwer SMTP",
             "smtp_port": "Port",
             "smtp_user": "Użytkownik (login)",
@@ -316,6 +318,8 @@ class MailSettingsForm(forms.ModelForm):
             "use_ssl": "Użyj SSL",
         }
         help_texts = {
+            "reply_to": "Gdy najemca odpowie na maila, trafi na ten adres. "
+            "Puste = adres e-mail Twojego konta.",
             "smtp_password": "Zostaw puste, aby nie zmieniać zapisanego hasła.",
             "from_email": "Np. najem@twojadomena.pl",
         }

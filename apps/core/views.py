@@ -1,5 +1,5 @@
 import calendar
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any, cast
 
@@ -432,13 +432,21 @@ def contracts(request: HttpRequest) -> HttpResponse:
     )
     active: list[Contract] = []
     past: list[Contract] = []
+    soon_cutoff = today + timedelta(days=31)
     for c in rows:
         is_active = bool(
             c.contract_start
             and c.contract_start <= today
             and (c.contract_end is None or today <= c.contract_end)
         )
-        (active if is_active else past).append(c)
+        if is_active:
+            # Flag fixed-term leases ending within a month (for the renewal CTA).
+            c.ending_soon = bool(  # type: ignore[attr-defined]
+                c.contract_end and c.contract_end <= soon_cutoff
+            )
+            active.append(c)
+        else:
+            past.append(c)
     return render(
         request,
         "core/contracts.html",
@@ -737,6 +745,28 @@ def settlement_email_send_one(
     return JsonResponse(
         {"sent": True, "message": f"Wysłano do {tenant.email}."}
     )
+
+
+@login_required
+@require_POST
+def contract_send_renewal(request: HttpRequest, pk: int) -> HttpResponse:
+    """Email the tenant that their contract is expiring, asking about renewal."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    if not contract.email:
+        messages.error(request, "Ta umowa nie ma adresu e-mail najemcy.")
+        return redirect("core:contracts")
+    from apps.core.services.notifications import send_renewal_email
+
+    try:
+        send_renewal_email(contract)
+    except Exception as exc:  # noqa: BLE001 - surface the send failure to the user
+        messages.error(request, f"Nie udało się wysłać: {exc}")
+        return redirect("core:contracts")
+    messages.success(
+        request, f"Wysłano przypomnienie o umowie do {contract.email}."
+    )
+    return redirect("core:contracts")
 
 
 def healthz(request: HttpRequest) -> JsonResponse:

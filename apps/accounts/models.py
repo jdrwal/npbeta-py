@@ -57,6 +57,8 @@ class MailSettings(models.Model):
     smtp_user = models.CharField(max_length=255, blank=True)
     smtp_password = models.CharField(max_length=255, blank=True)
     from_email = models.EmailField(max_length=255, blank=True)
+    # Reply-To for outgoing mail; blank falls back to the account's own address.
+    reply_to = models.EmailField(max_length=255, blank=True)
     use_tls = models.BooleanField(default=True)
     use_ssl = models.BooleanField(default=False)
     # When True, fall back to the project's default mail backend instead of the

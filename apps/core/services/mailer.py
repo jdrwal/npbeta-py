@@ -69,6 +69,14 @@ def owner_address(owner: User) -> str:
     return email if "@" in email else ""
 
 
+def owner_reply_to(owner: User) -> list[str]:
+    """Reply-To for the owner's mail: their configured address, else account e-mail."""
+    mail_cfg = getattr(owner, "mail_settings", None)
+    configured = getattr(mail_cfg, "reply_to", "") if mail_cfg is not None else ""
+    addr = configured or owner_address(owner)
+    return [addr] if addr and "@" in addr else []
+
+
 def owner_connection(owner: User) -> tuple[BaseEmailBackend | None, str]:
     """Return (connection, from_email) for ``owner``.
 
@@ -183,6 +191,7 @@ def send_owner_email(
     cc = cc or []
     bcc = bcc or []
     body = with_footer(body)
+    reply_to = owner_reply_to(owner)
     if connection is None:
         connection, from_email = owner_connection(owner)
     else:
@@ -206,6 +215,7 @@ def send_owner_email(
             to=to,
             cc=cc,
             bcc=bcc,
+            reply_to=reply_to,
             connection=connection,
         ).send(fail_silently=False)
     except Exception as exc:  # noqa: BLE001 - record the failure for the audit log

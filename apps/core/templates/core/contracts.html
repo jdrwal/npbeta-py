@@ -29,7 +29,11 @@
                     <div class="truncate font-semibold text-gray-900 dark:text-white">{{ c.tenant_name }}</div>
                     <div class="truncate text-xs text-gray-400 dark:text-gray-500">Umowa {{ c.contract_number }}</div>
                 </div>
+                {% if c.ending_soon %}
+                <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Wygasa wkrótce</span>
+                {% else %}
                 <span class="pill bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Aktywna</span>
+                {% endif %}
             </div>
             <div class="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                 <svg class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg>
@@ -46,7 +50,7 @@
                     <div class="font-semibold text-indigo-600 dark:text-indigo-400">{{ c.price }} zł</div>
                 </div>
             </div>
-            <div class="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
+            <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
                 <a href="{% url 'core:edit_contract' c.pk %}" class="act">Edytuj</a>
                 <a href="{% url 'core:contract_invites' c.pk %}" class="act">
                     {% if c.tenant_user_id %}
@@ -57,6 +61,15 @@
                     Zaproś
                     {% endif %}
                 </a>
+                {% if c.contract_end and c.email %}
+                <form method="post" action="{% url 'core:contract_send_renewal' c.pk %}" onsubmit="return confirm('Wysłać najemcy przypomnienie o wygaśnięciu umowy {{ c.contract_number }}?');">
+                    {% csrf_token %}
+                    <button type="submit" class="act" title="Wyślij przypomnienie o wygaśnięciu umowy">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        Przypomnij
+                    </button>
+                </form>
+                {% endif %}
                 <a href="{% url 'core:delete_contract' c.pk %}" class="act act-danger ml-auto">Usuń</a>
             </div>
         </div>

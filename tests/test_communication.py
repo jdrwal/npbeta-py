@@ -188,3 +188,45 @@ def test_template_restore_button_only_when_default_exists(landlord: User) -> Non
     r_custom = client.get(reverse("core:email_template_edit", args=[custom.pk]))
     assert b"Przywr" in r_settlement.content  # restore button for settlement
     assert b"Przywr" not in r_custom.content  # no default -> no button
+
+
+@pytest.mark.django_db
+def test_email_reply_to_defaults_to_account(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    send_flat_broadcast(landlord, flat_with_tenants, "Temat", "Treść")
+    assert mail.outbox[0].reply_to == ["owner@example.com"]
+
+
+@pytest.mark.django_db
+def test_email_reply_to_custom_override(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    from apps.accounts.models import MailSettings
+
+    MailSettings.objects.update_or_create(
+        user=landlord, defaults={"reply_to": "kontakt@przyklad.pl"}
+    )
+    send_flat_broadcast(landlord, flat_with_tenants, "Temat", "Treść")
+    assert mail.outbox[0].reply_to == ["kontakt@przyklad.pl"]
+
+
+@pytest.mark.django_db
+def test_contract_send_renewal(landlord: User) -> None:
+    flat = Flat.objects.create(owner=landlord, city="C", street="S", code="Z")
+    room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
+    today = timezone.now().date()
+    contract = Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="T",
+        email="t@example.com", contract_number="Z/1",
+        contract_start=today - timedelta(days=100),
+        contract_end=today + timedelta(days=15),
+    )
+    client = Client()
+    client.force_login(landlord)
+    resp = client.post(reverse("core:contract_send_renewal", args=[contract.pk]))
+    assert resp.status_code == 302
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == ["t@example.com"]
+    assert mail.outbox[0].reply_to == ["owner@example.com"]
+    assert "Z/1" in mail.outbox[0].body
