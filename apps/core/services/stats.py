@@ -13,7 +13,7 @@ from django.db.models import F, Q, Sum
 from django.utils import timezone
 
 from apps.accounts.models import User
-from apps.core.models import Contract, Flat, LedgerEntry, Room
+from apps.core.models import Contract, FeeCalculation, Flat, LedgerEntry, Room
 
 _PL_MONTH_ABBR = [
     "",
@@ -149,3 +149,74 @@ def monthly_income_series(user: User, months: int = 6) -> list[MonthPoint]:
         )
         for month, value in values
     ]
+
+
+@dataclass
+class FeeArrear:
+    """One computed-but-not-confirmed utility settlement owed by a tenant."""
+
+    flat: Flat
+    flat_id: int
+    tenant_name: str
+    period_label: str  # the settlement period the fee is for (MM/YYYY)
+    amount: Decimal
+    calc_id: int
+    bill_year: int  # month where the fee is confirmed (Ewidencja link)
+    bill_month: int
+
+
+def _next_month(year: int, month: int) -> tuple[int, int]:
+    return (year + 1, 1) if month == 12 else (year, month + 1)
+
+
+def unconfirmed_fees(user: User) -> list[FeeArrear]:
+    """Saved settlements (Pozostałe opłaty) not yet confirmed as a fee payment.
+
+    Fees are billed in arrears: a settlement for month P is confirmed by a
+    ``fee`` ledger entry in month P+1 for the same contract (matched by
+    ``contract_number``, as in the Ewidencja view). Anything still unconfirmed
+    is surfaced as a dashboard notification.
+    """
+    contracts_by_num = {
+        c.contract_number: c
+        for c in Contract.objects.filter(owner=user)
+        if c.contract_number
+    }
+    confirmed: set[tuple[int, int, int]] = set()
+    for cid, bp in LedgerEntry.objects.filter(
+        owner=user, kind=LedgerEntry.Kind.FEE, contract__isnull=False
+    ).values_list("contract_id", "billing_period"):
+        if bp:
+            confirmed.add((cid, bp.year, bp.month))
+
+    items: list[FeeArrear] = []
+    calcs = (
+        FeeCalculation.objects.filter(owner=user)
+        .select_related("flat")
+        .prefetch_related("tenants__items")
+    )
+    for calc in calcs:
+        midpoint = calc.period_start + (calc.period_end - calc.period_start) / 2
+        p_year, p_month = midpoint.year, midpoint.month
+        bill_year, bill_month = _next_month(p_year, p_month)
+        for tenant in calc.tenants.all():
+            total = sum((it.value for it in tenant.items.all()), Decimal(0))
+            if total <= 0:
+                continue
+            contract = contracts_by_num.get(tenant.contract_number)
+            if contract and (contract.pk, bill_year, bill_month) in confirmed:
+                continue
+            items.append(
+                FeeArrear(
+                    flat=calc.flat,
+                    flat_id=calc.flat_id,
+                    tenant_name=tenant.tenant_name,
+                    period_label=f"{p_month:02d}/{p_year}",
+                    amount=total,
+                    calc_id=calc.pk,
+                    bill_year=bill_year,
+                    bill_month=bill_month,
+                )
+            )
+    items.sort(key=lambda x: (x.period_label, x.tenant_name), reverse=True)
+    return items

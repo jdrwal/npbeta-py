@@ -74,6 +74,7 @@ from apps.core.services.stats import (
     inventory_state,
     monthly_income_series,
     occupancy,
+    unconfirmed_fees,
 )
 from apps.core.services.tax import monthly_tax, tax_for_year, tax_table
 from apps.core.tasks import email_settlement_task
@@ -167,6 +168,24 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     rent_arrears_total = sum((i.amount for i in rent_arrear_items), Decimal(0))
     arrears_total = Decimal(tax_arrears_total) + rent_arrears_total
 
+    # Pozostałe opłaty: saved settlements computed but not yet confirmed as paid.
+    fee_arrear_items = unconfirmed_fees(user)
+    fee_arrears_total = sum((i.amount for i in fee_arrear_items), Decimal(0))
+    fee_arrears_json = [
+        {
+            "tenant": i.tenant_name,
+            "flat": str(i.flat),
+            "period": i.period_label,
+            "amount": f"{i.amount:.2f}",
+            "calc_url": reverse("core:calculation_detail", args=[i.calc_id]),
+            "records_url": (
+                f"{reverse('core:records')}?year={i.bill_year}"
+                f"&month={i.bill_month}&flat={i.flat_id}"
+            ),
+        }
+        for i in fee_arrear_items
+    ]
+
     return render(
         request,
         "core/dashboard.html",
@@ -190,6 +209,10 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "rent_arrears_total": rent_arrears_total,
             "arrears_total": arrears_total,
             "has_arrears": bool(tax_arrears or rent_arrear_items),
+            "fee_arrears_total": fee_arrears_total,
+            "fee_arrears_count": len(fee_arrear_items),
+            "fee_arrears_json": fee_arrears_json,
+            "has_fee_arrears": bool(fee_arrear_items),
         },
     )
 
