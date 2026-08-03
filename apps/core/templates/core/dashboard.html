@@ -11,7 +11,7 @@
 </div>
 
 {% if has_any_arrears %}
-<a href="{% url 'core:arrears' %}" class="mb-6 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 transition-colors hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:border-rose-500/50">
+<a href="{% url 'core:arrears' %}" class="mb-6 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 !no-underline transition-colors hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:border-rose-500/50">
     <div class="flex min-w-0 items-center gap-3">
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
