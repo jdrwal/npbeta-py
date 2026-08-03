@@ -18,11 +18,11 @@ from decimal import Decimal
 from typing import Any
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
+from apps.accounts.models import User
 from apps.core.models import (
     Contract,
     Flat,
@@ -34,8 +34,6 @@ from apps.core.models import (
     TaxDue,
 )
 from apps.core.services import tax as tax_service
-
-User = get_user_model()
 
 LANDLORD_EMAIL = "demo.wynajmujacy@example.com"
 TENANT_EMAIL = "anna.kowalska@example.com"
@@ -356,8 +354,11 @@ class Command(BaseCommand):
             length = rng.randint(10, 20)  # months
             c_start = cursor
             c_end = _add_months(c_start, length) - timedelta(days=1)
-            # The final tenancy stays open-ended (active) if it reaches "today".
-            open_ended = _add_months(c_start, length) > today
+            # A short vacancy gap before a hypothetical next tenant (1-2 months).
+            next_cursor = _add_months(c_end, rng.choice([1, 1, 2]))
+            # If the next tenancy would start on/after today, keep THIS one as the
+            # current, open-ended (indefinite) lease so every room stays occupied.
+            open_ended = next_cursor >= today
             if rng.random() < 0.5:
                 first, last = rng.choice(_FEMALE_FIRST), rng.choice(_FEMALE_LAST)
             else:
@@ -386,6 +387,5 @@ class Command(BaseCommand):
             seq += 1
             if open_ended:
                 break
-            # A short vacancy gap before the next tenant (0-2 months).
-            cursor = _add_months(c_end, rng.choice([1, 1, 2]))
+            cursor = next_cursor
         return contracts
