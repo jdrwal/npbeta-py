@@ -29,7 +29,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 from apps.core.models import (
@@ -68,10 +68,13 @@ def _round(value: Decimal, quantum: Decimal) -> Decimal:
 
 
 def _active_contracts(flat: Flat, day: date) -> list[Contract]:
-    """Contracts active on ``day`` (start strictly before, end on/after)."""
+    """Contracts active on ``day`` (start strictly before, end on/after).
+
+    An open-ended contract (``contract_end`` is ``None``) counts as active.
+    """
     return list(
-        Contract.all_objects.filter(
-            flat=flat, contract_start__lt=day, contract_end__gte=day
+        Contract.all_objects.filter(flat=flat, contract_start__lt=day).filter(
+            Q(contract_end__gte=day) | Q(contract_end__isnull=True)
         )
     )
 

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
-from django.db.models import F, Sum
+from django.db.models import F, Q, Sum
 from django.utils import timezone
 
 from apps.accounts.models import User
@@ -51,8 +51,8 @@ def inventory_state(user: User) -> InventoryState:
     today = timezone.now().date()
     soon = _add_months(today, 2)
     active = Contract.objects.filter(
-        owner=user, contract_start__lte=today, contract_end__gte=today
-    )
+        owner=user, contract_start__lte=today
+    ).filter(Q(contract_end__gte=today) | Q(contract_end__isnull=True))
     return InventoryState(
         flats=Flat.objects.filter(owner=user).count(),
         rooms=Room.objects.filter(owner=user).count(),
@@ -87,15 +87,19 @@ def occupancy(flat: Flat) -> list[RoomOccupancy]:
     result: list[RoomOccupancy] = []
     for room in Room.objects.filter(flat=flat).order_by("room_no"):
         contract = (
-            Contract.objects.filter(room=room, contract_end__gt=today)
-            .order_by("-contract_end")
+            Contract.objects.filter(room=room, contract_start__lte=today)
+            .filter(Q(contract_end__gt=today) | Q(contract_end__isnull=True))
+            .order_by(F("contract_end").desc(nulls_first=True))
             .first()
         )
         if contract is None:
             result.append(RoomOccupancy(room, "danger", "", None))
             continue
-        days_left = (contract.contract_end - today).days if contract.contract_end else 0
-        status = "success" if days_left > 60 else "warning"
+        if contract.contract_end is None:
+            status = "success"  # open-ended lease, no end in sight
+        else:
+            days_left = (contract.contract_end - today).days
+            status = "success" if days_left > 60 else "warning"
         result.append(
             RoomOccupancy(room, status, contract.tenant_name, contract.contract_end)
         )

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.accounts.models import User
@@ -99,14 +100,20 @@ def rent_arrears(user: User, months: int = 12) -> list[RentArrear]:
 
 
 def contract_ratio(contract: Contract, year: int, month: int) -> Decimal:
-    """Fraction of the month the contract is active (0..1)."""
-    if contract.contract_start is None or contract.contract_end is None:
+    """Fraction of the month the contract is active (0..1).
+
+    An open-ended contract (``contract_end`` is ``None``) is treated as active
+    through the end of the month.
+    """
+    if contract.contract_start is None:
         return Decimal(0)
     days_in_month = calendar.monthrange(year, month)[1]
     first = date(year, month, 1)
     last = date(year, month, days_in_month)
     active_start = max(contract.contract_start, first)
-    active_end = min(contract.contract_end, last)
+    active_end = (
+        last if contract.contract_end is None else min(contract.contract_end, last)
+    )
     if active_end < active_start:
         return Decimal(0)
     active_days = (active_end - active_start).days + 1
@@ -120,8 +127,8 @@ def forecast_income(flat: Flat, year: int, month: int) -> Decimal:
     last = date(year, month, days_in_month)
     total = Decimal(0)
     contracts = Contract.all_objects.filter(
-        flat=flat, contract_start__lte=last, contract_end__gte=first
-    )
+        flat=flat, contract_start__lte=last
+    ).filter(Q(contract_end__gte=first) | Q(contract_end__isnull=True))
     for contract in contracts:
         if contract.price is None:
             continue
