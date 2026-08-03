@@ -230,6 +230,36 @@ def test_test_mode_redirects_all_mail_to_owner(
 
 
 @pytest.mark.django_db
+def test_test_mode_uses_custom_recipient(
+    landlord: User, flat_with_tenants: Flat
+) -> None:
+    from apps.accounts.models import MailSettings
+
+    MailSettings.objects.update_or_create(
+        user=landlord,
+        defaults={"test_mode": True, "test_recipient": "audyt@przyklad.pl"},
+    )
+    send_flat_broadcast(landlord, flat_with_tenants, "Temat", "Treść")
+    assert mail.outbox[0].to == ["audyt@przyklad.pl"]
+
+
+@pytest.mark.django_db
+def test_mail_form_test_mode_maps_flags(landlord: User) -> None:
+    from apps.accounts.models import MailSettings
+    from apps.core.forms import MailSettingsForm
+
+    ms, _ = MailSettings.objects.get_or_create(user=landlord)
+    form = MailSettingsForm(
+        {"mail_mode": "test", "test_recipient": "t@przyklad.pl"}, instance=ms
+    )
+    assert form.is_valid(), form.errors
+    obj = form.save()
+    assert obj.test_mode is True
+    assert obj.use_default is True  # test sends via the default server
+    assert obj.test_recipient == "t@przyklad.pl"
+
+
+@pytest.mark.django_db
 def test_contract_send_renewal(landlord: User) -> None:
     flat = Flat.objects.create(owner=landlord, city="C", street="S", code="Z")
     room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
@@ -259,3 +289,30 @@ def test_contract_send_renewal(landlord: User) -> None:
     assert mail.outbox[0].to == ["t@example.com"]
     assert mail.outbox[0].reply_to == ["owner@example.com"]
     assert "Z/1" in mail.outbox[0].body
+
+
+@pytest.mark.django_db
+def test_send_message_reflects_test_mode(landlord: User) -> None:
+    from apps.accounts.models import MailSettings
+
+    flat = Flat.objects.create(owner=landlord, city="C", street="S", code="Z2")
+    room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
+    today = timezone.now().date()
+    contract = Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="T",
+        email="t@example.com", contract_number="Z2/1",
+        contract_start=today - timedelta(days=100),
+        contract_end=today + timedelta(days=15),
+    )
+    MailSettings.objects.update_or_create(
+        user=landlord,
+        defaults={"test_mode": True, "test_recipient": "audyt@przyklad.pl"},
+    )
+    client = Client()
+    client.force_login(landlord)
+    resp = client.post(reverse("core:contract_send_renewal", args=[contract.pk]))
+    data = resp.json()
+    assert data["sent"] is True
+    assert "Tryb testowy" in data["message"]  # message names test mode
+    assert "audyt@przyklad.pl" in data["message"]  # and the real recipient
+    assert mail.outbox[0].to == ["audyt@przyklad.pl"]  # actually redirected there

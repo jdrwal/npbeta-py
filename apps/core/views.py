@@ -694,6 +694,16 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
+def _sent_message(user: User, intended: str) -> str:
+    """Success message that reflects SMTP test-mode redirection, if active."""
+    from apps.core.services.mailer import owner_test_mode, owner_test_recipient
+
+    if owner_test_mode(user):
+        dest = owner_test_recipient(user)
+        return f"Tryb testowy: wysłano na {dest} (zamiast do {intended})."
+    return f"Wysłano do {intended}."
+
+
 @login_required
 def settlement_email_preview(
     request: HttpRequest, pk: int, tenant_pk: int
@@ -743,7 +753,7 @@ def settlement_email_send_one(
             {"sent": False, "message": f"Nie udało się wysłać: {exc}"}, status=502
         )
     return JsonResponse(
-        {"sent": True, "message": f"Wysłano do {tenant.email}."}
+        {"sent": True, "message": _sent_message(user, tenant.email)}
     )
 
 
@@ -786,7 +796,7 @@ def contract_send_renewal(request: HttpRequest, pk: int) -> JsonResponse:
             {"sent": False, "message": f"Nie udało się wysłać: {exc}"}, status=502
         )
     return JsonResponse(
-        {"sent": True, "message": f"Wysłano do {contract.email}."}
+        {"sent": True, "message": _sent_message(user, contract.email)}
     )
 
 
@@ -1168,6 +1178,8 @@ def delete_tax_payment(request: HttpRequest, pk: int) -> HttpResponse:
 @login_required
 def user_settings(request: HttpRequest) -> HttpResponse:
     """Account settings: change password and configure outgoing SMTP mail."""
+    from django.conf import settings as dj_settings
+
     from apps.core.services.mailer import owner_address
 
     user = cast(User, request.user)
@@ -1206,6 +1218,7 @@ def user_settings(request: HttpRequest) -> HttpResponse:
             "mail_form": mail_form,
             "sec_form": sec_form,
             "owner_email": owner_address(user),
+            "default_from_email": dj_settings.DEFAULT_FROM_EMAIL,
         },
     )
 
