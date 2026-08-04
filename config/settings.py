@@ -149,6 +149,11 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "accounts:post_login"
 LOGOUT_REDIRECT_URL = "login"
 
+# Whether public self-registration is open. Closed by default in production
+# (shows a "coming soon" page); open in development. Override with the
+# REGISTRATION_OPEN env var to force it on/off in any environment.
+REGISTRATION_OPEN = env.bool("REGISTRATION_OPEN", default=DEBUG)
+
 # --- Celery ---
 CELERY_BROKER_URL = env("REDIS_URL", default="redis://redis:6379/0")
 CELERY_RESULT_BACKEND = env("REDIS_URL", default="redis://redis:6379/0")

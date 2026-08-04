@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import cast
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -25,6 +26,11 @@ from apps.accounts.tasks import send_activation_email_task
 User = get_user_model()
 
 
+def _registration_closed(request: HttpRequest) -> HttpResponse:
+    """Friendly "coming soon" page shown when self-registration is disabled."""
+    return render(request, "registration/registration_closed.html", status=403)
+
+
 def _send_activation_email(request: HttpRequest, user: UserType) -> None:
     """Build a one-time activation link and queue the email on a worker."""
     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
@@ -39,6 +45,8 @@ def _register(
 ) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("accounts:post_login")
+    if not settings.REGISTRATION_OPEN:
+        return _registration_closed(request)
     if request.method == "POST":
         form = form_class(request.POST)
         if form.is_valid():
@@ -54,6 +62,8 @@ def register_choice(request: HttpRequest) -> HttpResponse:
     """Landing page: pick landlord or tenant registration."""
     if request.user.is_authenticated:
         return redirect("accounts:post_login")
+    if not settings.REGISTRATION_OPEN:
+        return _registration_closed(request)
     return render(request, "registration/register_choice.html")
 
 

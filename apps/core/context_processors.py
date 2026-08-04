@@ -7,5 +7,8 @@ from django.http import HttpRequest
 
 
 def dev_flags(request: HttpRequest) -> dict[str, Any]:
-    """Expose whether this is a development (DEBUG) instance to templates."""
-    return {"is_dev": settings.DEBUG}
+    """Expose cross-cutting UI flags (dev instance, open registration)."""
+    return {
+        "is_dev": settings.DEBUG,
+        "registration_open": settings.REGISTRATION_OPEN,
+    }

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Zapraszamy wkrótce — Rozlicz Najem{% endblock %}
+{% block content %}
+<div class="login-card relative z-10 text-center">
+    <div class="mb-6 flex items-center justify-center gap-2.5">
+        <div class="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">RN</div>
+        <span class="text-lg font-semibold tracking-tight">Rozlicz Najem</span>
+    </div>
+    <div class="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
+        <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    </div>
+    <h1 class="mb-2 text-xl">Zapraszamy wkrótce</h1>
+    <p class="mb-6 text-sm text-gray-500 dark:text-gray-400">
+        Rejestracja nowych kont jest chwilowo niedostępna. Pracujemy nad uruchomieniem — wróć niebawem.
+    </p>
+    <a href="{% url 'login' %}" class="btn w-full justify-center">Zaloguj się</a>
+</div>
+{% endblock %}

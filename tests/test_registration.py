@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from django.contrib.auth.tokens import default_token_generator
@@ -19,6 +20,12 @@ from apps.core.models import Contract, ContractInvite, Flat, Room
 STRONG_PW = "Trawa-9284-Xylo"
 
 
+@pytest.fixture(autouse=True)
+def _open_registration(settings: Any) -> None:
+    """Registration is closed by default (DEBUG=False in tests); open it here."""
+    settings.REGISTRATION_OPEN = True
+
+
 def _landlord() -> User:
     return User.objects.create_user(
         username="owner@example.com",
@@ -32,6 +39,38 @@ def _flat_room(owner: User) -> tuple[Flat, Room]:
     flat = Flat.objects.create(owner=owner, city="Kraków", street="Główna", building_no="1")
     room = Room.objects.create(owner=owner, flat=flat, room_no=1, beds=1)
     return flat, room
+
+
+@pytest.mark.django_db
+def test_registration_closed_shows_coming_soon(settings: Any) -> None:
+    settings.REGISTRATION_OPEN = False
+    client = Client()
+    for name in (
+        "accounts:register",
+        "accounts:register_landlord",
+        "accounts:register_tenant",
+    ):
+        resp = client.get(reverse(name))
+        assert resp.status_code == 403
+        assert "wkrótce" in resp.content.decode().lower()
+
+
+@pytest.mark.django_db
+def test_registration_closed_blocks_signup(settings: Any) -> None:
+    settings.REGISTRATION_OPEN = False
+    client = Client()
+    resp = client.post(
+        reverse("accounts:register_landlord"),
+        {
+            "first_name": "Jan Nowak",
+            "email": "blocked@example.com",
+            "password1": STRONG_PW,
+            "password2": STRONG_PW,
+        },
+    )
+    assert resp.status_code == 403
+    assert not User.objects.filter(email="blocked@example.com").exists()
+    assert len(mail.outbox) == 0
 
 
 @pytest.mark.django_db
