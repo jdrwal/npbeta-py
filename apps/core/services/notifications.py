@@ -20,29 +20,25 @@ def _period_label(calc: FeeCalculation) -> str:
 
 
 def _items_block(tenant: FeeCalculationTenant) -> tuple[str, Decimal]:
-    """Rendered per-item breakdown text and its total for one tenant.
+    """Per-section subtotals and the grand total for one tenant.
 
-    Items are grouped into the three settlement sections (meter fees, other
-    fees, funds); empty sections are omitted.
+    Rather than listing every line, the tenant sees one number per settlement
+    section (meter fees, other fees, funds); empty sections are omitted.
     """
     sections = (
         ("Counter", "Opłaty licznikowe"),
         ("Admin", "Opłaty pozostałe"),
         ("Fund", "Fundusze"),
     )
-    grouped: dict[str, list[str]] = {}
+    sums: dict[str, Decimal] = {}
     total = Decimal(0)
     for item in tenant.items.all():
-        grouped.setdefault(item.fee_type, []).append(
-            f"  {item.name}: {item.value:.2f} zł"
-        )
+        sums[item.fee_type] = sums.get(item.fee_type, Decimal(0)) + item.value
         total += item.value
-    blocks: list[str] = []
-    for key, label in sections:
-        rows = grouped.get(key)
-        if rows:
-            blocks.append(f"{label}:\n" + "\n".join(rows))
-    return "\n".join(blocks), total
+    lines = [
+        f"{label}: {sums[key]:.2f} zł" for key, label in sections if key in sums
+    ]
+    return "\n".join(lines), total
 
 
 def _fallback_body(tenant: FeeCalculationTenant) -> str:
@@ -52,8 +48,8 @@ def _fallback_body(tenant: FeeCalculationTenant) -> str:
     return (
         f"Rozliczenie opłat — {calc.flat}\n"
         f"Okres: {_period_label(calc)}\n\n"
-        f"{items}\n\n"
-        f"SUMA: {total:.2f} zł"
+        f"Do zapłaty razem: {total:.2f} zł\n\n"
+        f"W tym:\n{items}"
     )
 
 

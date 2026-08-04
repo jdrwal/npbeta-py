@@ -58,9 +58,8 @@ def test_send_settlement_emails(calc_with_tenant: FeeCalculation) -> None:
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == ["tenant@example.com"]
     assert mail.outbox[0].cc == ["owner@example.com"]
-    assert "Prad" in mail.outbox[0].body
-    assert "50.00 zł" in mail.outbox[0].body
-    assert "SUMA" in mail.outbox[0].body
+    assert "Opłaty licznikowe: 50.00 zł" in mail.outbox[0].body  # section subtotal
+    assert "Do zapłaty razem: 50.00 zł" in mail.outbox[0].body  # total first
     assert "rozlicz-najem.pl" in mail.outbox[0].body  # marketing footer
 
 
@@ -82,7 +81,7 @@ def test_settlement_email_uses_owner_template(
     body = mail.outbox[0].body
     assert "Cześć Tenant," in body  # template greeting used
     assert "Mój podpis" in body  # template signature used
-    assert "Prad: 50.00 zł" in body  # {items} injected
+    assert "Opłaty licznikowe: 50.00 zł" in body  # {items} = section subtotals
     assert "Razem: 50.00 zł" in body  # {total} injected
 
 
@@ -100,7 +99,7 @@ def test_settlement_email_preview_endpoint(
     assert resp.status_code == 200
     data = resp.json()
     assert data["subject"]
-    assert "Prad" in data["body"]
+    assert "Opłaty licznikowe" in data["body"]
     assert "50.00 zł" in data["body"]
     assert "rozlicz-najem.pl" in data["body"]  # footer shown in preview
     assert len(mail.outbox) == 0  # preview must not send
