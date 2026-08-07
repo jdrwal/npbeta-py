@@ -42,10 +42,15 @@ def _items_block(tenant: FeeCalculationTenant) -> tuple[str, Decimal]:
 
 def _fallback_body(tenant: FeeCalculationTenant) -> str:
     """Built-in body, used only when the template body renders empty."""
+    from apps.core.services.mailer import room_label
+
     calc = tenant.calculation
     items, total = _items_block(tenant)
+    room = room_label(tenant.contract.room if tenant.contract else None)
+    room_line = f"Pokój: {room}\n" if room else ""
     return (
         f"Rozliczenie opłat — {calc.flat}\n"
+        f"{room_line}"
         f"Okres: {_period_label(calc)}\n\n"
         f"Do zapłaty razem: {total:.2f} zł\n\n"
         f"W tym:\n{items}"
@@ -62,7 +67,7 @@ def render_settlement_email(
     Used by both the actual sending and the on-screen preview so they match.
     """
     from apps.core.models import EmailTemplate
-    from apps.core.services.mailer import get_template
+    from apps.core.services.mailer import get_template, room_label
 
     subject_tpl, body_tpl = get_template(calc.owner, EmailTemplate.Kind.SETTLEMENT)
     owner = calc.owner
@@ -72,6 +77,7 @@ def render_settlement_email(
         "tenant_name": tenant.tenant_name or "",
         "contract_number": tenant.contract_number or "",
         "flat": str(calc.flat),
+        "room": room_label(tenant.contract.room if tenant.contract else None),
         "period": _period_label(calc),
         "items": items,
         "total": f"{total:.2f} zł",
@@ -132,11 +138,15 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
 
 def _renewal_fallback(contract: Contract) -> str:
     """Built-in renewal reminder body, used when the template renders empty."""
+    from apps.core.services.mailer import room_label
+
     end = contract.contract_end.isoformat() if contract.contract_end else ""
     owner = contract.owner
+    room = room_label(contract.room)
+    place = f"{contract.flat}, {room}" if room else str(contract.flat)
     return (
         "Dzień dobry,\n\n"
-        f"Umowa Najmu {contract.contract_number} dot. {contract.flat} wygasa "
+        f"Umowa Najmu {contract.contract_number} dot. {place} wygasa "
         f"z dniem {end}. Proszę o informację, czy będziemy ją przedłużać.\n\n"
         f"Pozdrawiam,\n{owner.get_full_name() or owner.get_username()}"
     )
@@ -148,7 +158,7 @@ def render_renewal_email(contract: Contract) -> tuple[str, str]:
     The body excludes the marketing footer (added by the send path).
     """
     from apps.core.models import EmailTemplate
-    from apps.core.services.mailer import get_template
+    from apps.core.services.mailer import get_template, room_label
 
     subject_tpl, body_tpl = get_template(
         contract.owner, EmailTemplate.Kind.CONTRACT_RENEWAL
@@ -158,6 +168,7 @@ def render_renewal_email(contract: Contract) -> tuple[str, str]:
         "tenant_name": contract.tenant_name or "",
         "contract_number": contract.contract_number or "",
         "flat": str(contract.flat),
+        "room": room_label(contract.room),
         "contract_end": (
             contract.contract_end.isoformat() if contract.contract_end else ""
         ),

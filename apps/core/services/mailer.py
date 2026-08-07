@@ -25,6 +25,7 @@ from apps.core.models import (
     EmailTemplate,
     FeeCalculationTenant,
     Flat,
+    Room,
 )
 
 # Built-in defaults for the two standard template kinds. A stored active
@@ -33,14 +34,14 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
     EmailTemplate.Kind.CONTRACT_RENEWAL: (
         "Umowa najmu {contract_number} — informacja o wygaśnięciu",
         "Dzień dobry,\n\n"
-        "Umowa Najmu {contract_number} dot. {flat} wygasa z dniem "
+        "Umowa Najmu {contract_number} dot. {flat}, {room} wygasa z dniem "
         "{contract_end}. Proszę o informację, czy będziemy ją przedłużać.\n\n"
         "Pozdrawiam,\n{owner_name}",
     ),
     EmailTemplate.Kind.SETTLEMENT: (
         "Rozliczenie mediów — {flat} ({period})",
         "Dzień dobry,\n\n"
-        "rozliczenie opłat za okres {period} — {flat}.\n\n"
+        "rozliczenie opłat za okres {period} — {flat}, {room}.\n\n"
         "Do zapłaty razem: {total}\n\n"
         "W tym:\n{items}\n\n"
         "Pozdrawiam,\n{owner_name}",
@@ -52,6 +53,7 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
 TEMPLATE_TAGS: list[tuple[str, str, str]] = [
     ("{tenant_name}", "Imię i nazwisko najemcy (mianownik, bez odmiany)", "Jan Kowalski"),
     ("{flat}", "Adres mieszkania / obiektu", "ul. Przykładowa 1/2, Warszawa"),
+    ("{room}", "Pokój", "Pokój 1"),
     ("{contract_number}", "Numer umowy", "L123/2026/01"),
     ("{contract_end}", "Data zakończenia umowy", "2026-12-31"),
     ("{period}", "Okres rozliczenia", "2026-07"),
@@ -74,6 +76,17 @@ def owner_address(owner: User) -> str:
     """The owner's e-mail address (username doubles as login e-mail)."""
     email = owner.email or owner.get_username()
     return email if "@" in email else ""
+
+
+def room_label(room: Room | None) -> str:
+    """Short room label for e-mails (no flat suffix): name or ``Pokój <no>``."""
+    if room is None:
+        return ""
+    if room.name:
+        return room.name
+    if room.room_no:
+        return f"Pokój {room.room_no}"
+    return ""
 
 
 def owner_reply_to(owner: User) -> list[str]:
