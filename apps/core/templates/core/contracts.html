@@ -270,6 +270,16 @@
     let sendUrl = null;
     let currentUntil = '';
     const SEND_IDLE = sendBtn.innerHTML;
+
+    // Date inputs are enhanced by flatpickr (base.html), which hides the native
+    // input; set values through its instance so the visible picker updates.
+    function setDate(input, val) {
+        if (input && input._flatpickr) {
+            if (val) { input._flatpickr.setDate(val, true); } else { input._flatpickr.clear(); }
+        } else if (input) {
+            input.value = val || '';
+        }
+    }
     const SEND_SPIN = '<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path></svg> Wysyłanie…';
     const SEND_DONE = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Wysłano';
 
@@ -359,7 +369,7 @@
             endForm.action = btn.dataset.endUrl;
             endName.textContent = btn.dataset.name || '';
             endOpen();
-            requestAnimationFrame(function () { endDate.value = btn.dataset.end || ''; });
+            setDate(endDate, btn.dataset.end);
         });
     });
     document.getElementById('end-modal-close').addEventListener('click', endClose);
@@ -390,7 +400,7 @@
                 openRenewalPreview(btn.dataset.previewUrl, btn.dataset.sendUrl, btn.dataset.name, dateStr);
             };
             renewOpen();
-            requestAnimationFrame(function () { renewDate.value = btn.dataset.defaultUntil || ''; });
+            setDate(renewDate, btn.dataset.defaultUntil);
         });
     });
 
@@ -421,7 +431,7 @@
                     .catch(function () { renewAcceptBtn.disabled = false; alert('Błąd połączenia.'); });
             };
             renewOpen();
-            requestAnimationFrame(function () { renewDate.value = btn.dataset.defaultUntil || ''; });
+            setDate(renewDate, btn.dataset.defaultUntil);
         });
     });
 
