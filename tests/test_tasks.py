@@ -128,6 +128,8 @@ def test_settlement_email_preview_endpoint(
     assert resp.status_code == 200
     data = resp.json()
     assert data["subject"]
+    assert data["to"] == ["tenant@example.com"]  # To shown
+    assert data["bcc"] == ["owner@example.com"]  # BCC (flat address) shown
     assert "Opłaty licznikowe" in data["body"]
     assert "50.00 zł" in data["body"]
     assert "rozlicz-najem.pl" in data["body"]  # footer shown in preview
