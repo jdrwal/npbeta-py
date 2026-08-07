@@ -14,12 +14,10 @@
         </div>
     </div>
     <div class="flex shrink-0 items-center gap-2">
-        <form method="post" action="{% url 'core:email_settlement' calc.pk %}">
-            {% csrf_token %}<button type="submit" class="btn-ghost">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                Wyślij wszystko
-            </button>
-        </form>
+        <button type="button" id="send-all-btn" class="btn-ghost">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Wyślij wszystko
+        </button>
         <form method="post" action="{% url 'core:delete_settlement' calc.pk %}"
               onsubmit="return confirm('Usunąć to rozliczenie?');">
             {% csrf_token %}<button type="submit" class="act act-danger">
@@ -30,6 +28,16 @@
     </div>
 </div>
 
+<div id="send-all-progress" class="mb-6 hidden">
+    <div class="mb-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span id="send-all-label">Wysyłanie…</span>
+        <span id="send-all-count" class="font-medium tabular-nums">0 / 0</span>
+    </div>
+    <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+        <div id="send-all-bar" class="h-2 rounded-full bg-indigo-600 transition-all duration-300" style="width:0%"></div>
+    </div>
+</div>
+
 {% for row in tenants %}
 <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
     <h2 style="font-size:1.1rem;">
@@ -37,17 +45,21 @@
         <span class="font-normal text-gray-500 dark:text-gray-400">— {{ row.tenant.contract_number }} · razem {{ row.total }} zł</span>
     </h2>
     <div class="flex items-center gap-2">
-        {% if row.sent_count == 0 %}
-        <span class="pill bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">nie wysłano</span>
-        {% else %}
-        <span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-            <svg class="mr-0.5 inline h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            wysłano{% if row.sent_count > 1 %} ×{{ row.sent_count }}{% endif %}
+        <span class="sent-badge" data-tenant-pk="{{ row.tenant.pk }}" data-count="{{ row.sent_count }}">
+            {% if row.sent_count == 0 %}
+            <span class="pill bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">nie wysłano</span>
+            {% else %}
+            <span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                <svg class="mr-0.5 inline h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                wysłano{% if row.sent_count > 1 %} ×{{ row.sent_count }}{% endif %}
+            </span>
+            {% endif %}
         </span>
-        {% endif %}
         <button type="button" class="act email-preview-btn"
                 data-url="{% url 'core:settlement_email_preview' calc.pk row.tenant.pk %}"
                 data-send-url="{% url 'core:settlement_email_send_one' calc.pk row.tenant.pk %}"
+                data-tenant-pk="{{ row.tenant.pk }}"
+                data-email="{{ row.tenant.email }}"
                 data-name="{{ row.tenant.tenant_name }}">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             Podgląd maila
@@ -120,12 +132,28 @@
     const csrfEl = document.querySelector('[name=csrfmiddlewaretoken]');
     const csrf = csrfEl ? csrfEl.value : '';
     let sendUrl = null;
+    let currentTenantPk = null;
     const SEND_IDLE = sendBtn.innerHTML;
     const SEND_CLS = sendBtn.className;
     const SEND_SPIN = '<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path></svg> Wysyłanie…';
     const SEND_DONE = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Wysłano';
     const SEND_CLOSE = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Zamknij';
     let sent = false;
+
+    function renderBadge(count) {
+        if (count > 0) {
+            return '<span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"><svg class="mr-0.5 inline h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> wysłano' + (count > 1 ? ' \u00d7' + count : '') + '</span>';
+        }
+        return '<span class="pill bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">nie wysłano</span>';
+    }
+    function bumpBadge(pk) {
+        if (!pk) { return; }
+        const el = document.querySelector('.sent-badge[data-tenant-pk="' + pk + '"]');
+        if (!el) { return; }
+        const n = (parseInt(el.dataset.count || '0', 10) || 0) + 1;
+        el.dataset.count = String(n);
+        el.innerHTML = renderBadge(n);
+    }
 
     function open() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
     function close() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
@@ -146,6 +174,7 @@
     document.querySelectorAll('.email-preview-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             sendUrl = btn.dataset.sendUrl || null;
+            currentTenantPk = btn.dataset.tenantPk || null;
             subj.textContent = 'Ładowanie…';
             body.textContent = '';
             to.textContent = btn.dataset.name || '';
@@ -186,6 +215,7 @@
             .then(function (res) {
                 if (res.ok && res.d.sent) {
                     setStatus(res.d.message || 'Wysłano.', 'ok');
+                    bumpBadge(currentTenantPk);
                     sendBtn.innerHTML = SEND_DONE;
                     setTimeout(function () {
                         sent = true;
@@ -205,6 +235,69 @@
     document.getElementById('mail-modal-close').addEventListener('click', close);
     modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+
+    // "Wyślij wszystko": send to every tenant with an address, one by one,
+    // updating a progress bar and each tenant's sent badge as we go.
+    const sendAllBtn = document.getElementById('send-all-btn');
+    const prog = document.getElementById('send-all-progress');
+    const progBar = document.getElementById('send-all-bar');
+    const progCount = document.getElementById('send-all-count');
+    const progLabel = document.getElementById('send-all-label');
+
+    function postSend(url) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+        }).then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+        });
+    }
+
+    if (sendAllBtn) {
+        sendAllBtn.addEventListener('click', function () {
+            const targets = Array.prototype.slice
+                .call(document.querySelectorAll('.email-preview-btn'))
+                .filter(function (b) { return (b.dataset.email || '').trim() !== ''; });
+            const total = targets.length;
+            if (total === 0) { alert('Brak najemców z adresem e-mail.'); return; }
+            sendAllBtn.disabled = true;
+            prog.classList.remove('hidden');
+            progBar.className = 'h-2 rounded-full bg-indigo-600 transition-all duration-300';
+            progLabel.textContent = 'Wysyłanie…';
+            progCount.textContent = '0 / ' + total;
+            progBar.style.width = '0%';
+
+            let done = 0;
+            let failed = 0;
+
+            function step(i) {
+                if (i >= total) {
+                    progLabel.textContent = failed
+                        ? ('Zakończono — nie wysłano: ' + failed)
+                        : 'Wysłano wszystkie';
+                    if (!failed) {
+                        progBar.className = 'h-2 rounded-full bg-emerald-600 transition-all duration-300';
+                    }
+                    sendAllBtn.disabled = false;
+                    return;
+                }
+                const b = targets[i];
+                postSend(b.dataset.sendUrl)
+                    .then(function (res) {
+                        if (res.ok && res.d.sent) { bumpBadge(b.dataset.tenantPk); }
+                        else { failed++; }
+                    })
+                    .catch(function () { failed++; })
+                    .then(function () {
+                        done++;
+                        progCount.textContent = done + ' / ' + total;
+                        progBar.style.width = Math.round((done / total) * 100) + '%';
+                        step(i + 1);
+                    });
+            }
+            step(0);
+        });
+    }
 })();
 </script>
 {% endblock %}
