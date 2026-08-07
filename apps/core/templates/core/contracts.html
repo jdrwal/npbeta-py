@@ -382,7 +382,7 @@
         btn.addEventListener('click', function () {
             renewTitle.textContent = 'Przedłużenie umowy — nowy termin';
             renewName.textContent = btn.dataset.name || '';
-            renewDesc.textContent = 'Wybierz proponowany termin. Domyślnie o rok dłużej niż obecny.';
+            renewDesc.textContent = 'Wybierz proponowany termin obowiązywania umowy.';
             renewDate.value = btn.dataset.defaultUntil || '';
             renewAcceptBtn.textContent = 'Dalej';
             renewAcceptBtn.disabled = false;
