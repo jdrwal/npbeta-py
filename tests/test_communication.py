@@ -292,6 +292,39 @@ def test_contract_send_renewal(landlord: User) -> None:
 
 
 @pytest.mark.django_db
+def test_contract_hard_stop(landlord: User) -> None:
+    flat = Flat.objects.create(owner=landlord, city="C", street="S", code="ZH")
+    room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
+    today = timezone.now().date()
+    contract = Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="T",
+        email="t@example.com", contract_number="ZH/1",
+        contract_start=today - timedelta(days=100),
+        contract_end=today + timedelta(days=60),
+    )
+    client = Client()
+    client.force_login(landlord)
+
+    # Before: the renewal ("Przedłuż") CTA is offered.
+    page = client.get(reverse("core:contracts"))
+    assert reverse("core:contract_renewal_preview", args=[contract.pk]) in page.content.decode()
+
+    stop_day = today + timedelta(days=10)
+    resp = client.post(
+        reverse("core:contract_hard_stop", args=[contract.pk]),
+        {"end_date": stop_day.isoformat()},
+    )
+    assert resp.status_code == 302
+    contract.refresh_from_db()
+    assert contract.hard_stop is True
+    assert contract.contract_end == stop_day
+
+    # After: no renewal CTA for a hard-stopped contract.
+    page = client.get(reverse("core:contracts"))
+    assert reverse("core:contract_renewal_preview", args=[contract.pk]) not in page.content.decode()
+
+
+@pytest.mark.django_db
 def test_send_message_reflects_test_mode(landlord: User) -> None:
     from apps.accounts.models import MailSettings
 

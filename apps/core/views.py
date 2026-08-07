@@ -1201,6 +1201,27 @@ def contract_send_renewal(request: HttpRequest, pk: int) -> JsonResponse:
     )
 
 
+@login_required
+@require_POST
+def contract_hard_stop(request: HttpRequest, pk: int) -> HttpResponse:
+    """Terminate a contract on a chosen date (final end, no renewal reminders)."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    try:
+        end_date = date.fromisoformat((request.POST.get("end_date") or "").strip())
+    except ValueError:
+        messages.error(request, "Nieprawidłowa data zakończenia umowy.")
+        return redirect("core:contracts")
+    contract.contract_end = end_date
+    contract.hard_stop = True
+    contract.save(update_fields=["contract_end", "hard_stop"])
+    messages.success(
+        request,
+        f"Umowa {contract.contract_number} zakończona z dniem {end_date.isoformat()}.",
+    )
+    return redirect("core:contracts")
+
+
 def healthz(request: HttpRequest) -> JsonResponse:
     """Liveness probe used by Docker/monitoring."""
     return JsonResponse({"status": "ok"})

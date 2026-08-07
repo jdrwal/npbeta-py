@@ -29,7 +29,9 @@
                     <div class="truncate font-semibold text-gray-900 dark:text-white">{{ c.tenant_name }}</div>
                     <div class="truncate text-xs text-gray-400 dark:text-gray-500">Umowa {{ c.contract_number }}</div>
                 </div>
-                {% if c.ending_soon %}
+                {% if c.hard_stop %}
+                <span class="pill bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">Kończy się {{ c.contract_end|date:"Y-m-d" }}</span>
+                {% elif c.ending_soon %}
                 <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Wygasa wkrótce</span>
                 {% else %}
                 <span class="pill bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Aktywna</span>
@@ -64,16 +66,24 @@
                     Zaproś
                     {% endif %}
                 </a>
-                {% if c.contract_end and c.email %}
+                {% if c.contract_end and c.email and not c.hard_stop %}
                 <button type="button" class="act renewal-preview-btn"
                         data-url="{% url 'core:contract_renewal_preview' c.pk %}"
                         data-send-url="{% url 'core:contract_send_renewal' c.pk %}"
                         data-name="{{ c.tenant_name }}"
-                        title="Podgląd i wysyłka przypomnienia o wygaśnięciu umowy">
+                        title="Podgląd i wysyłka propozycji przedłużenia umowy">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                    Przypomnij
+                    Przedłuż
                 </button>
                 {% endif %}
+                <button type="button" class="act end-contract-btn"
+                        data-end-url="{% url 'core:contract_hard_stop' c.pk %}"
+                        data-name="{{ c.tenant_name }}"
+                        data-end="{{ c.contract_end|date:'Y-m-d' }}"
+                        title="Zakończ umowę w wybranej dacie (bez przedłużania)">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+                    Zakończ
+                </button>
                 <a href="{% url 'core:delete_contract' c.pk %}" class="act act-danger ml-auto">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                     Usuń
@@ -149,7 +159,7 @@
     <div class="w-full max-w-2xl rounded-xl bg-white shadow-xl dark:bg-gray-900">
         <div class="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-3 dark:border-gray-800">
             <div class="min-w-0">
-                <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Przypomnienie o wygaśnięciu umowy</div>
+                <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Przedłużenie umowy</div>
                 <div id="mail-modal-to" class="truncate text-xs text-gray-500 dark:text-gray-400"></div>
             </div>
             <button type="button" id="mail-modal-close" class="act !px-2 !py-1" aria-label="Zamknij">
@@ -174,6 +184,36 @@
                 Wyślij do najemcy
             </button>
         </div>
+    </div>
+</div>
+
+<div id="end-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-md rounded-xl bg-white shadow-xl dark:bg-gray-900">
+        <form id="end-form" method="post">
+            {% csrf_token %}
+            <div class="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-3 dark:border-gray-800">
+                <div class="min-w-0">
+                    <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Zakończ umowę</div>
+                    <div id="end-modal-name" class="truncate text-xs text-gray-500 dark:text-gray-400"></div>
+                </div>
+                <button type="button" id="end-modal-close" class="act !px-2 !py-1" aria-label="Zamknij">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="px-5 py-4">
+                <p class="mb-3 text-sm text-gray-600 dark:text-gray-300">Umowa zostanie zakończona w podanej dacie na stałe — bez przypomnień o przedłużeniu.</p>
+                <label for="end-date-input" class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Data zakończenia</label>
+                <input type="date" id="end-date-input" name="end_date" required
+                       class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
+            </div>
+            <div class="flex items-center justify-end gap-2 border-t border-gray-200 px-5 py-3 dark:border-gray-800">
+                <button type="button" id="end-modal-cancel" class="btn-ghost">Anuluj</button>
+                <button type="submit" class="btn btn-danger shrink-0">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg>
+                    Zakończ umowę
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -260,7 +300,26 @@
 
     document.getElementById('mail-modal-close').addEventListener('click', close);
     modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { close(); endClose(); } });
+
+    // "Zakończ": hard-stop a contract on a chosen date (form posts + reloads).
+    const endModal = document.getElementById('end-modal');
+    const endForm = document.getElementById('end-form');
+    const endName = document.getElementById('end-modal-name');
+    const endDate = document.getElementById('end-date-input');
+    function endOpen() { endModal.classList.remove('hidden'); endModal.classList.add('flex'); }
+    function endClose() { endModal.classList.add('hidden'); endModal.classList.remove('flex'); }
+    document.querySelectorAll('.end-contract-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            endForm.action = btn.dataset.endUrl;
+            endName.textContent = btn.dataset.name || '';
+            endDate.value = btn.dataset.end || '';
+            endOpen();
+        });
+    });
+    document.getElementById('end-modal-close').addEventListener('click', endClose);
+    document.getElementById('end-modal-cancel').addEventListener('click', endClose);
+    endModal.addEventListener('click', function (e) { if (e.target === endModal) endClose(); });
 })();
 </script>
 {% endblock %}

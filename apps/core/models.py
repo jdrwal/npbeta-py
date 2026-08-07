@@ -148,6 +148,8 @@ class Contract(SoftDeleteModel):
     contract_end = models.DateField(null=True, blank=True)
     # Legacy `deadline`: payment due day-of-month.
     payment_day = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Definitive termination: end date is final, no renewal reminders.
+    hard_stop = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-contract_start"]
