@@ -186,6 +186,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     arrears_grand_total = (
         rent_arrears_total + fee_arrears_total + Decimal(tax_unpaid_total)
     )
+    # Split for the dashboard: what tenants owe us vs what we owe (tax).
+    receivable_total = rent_arrears_total + fee_arrears_total
+    payable_total = Decimal(tax_unpaid_total)
     has_any_arrears = bool(rent_arrear_items or fee_arrear_items or unpaid_tax)
 
     return render(
@@ -214,6 +217,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "fee_arrears_total": fee_arrears_total,
             "tax_unpaid_total": tax_unpaid_total,
             "arrears_grand_total": arrears_grand_total,
+            "receivable_total": receivable_total,
+            "payable_total": payable_total,
             "has_any_arrears": has_any_arrears,
         },
     )

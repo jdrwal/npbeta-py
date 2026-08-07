@@ -11,25 +11,45 @@
 </div>
 
 {% if has_any_arrears %}
-<a href="{% url 'core:arrears' %}" class="mb-6 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 !no-underline transition-colors hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:border-rose-500/50">
-    <div class="flex min-w-0 items-center gap-3">
-        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
-        </span>
-        <div class="min-w-0">
-            <div class="font-semibold text-rose-800 dark:text-rose-200">Zaległości do uregulowania</div>
-            <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-rose-700 dark:text-rose-300">
-                <span>Czynsz {{ rent_arrears_total|floatformat:2|intcomma }} zł</span><span class="text-rose-300 dark:text-rose-500/60">·</span>
-                <span>Opłaty {{ fee_arrears_total|floatformat:2|intcomma }} zł</span><span class="text-rose-300 dark:text-rose-500/60">·</span>
-                <span>Podatek {{ tax_unpaid_total|intcomma }} zł</span>
+<div class="mb-6 grid gap-4 sm:grid-cols-2">
+    {% if receivable_total %}
+    <a href="{% url 'core:arrears' %}" class="flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-5 py-4 !no-underline transition-colors hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:border-rose-500/50">
+        <div class="flex min-w-0 items-center gap-3">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </span>
+            <div class="min-w-0">
+                <div class="font-semibold text-rose-800 dark:text-rose-200">Należne nam</div>
+                <div class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-rose-700 dark:text-rose-300">
+                    <span>Czynsz {{ rent_arrears_total|floatformat:2|intcomma }} zł</span><span class="text-rose-300 dark:text-rose-500/60">·</span>
+                    <span>Opłaty {{ fee_arrears_total|floatformat:2|intcomma }} zł</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="flex shrink-0 items-center gap-3">
-        <span class="font-mono text-base font-semibold text-rose-700 dark:text-rose-300">{{ arrears_grand_total|floatformat:2|intcomma }} zł</span>
-        <svg class="h-5 w-5 text-rose-400 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-    </div>
-</a>
+        <div class="flex shrink-0 items-center gap-3">
+            <span class="font-mono text-base font-semibold text-rose-700 dark:text-rose-300">{{ receivable_total|floatformat:2|intcomma }} zł</span>
+            <svg class="h-5 w-5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+    </a>
+    {% endif %}
+    {% if payable_total %}
+    <a href="{% url 'core:arrears' %}" class="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 !no-underline transition-colors hover:border-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:border-amber-500/50">
+        <div class="flex min-w-0 items-center gap-3">
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg>
+            </span>
+            <div class="min-w-0">
+                <div class="font-semibold text-amber-800 dark:text-amber-200">Nasze zobowiązania</div>
+                <div class="mt-0.5 text-xs text-amber-700 dark:text-amber-300">Podatek (ryczałt)</div>
+            </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-3">
+            <span class="font-mono text-base font-semibold text-amber-700 dark:text-amber-300">{{ payable_total|floatformat:2|intcomma }} zł</span>
+            <svg class="h-5 w-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </div>
+    </a>
+    {% endif %}
+</div>
 {% endif %}
 
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:grid-flow-col lg:grid-rows-2">
