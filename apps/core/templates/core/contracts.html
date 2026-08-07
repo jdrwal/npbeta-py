@@ -282,9 +282,16 @@
     }
     const SEND_SPIN = '<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path></svg> Wysyłanie…';
     const SEND_DONE = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Wysłano';
+    const SEND_CLS = sendBtn.className;
+    const SEND_CLOSE = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Zamknij';
+    let sent = false;
 
     function open() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
-    function close() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    function close() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        if (sent) { sent = false; location.reload(); }  // refresh so the card flips to "Zatwierdź"
+    }
     function setStatus(text, tone) {
         status.textContent = text || '';
         status.className = 'min-w-0 flex-1 break-words text-xs ' + (
@@ -301,6 +308,8 @@
         body.textContent = '';
         to.textContent = name || '';
         setStatus('', '');
+        sent = false;
+        sendBtn.className = SEND_CLS;
         sendBtn.innerHTML = SEND_IDLE;
         sendBtn.disabled = true;
         open();
@@ -326,6 +335,7 @@
 
     sendBtn.addEventListener('click', function () {
         if (!sendUrl) { return; }
+        if (sent) { close(); return; }
         sendBtn.disabled = true;
         sendBtn.innerHTML = SEND_SPIN;
         setStatus('Wysyłanie…', '');
@@ -341,9 +351,11 @@
             .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
             .then(function (res) {
                 if (res.ok && res.d.sent) {
-                    setStatus((res.d.message || 'Wysłano.') + ' Odświeżanie…', 'ok');
-                    sendBtn.innerHTML = SEND_DONE;
-                    setTimeout(function () { location.reload(); }, 900);
+                    setStatus(res.d.message || 'E-mail wysłany.', 'ok');
+                    sent = true;
+                    sendBtn.className = SEND_CLS + ' !bg-emerald-600 hover:!bg-emerald-700 !text-white';
+                    sendBtn.innerHTML = SEND_CLOSE;
+                    sendBtn.disabled = false;
                 } else {
                     setStatus(res.d.message || 'Nie udało się wysłać.', 'err');
                     sendBtn.innerHTML = SEND_IDLE;
