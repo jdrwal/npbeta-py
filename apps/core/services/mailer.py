@@ -6,8 +6,8 @@ notifications) goes through :func:`send_owner_email`, which:
 - uses the owner's own SMTP config (``MailSettings``) or the project default,
 - writes an :class:`EmailLog` audit row,
 - and enforces the addressing rules agreed with the product owner:
-    * personalised mail (one per tenant) → ``to`` tenant, owner's copy as the
-      flat's hidden ``bcc`` (never a visible ``cc``),
+    * the owner's own copy is ALWAYS a hidden ``bcc`` (never a visible ``cc``):
+      the flat's ``owner_bcc_email`` if set, otherwise the owner's login e-mail,
     * broadcast mail (same body to a whole flat) → ``to`` owner, ``bcc`` tenants
       (so tenants never see each other's addresses).
 """
@@ -196,7 +196,6 @@ def send_owner_email(
     subject: str,
     body: str,
     to: list[str] | None = None,
-    cc: list[str] | None = None,
     bcc: list[str] | None = None,
     flat: Flat | None = None,
     template: EmailTemplate | None = None,
@@ -205,15 +204,19 @@ def send_owner_email(
 ) -> EmailLog:
     """Send one e-mail on the owner's behalf and record an :class:`EmailLog`.
 
-    ``connection`` may be passed to reuse one SMTP connection across a batch;
-    otherwise a fresh one is opened from the owner's config.
+    The owner's copy is ALWAYS a hidden BCC (never a CC): the flat's configured
+    ``owner_bcc_email`` if set, otherwise the owner's login e-mail. ``connection``
+    may be passed to reuse one SMTP connection across a batch.
     """
     to = to or []
-    cc = cc or []
     bcc = bcc or []
-    # The flat's own hidden owner copy (BCC, never visible to the tenant).
-    if flat is not None and flat.owner_bcc_email and flat.owner_bcc_email not in bcc:
-        bcc = [*bcc, flat.owner_bcc_email]
+    # Owner's own copy — always BCC, never CC; flat address if set, else login.
+    owner_copy = (
+        flat.owner_bcc_email if flat is not None and flat.owner_bcc_email
+        else owner_address(owner)
+    )
+    if owner_copy and owner_copy not in to and owner_copy not in bcc:
+        bcc = [*bcc, owner_copy]
     body = with_footer(body)
     reply_to = owner_reply_to(owner)
     if connection is None:
@@ -228,8 +231,6 @@ def send_owner_email(
             intended = []
             if to:
                 intended.append("To: " + ", ".join(to))
-            if cc:
-                intended.append("CC: " + ", ".join(cc))
             if bcc:
                 intended.append("BCC: " + ", ".join(bcc))
             notice = (
@@ -239,7 +240,7 @@ def send_owner_email(
             )
             subject = "[TEST] " + subject
             body = notice + body
-            to, cc, bcc = [redirect_to], [], []
+            to, bcc = [redirect_to], []
 
     log = EmailLog(
         owner=owner,
@@ -249,7 +250,7 @@ def send_owner_email(
         subject=subject,
         body=body,
         to=to,
-        cc=cc,
+        cc=[],
         bcc=bcc,
     )
     try:
@@ -258,7 +259,7 @@ def send_owner_email(
             body=body,
             from_email=from_email,
             to=to,
-            cc=cc,
+            cc=[],
             bcc=bcc,
             reply_to=reply_to,
             connection=connection,

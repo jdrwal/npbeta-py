@@ -8,7 +8,6 @@ from django.core.mail.backends.base import BaseEmailBackend
 
 from apps.core.models import Contract, FeeCalculation, FeeCalculationTenant
 from apps.core.services.mailer import (
-    owner_address,
     owner_connection,
     render_text,
     send_owner_email,
@@ -176,18 +175,15 @@ def render_renewal_email(contract: Contract) -> tuple[str, str]:
 
 
 def send_renewal_email(contract: Contract) -> bool:
-    """Send the renewal reminder to the tenant (owner in CC). False if no address."""
+    """Send the renewal reminder to the tenant (owner as hidden BCC). False if no address."""
     if not contract.email:
         return False
     subject, body = render_renewal_email(contract)
-    owner_cc = owner_address(contract.owner)
-    cc = [owner_cc] if owner_cc else []
     send_owner_email(
         contract.owner,
         subject=subject,
         body=body,
         to=[contract.email],
-        cc=cc,
         flat=contract.flat,
     )
     return True

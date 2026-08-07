@@ -68,6 +68,18 @@ def test_send_settlement_emails(calc_with_tenant: FeeCalculation) -> None:
 
 
 @pytest.mark.django_db
+def test_settlement_bcc_falls_back_to_owner_login(
+    calc_with_tenant: FeeCalculation,
+) -> None:
+    calc = calc_with_tenant
+    calc.flat.owner_bcc_email = ""  # no flat address -> fall back to owner login
+    calc.flat.save()
+    send_settlement_emails(calc)
+    assert mail.outbox[0].cc == []
+    assert mail.outbox[0].bcc == ["owner@example.com"]
+
+
+@pytest.mark.django_db
 def test_settlement_email_logged_against_tenant(calc_with_tenant: FeeCalculation) -> None:
     from apps.core.models import EmailLog
 
