@@ -150,6 +150,8 @@ class Contract(SoftDeleteModel):
     payment_day = models.PositiveSmallIntegerField(null=True, blank=True)
     # Definitive termination: end date is final, no renewal reminders.
     hard_stop = models.BooleanField(default=False)
+    # A renewal proposal was e-mailed to the tenant, pending landlord confirmation.
+    renewal_proposed_until = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ["-contract_start"]

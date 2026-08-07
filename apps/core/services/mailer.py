@@ -32,10 +32,11 @@ from apps.core.models import (
 # EmailTemplate of the same kind overrides these.
 DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
     EmailTemplate.Kind.CONTRACT_RENEWAL: (
-        "Umowa najmu {contract_number} — informacja o wygaśnięciu",
+        "Propozycja przedłużenia umowy {contract_number}",
         "Dzień dobry,\n\n"
-        "Umowa Najmu {contract_number} dot. {flat}, {room} wygasa z dniem "
-        "{contract_end}. Proszę o informację, czy będziemy ją przedłużać.\n\n"
+        "proponujemy przedłużenie umowy najmu {contract_number} dot. {flat}, "
+        "{room} do dnia {renew_until}. Prosimy o informację, czy akceptują "
+        "Państwo nowy termin.\n\n"
         "Pozdrawiam,\n{owner_name}",
     ),
     EmailTemplate.Kind.SETTLEMENT: (
@@ -56,6 +57,7 @@ TEMPLATE_TAGS: list[tuple[str, str, str]] = [
     ("{room}", "Pokój", "Pokój 1"),
     ("{contract_number}", "Numer umowy", "L123/2026/01"),
     ("{contract_end}", "Data zakończenia umowy", "2026-12-31"),
+    ("{renew_until}", "Proponowany nowy termin", "2027-12-31"),
     ("{period}", "Okres rozliczenia", "2026-07"),
     ("{items}", "Podsumowanie rozliczenia (sumy sekcji)",
      "Opłaty licznikowe: 180.39 zł\nOpłaty pozostałe: 240.00 zł\nFundusze: 25.00 zł"),

@@ -278,7 +278,7 @@ def test_contract_send_renewal(landlord: User) -> None:
     assert prev.status_code == 200
     data = prev.json()
     assert "Z/1" in data["body"]
-    assert "wygasa z dniem" in data["body"]  # formal wording
+    assert "przedłużenie" in data["body"]  # proposal wording
     assert len(mail.outbox) == 0
 
     # Send returns JSON and mails the tenant with owner reply-to.
@@ -322,6 +322,56 @@ def test_contract_hard_stop(landlord: User) -> None:
     # After: no renewal CTA for a hard-stopped contract.
     page = client.get(reverse("core:contracts"))
     assert reverse("core:contract_renewal_preview", args=[contract.pk]) not in page.content.decode()
+
+
+@pytest.mark.django_db
+def test_contract_renewal_two_phase(landlord: User) -> None:
+    flat = Flat.objects.create(owner=landlord, city="C", street="S", code="ZR")
+    room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
+    today = timezone.now().date()
+    contract = Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="T",
+        email="t@example.com", contract_number="ZR/1",
+        contract_start=today - timedelta(days=100),
+        contract_end=today + timedelta(days=20),
+    )
+    client = Client()
+    client.force_login(landlord)
+
+    proposed = today + timedelta(days=385)
+    # Preview reflects the proposed date.
+    prev = client.get(
+        reverse("core:contract_renewal_preview", args=[contract.pk]),
+        {"until": proposed.isoformat()},
+    )
+    assert proposed.isoformat() in prev.json()["body"]
+
+    # Phase 1: send proposal → marks pending, mails tenant with owner reply-to.
+    resp = client.post(
+        reverse("core:contract_send_renewal", args=[contract.pk]),
+        {"until": proposed.isoformat()},
+    )
+    assert resp.json()["sent"] is True
+    contract.refresh_from_db()
+    assert contract.renewal_proposed_until == proposed
+    assert contract.contract_end == today + timedelta(days=20)  # not yet extended
+    assert mail.outbox[-1].to == ["t@example.com"]
+    assert mail.outbox[-1].reply_to == ["owner@example.com"]
+    assert proposed.isoformat() in mail.outbox[-1].body
+
+    page = client.get(reverse("core:contracts")).content.decode()
+    assert reverse("core:contract_confirm_renewal", args=[contract.pk]) in page
+
+    # Phase 2: confirm (with an edited date) → extends and clears pending.
+    final = today + timedelta(days=400)
+    resp = client.post(
+        reverse("core:contract_confirm_renewal", args=[contract.pk]),
+        {"end_date": final.isoformat()},
+    )
+    assert resp.json()["ok"] is True
+    contract.refresh_from_db()
+    assert contract.contract_end == final
+    assert contract.renewal_proposed_until is None
 
 
 @pytest.mark.django_db

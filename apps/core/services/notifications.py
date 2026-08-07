@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 from django.core.mail.backends.base import BaseEmailBackend
@@ -136,26 +137,30 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
     return sent
 
 
-def _renewal_fallback(contract: Contract) -> str:
-    """Built-in renewal reminder body, used when the template renders empty."""
+def _renewal_fallback(contract: Contract, renew_until: str) -> str:
+    """Built-in renewal proposal body, used when the template renders empty."""
     from apps.core.services.mailer import room_label
 
-    end = contract.contract_end.isoformat() if contract.contract_end else ""
     owner = contract.owner
     room = room_label(contract.room)
     place = f"{contract.flat}, {room}" if room else str(contract.flat)
     return (
         "Dzień dobry,\n\n"
-        f"Umowa Najmu {contract.contract_number} dot. {place} wygasa "
-        f"z dniem {end}. Proszę o informację, czy będziemy ją przedłużać.\n\n"
+        f"proponujemy przedłużenie umowy najmu {contract.contract_number} "
+        f"dot. {place} do dnia {renew_until}. Prosimy o informację, czy "
+        "akceptują Państwo nowy termin.\n\n"
         f"Pozdrawiam,\n{owner.get_full_name() or owner.get_username()}"
     )
 
 
-def render_renewal_email(contract: Contract) -> tuple[str, str]:
-    """Rendered (subject, body) of the contract-renewal reminder for a tenant.
+def render_renewal_email(
+    contract: Contract, *, renew_until: date | None = None
+) -> tuple[str, str]:
+    """Rendered (subject, body) of the contract-renewal proposal for a tenant.
 
-    The body excludes the marketing footer (added by the send path).
+    ``renew_until`` is the proposed new end date; when omitted the current
+    contract end is used. The body excludes the marketing footer (added by the
+    send path).
     """
     from apps.core.models import EmailTemplate
     from apps.core.services.mailer import get_template, room_label
@@ -164,6 +169,8 @@ def render_renewal_email(contract: Contract) -> tuple[str, str]:
         contract.owner, EmailTemplate.Kind.CONTRACT_RENEWAL
     )
     owner = contract.owner
+    target = renew_until or contract.contract_end
+    renew_until_str = target.isoformat() if target else ""
     context = {
         "tenant_name": contract.tenant_name or "",
         "contract_number": contract.contract_number or "",
@@ -172,24 +179,27 @@ def render_renewal_email(contract: Contract) -> tuple[str, str]:
         "contract_end": (
             contract.contract_end.isoformat() if contract.contract_end else ""
         ),
+        "renew_until": renew_until_str,
         "payment_day": str(contract.payment_day or ""),
         "owner_name": owner.get_full_name() or owner.get_username(),
     }
     subject = render_text(
-        subject_tpl or "Umowa najmu {contract_number} — informacja o wygaśnięciu",
+        subject_tpl or "Propozycja przedłużenia umowy {contract_number}",
         context,
     )
     body = render_text(body_tpl or "", context).strip()
     if not body:
-        body = _renewal_fallback(contract)
+        body = _renewal_fallback(contract, renew_until_str)
     return subject, body
 
 
-def send_renewal_email(contract: Contract) -> bool:
-    """Send the renewal reminder to the tenant (owner as hidden BCC). False if no address."""
+def send_renewal_email(
+    contract: Contract, *, renew_until: date | None = None
+) -> bool:
+    """Send the renewal proposal to the tenant (owner as hidden BCC). False if no address."""
     if not contract.email:
         return False
-    subject, body = render_renewal_email(contract)
+    subject, body = render_renewal_email(contract, renew_until=renew_until)
     send_owner_email(
         contract.owner,
         subject=subject,

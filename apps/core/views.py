@@ -670,6 +670,14 @@ def delete_meter_price(request: HttpRequest, pk: int, price_id: int) -> HttpResp
     return redirect("core:flat_fees", pk=pk)
 
 
+def _plus_year(d: date) -> date:
+    """One calendar year after ``d`` (Feb 29 falls back to Feb 28)."""
+    try:
+        return d.replace(year=d.year + 1)
+    except ValueError:
+        return d.replace(year=d.year + 1, day=28)
+
+
 @login_required
 def contracts(request: HttpRequest) -> HttpResponse:
     """Tenancy contracts split into active and past (port of contr.php)."""
@@ -694,6 +702,9 @@ def contracts(request: HttpRequest) -> HttpResponse:
             c.ending_soon = bool(  # type: ignore[attr-defined]
                 c.contract_end and c.contract_end <= soon_cutoff
             )
+            # Default proposed renewal date: one year past the current end.
+            base = c.renewal_proposed_until or c.contract_end or today
+            c.renew_default_until = _plus_year(base).isoformat()  # type: ignore[attr-defined]
             active.append(c)
         else:
             past.append(c)
@@ -1154,15 +1165,23 @@ def settlement_email_send_one(
     )
 
 
+def _parse_until(raw: str | None) -> date | None:
+    try:
+        return date.fromisoformat((raw or "").strip())
+    except ValueError:
+        return None
+
+
 @login_required
 def contract_renewal_preview(request: HttpRequest, pk: int) -> JsonResponse:
-    """Preview the renewal reminder email for one contract."""
+    """Preview the renewal proposal email for one contract (optional ?until=)."""
     user = cast(User, request.user)
     contract = get_object_or_404(Contract, pk=pk, owner=user)
     from apps.core.services.mailer import owner_address, owner_reply_to, with_footer
     from apps.core.services.notifications import render_renewal_email
 
-    subject, body = render_renewal_email(contract)
+    renew_until = _parse_until(request.GET.get("until"))
+    subject, body = render_renewal_email(contract, renew_until=renew_until)
     bcc = (contract.flat.owner_bcc_email if contract.flat else "") or owner_address(user)
     return JsonResponse(
         {
@@ -1180,7 +1199,7 @@ def contract_renewal_preview(request: HttpRequest, pk: int) -> JsonResponse:
 @login_required
 @require_POST
 def contract_send_renewal(request: HttpRequest, pk: int) -> JsonResponse:
-    """Email the tenant that their contract is expiring, asking about renewal."""
+    """E-mail the tenant a renewal proposal to a chosen date; mark it pending."""
     user = cast(User, request.user)
     contract = get_object_or_404(Contract, pk=pk, owner=user)
     if not contract.email:
@@ -1188,16 +1207,42 @@ def contract_send_renewal(request: HttpRequest, pk: int) -> JsonResponse:
             {"sent": False, "message": "Ta umowa nie ma adresu e-mail najemcy."},
             status=400,
         )
+    renew_until = _parse_until(request.POST.get("until"))
     from apps.core.services.notifications import send_renewal_email
 
     try:
-        send_renewal_email(contract)
+        send_renewal_email(contract, renew_until=renew_until)
     except Exception as exc:  # noqa: BLE001 - surface the send failure to the UI
         return JsonResponse(
             {"sent": False, "message": f"Nie udało się wysłać: {exc}"}, status=502
         )
+    if renew_until is not None:
+        contract.renewal_proposed_until = renew_until
+        contract.save(update_fields=["renewal_proposed_until"])
     return JsonResponse(
         {"sent": True, "message": _sent_message(user, contract.email)}
+    )
+
+
+@login_required
+@require_POST
+def contract_confirm_renewal(request: HttpRequest, pk: int) -> JsonResponse:
+    """Confirm a proposed renewal: extend the contract end and clear the pending flag."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    end_date = _parse_until(request.POST.get("end_date"))
+    if end_date is None:
+        return JsonResponse(
+            {"ok": False, "message": "Nieprawidłowa data przedłużenia."}, status=400
+        )
+    contract.contract_end = end_date
+    contract.renewal_proposed_until = None
+    contract.save(update_fields=["contract_end", "renewal_proposed_until"])
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": f"Umowa {contract.contract_number} przedłużona do {end_date.isoformat()}.",
+        }
     )
 
 
