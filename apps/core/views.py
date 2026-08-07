@@ -1107,7 +1107,7 @@ def settlement_email_preview(
         FeeCalculation.objects.select_related("flat"), pk=pk, owner=user
     )
     tenant = get_object_or_404(calc.tenants, pk=tenant_pk)
-    from apps.core.services.mailer import owner_address, with_footer
+    from apps.core.services.mailer import owner_address, owner_reply_to, with_footer
     from apps.core.services.notifications import render_settlement_email
 
     subject, body = render_settlement_email(calc, tenant)
@@ -1118,6 +1118,7 @@ def settlement_email_preview(
             "email": tenant.email,
             "to": [tenant.email] if tenant.email else [],
             "bcc": [bcc] if bcc else [],
+            "reply_to": owner_reply_to(user),
             "subject": subject,
             "body": with_footer(body),
         }
@@ -1158,7 +1159,7 @@ def contract_renewal_preview(request: HttpRequest, pk: int) -> JsonResponse:
     """Preview the renewal reminder email for one contract."""
     user = cast(User, request.user)
     contract = get_object_or_404(Contract, pk=pk, owner=user)
-    from apps.core.services.mailer import owner_address, with_footer
+    from apps.core.services.mailer import owner_address, owner_reply_to, with_footer
     from apps.core.services.notifications import render_renewal_email
 
     subject, body = render_renewal_email(contract)
@@ -1169,6 +1170,7 @@ def contract_renewal_preview(request: HttpRequest, pk: int) -> JsonResponse:
             "email": contract.email,
             "to": [contract.email] if contract.email else [],
             "bcc": [bcc] if bcc else [],
+            "reply_to": owner_reply_to(user),
             "subject": subject,
             "body": with_footer(body),
         }
