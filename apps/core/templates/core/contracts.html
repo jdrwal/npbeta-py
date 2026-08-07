@@ -358,8 +358,8 @@
         btn.addEventListener('click', function () {
             endForm.action = btn.dataset.endUrl;
             endName.textContent = btn.dataset.name || '';
-            endDate.value = btn.dataset.end || '';
             endOpen();
+            endDate.value = btn.dataset.end || '';
         });
     });
     document.getElementById('end-modal-close').addEventListener('click', endClose);
@@ -383,7 +383,6 @@
             renewTitle.textContent = 'Przedłużenie umowy — nowy termin';
             renewName.textContent = btn.dataset.name || '';
             renewDesc.textContent = 'Wybierz proponowany termin obowiązywania umowy.';
-            renewDate.value = btn.dataset.defaultUntil || '';
             renewAcceptBtn.textContent = 'Dalej';
             renewAcceptBtn.disabled = false;
             renewAccept = function (dateStr) {
@@ -391,6 +390,7 @@
                 openRenewalPreview(btn.dataset.previewUrl, btn.dataset.sendUrl, btn.dataset.name, dateStr);
             };
             renewOpen();
+            renewDate.value = btn.dataset.defaultUntil || '';
         });
     });
 
@@ -400,7 +400,6 @@
             renewTitle.textContent = 'Zatwierdź przedłużenie';
             renewName.textContent = btn.dataset.name || '';
             renewDesc.textContent = 'Potwierdź termin, do którego przedłużyć umowę. Możesz go zmienić.';
-            renewDate.value = btn.dataset.defaultUntil || '';
             renewAcceptBtn.textContent = 'Przedłuż umowę';
             renewAcceptBtn.disabled = false;
             renewAccept = function (dateStr) {
@@ -422,6 +421,7 @@
                     .catch(function () { renewAcceptBtn.disabled = false; alert('Błąd połączenia.'); });
             };
             renewOpen();
+            renewDate.value = btn.dataset.defaultUntil || '';
         });
     });
 
