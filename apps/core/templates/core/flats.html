@@ -73,9 +73,9 @@
         </div>
 
         <div class="mt-auto flex items-center gap-2 border-t border-gray-100 bg-gray-50 px-5 py-3 dark:border-gray-800 dark:bg-gray-800/50">
+            <a href="{% url 'core:edit_flat' row.flat.pk %}" class="act">Edytuj</a>
             <a href="{% url 'core:rooms' %}?flat={{ row.flat.pk }}" class="act">Pokoje</a>
             <a href="{% url 'core:flat_fees' row.flat.pk %}" class="act">Opłaty</a>
-            <a href="{% url 'core:edit_flat' row.flat.pk %}" class="act">Edytuj</a>
             <a href="{% url 'core:delete_flat' row.flat.pk %}" class="act act-danger ml-auto">Usuń</a>
         </div>
     </div>
