@@ -1010,11 +1010,25 @@ def calculations(request: HttpRequest) -> HttpResponse:
         .annotate(tenants_count=Count("tenants"))
         .order_by("-period_start")
     )
+    # Distinct tenants who received at least one settlement e-mail, per calc.
+    # Coverage only (surplus copies are not counted).
+    emailed: dict[int, set[int]] = {}
+    for calc_id, tenant_id in (
+        EmailLog.objects.filter(
+            owner=user,
+            status=EmailLog.Status.SENT,
+            settlement_tenant__isnull=False,
+        )
+        .values_list("settlement_tenant__calculation_id", "settlement_tenant_id")
+        .distinct()
+    ):
+        emailed.setdefault(calc_id, set()).add(tenant_id)
     for calc in calcs:
         # Label by the month holding the majority of the period: the midpoint's
         # month is the month that contains most of a contiguous interval.
         midpoint = calc.period_start + (calc.period_end - calc.period_start) / 2
         calc.period_label = f"{_PL_MONTHS[midpoint.month - 1]} {midpoint.year}"  # type: ignore[attr-defined]
+        calc.emailed_count = len(emailed.get(calc.pk, ()))  # type: ignore[attr-defined]
     flats = Flat.objects.filter(owner=user).order_by("city", "street")
     return render(
         request,

@@ -52,6 +52,15 @@
         <span class="pill shrink-0 gap-1 bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">{{ c.tenants_count }}
             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </span>
+        {% if c.emailed_count == c.tenants_count and c.tenants_count > 0 %}
+        <span class="pill shrink-0 gap-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" title="Każdy mieszkaniec dostał maila">{{ c.emailed_count }}/{{ c.tenants_count }}
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </span>
+        {% else %}
+        <span class="pill shrink-0 gap-1 bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400" title="Nie każdy mieszkaniec dostał maila">{{ c.emailed_count }}/{{ c.tenants_count }}
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </span>
+        {% endif %}
         <div class="flex items-center gap-1 text-sm font-medium text-indigo-600 group-hover:text-indigo-700 sm:ml-auto dark:text-indigo-400">
             Szczegóły
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
