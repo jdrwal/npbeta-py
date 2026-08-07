@@ -253,6 +253,7 @@ def arrears(request: HttpRequest) -> HttpResponse:
             "flat": str(i.flat),
             "period": i.period_label,
             "amount": i.amount,
+            "overdue": i.overdue,
             "calc_url": reverse("core:calculation_detail", args=[i.calc_id]),
             "records_url": (
                 f"{reverse('core:records')}?year={i.bill_year}"
@@ -283,7 +284,10 @@ def arrears(request: HttpRequest) -> HttpResponse:
     ]
     tax_total = sum(m.tax for m in unpaid_tax)
 
-    grand_total = rent_total + fee_total + Decimal(tax_total)
+    # "Zaległości" = what tenants owe us; "Należności" = what we owe (tax).
+    receivable_total = rent_total + fee_total
+    payable_total = Decimal(tax_total)
+    grand_total = receivable_total + payable_total
     return render(
         request,
         "core/arrears.html",
@@ -294,6 +298,8 @@ def arrears(request: HttpRequest) -> HttpResponse:
             "fee_total": fee_total,
             "tax_rows": tax_rows,
             "tax_total": tax_total,
+            "receivable_total": receivable_total,
+            "payable_total": payable_total,
             "grand_total": grand_total,
         },
     )

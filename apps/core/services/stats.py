@@ -163,6 +163,7 @@ class FeeArrear:
     calc_id: int
     bill_year: int  # month where the fee is confirmed (Ewidencja link)
     bill_month: int
+    overdue: bool = False  # billing month already passed → a real debt
 
 
 def _next_month(year: int, month: int) -> tuple[int, int]:
@@ -190,6 +191,8 @@ def unconfirmed_fees(user: User) -> list[FeeArrear]:
         .select_related("flat")
         .prefetch_related("tenants__items")
     )
+    today = timezone.now().date()
+    cur = (today.year, today.month)
     for calc in calcs:
         midpoint = calc.period_start + (calc.period_end - calc.period_start) / 2
         p_year, p_month = midpoint.year, midpoint.month
@@ -210,6 +213,7 @@ def unconfirmed_fees(user: User) -> list[FeeArrear]:
                     calc_id=calc.pk,
                     bill_year=bill_year,
                     bill_month=bill_month,
+                    overdue=(bill_year, bill_month) < cur,
                 )
             )
     items.sort(key=lambda x: (x.period_label, x.tenant_name), reverse=True)

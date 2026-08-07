@@ -56,6 +56,7 @@ def test_unconfirmed_fees_detected(fee_setup: tuple) -> None:
     assert items[0].amount == Decimal("60.00")
     assert items[0].period_label == "06/2026"  # the settlement period
     assert (items[0].bill_year, items[0].bill_month) == (2026, 7)  # confirm month
+    assert items[0].overdue is True  # billing month (07/2026) already passed
 
 
 @pytest.mark.django_db
