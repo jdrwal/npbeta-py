@@ -36,13 +36,23 @@
         {{ row.tenant.tenant_name }}
         <span class="font-normal text-gray-500 dark:text-gray-400">— {{ row.tenant.contract_number }} · razem {{ row.total }} zł</span>
     </h2>
-    <button type="button" class="act email-preview-btn"
-            data-url="{% url 'core:settlement_email_preview' calc.pk row.tenant.pk %}"
-            data-send-url="{% url 'core:settlement_email_send_one' calc.pk row.tenant.pk %}"
-            data-name="{{ row.tenant.tenant_name }}">
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-        Podgląd maila
-    </button>
+    <div class="flex items-center gap-2">
+        {% if row.sent_count == 0 %}
+        <span class="pill bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">nie wysłano</span>
+        {% else %}
+        <span class="pill bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+            <svg class="mr-0.5 inline h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            wysłano{% if row.sent_count > 1 %} ×{{ row.sent_count }}{% endif %}
+        </span>
+        {% endif %}
+        <button type="button" class="act email-preview-btn"
+                data-url="{% url 'core:settlement_email_preview' calc.pk row.tenant.pk %}"
+                data-send-url="{% url 'core:settlement_email_send_one' calc.pk row.tenant.pk %}"
+                data-name="{{ row.tenant.tenant_name }}">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Podgląd maila
+        </button>
+    </div>
 </div>
 {% for section in row.sections %}
 <h3 class="mb-1 mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ section.label }}</h3>

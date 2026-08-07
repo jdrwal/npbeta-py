@@ -6,7 +6,8 @@ notifications) goes through :func:`send_owner_email`, which:
 - uses the owner's own SMTP config (``MailSettings``) or the project default,
 - writes an :class:`EmailLog` audit row,
 - and enforces the addressing rules agreed with the product owner:
-    * personalised mail (one per tenant) → ``to`` tenant, ``cc`` owner,
+    * personalised mail (one per tenant) → ``to`` tenant, owner's copy as the
+      flat's hidden ``bcc`` (never a visible ``cc``),
     * broadcast mail (same body to a whole flat) → ``to`` owner, ``bcc`` tenants
       (so tenants never see each other's addresses).
 """
@@ -18,7 +19,13 @@ from django.core.mail import EmailMessage, get_connection
 from django.core.mail.backends.base import BaseEmailBackend
 
 from apps.accounts.models import User
-from apps.core.models import Contract, EmailLog, EmailTemplate, Flat
+from apps.core.models import (
+    Contract,
+    EmailLog,
+    EmailTemplate,
+    FeeCalculationTenant,
+    Flat,
+)
 
 # Built-in defaults for the two standard template kinds. A stored active
 # EmailTemplate of the same kind overrides these.
@@ -193,6 +200,7 @@ def send_owner_email(
     bcc: list[str] | None = None,
     flat: Flat | None = None,
     template: EmailTemplate | None = None,
+    settlement_tenant: FeeCalculationTenant | None = None,
     connection: BaseEmailBackend | None = None,
 ) -> EmailLog:
     """Send one e-mail on the owner's behalf and record an :class:`EmailLog`.
@@ -203,6 +211,9 @@ def send_owner_email(
     to = to or []
     cc = cc or []
     bcc = bcc or []
+    # The flat's own hidden owner copy (BCC, never visible to the tenant).
+    if flat is not None and flat.owner_bcc_email and flat.owner_bcc_email not in bcc:
+        bcc = [*bcc, flat.owner_bcc_email]
     body = with_footer(body)
     reply_to = owner_reply_to(owner)
     if connection is None:
@@ -234,6 +245,7 @@ def send_owner_email(
         owner=owner,
         flat=flat,
         template=template,
+        settlement_tenant=settlement_tenant,
         subject=subject,
         body=body,
         to=to,

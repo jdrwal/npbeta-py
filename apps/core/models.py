@@ -82,6 +82,8 @@ class Flat(SoftDeleteModel):
     flat_size = models.PositiveIntegerField(null=True, blank=True, help_text="m²")
     code = models.CharField(max_length=16)
     room_count = models.PositiveIntegerField(null=True, blank=True)
+    # Hidden BCC recipient for emails about this flat (the landlord's own copy).
+    owner_bcc_email = models.EmailField(blank=True)
     created = models.DateTimeField(null=True, blank=True)
     rental_start = models.DateTimeField(null=True, blank=True)
     color = models.CharField(max_length=15, blank=True)
@@ -675,6 +677,14 @@ class EmailLog(models.Model):
         null=True,
         blank=True,
         related_name="logs",
+    )
+    # When this log is a settlement email, the tenant it was sent for.
+    settlement_tenant = models.ForeignKey(
+        "FeeCalculationTenant",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="email_logs",
     )
     subject = models.CharField(max_length=200)
     body = models.TextField()

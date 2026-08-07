@@ -37,6 +37,13 @@
         </div>
     </section>
 
+    <section class="card space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Powiadomienia e-mail</h2>
+        <div class="max-w-md">
+            {% include "core/_field.html" with field=form.owner_bcc_email %}
+        </div>
+    </section>
+
     <div class="flex items-center gap-3">
         <button type="submit">Zapisz</button>
         <a href="{% url 'core:flats' %}" class="text-sm">Anuluj</a>

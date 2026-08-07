@@ -1030,6 +1030,14 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
     calc = get_object_or_404(
         FeeCalculation.objects.select_related("flat"), pk=pk, owner=user
     )
+    sent_counts = dict(
+        EmailLog.objects.filter(
+            owner=user, status=EmailLog.Status.SENT, settlement_tenant__calculation=calc
+        )
+        .values("settlement_tenant")
+        .annotate(n=Count("id"))
+        .values_list("settlement_tenant", "n")
+    )
     tenants = []
     for tenant in calc.tenants.all():
         items = list(tenant.items.all())
@@ -1057,6 +1065,7 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
                 "tenant": tenant,
                 "sections": sections,
                 "total": sum((i.value for i in items), start=Decimal(0)),
+                "sent_count": sent_counts.get(tenant.pk, 0),
             }
         )
     return render(

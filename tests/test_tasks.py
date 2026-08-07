@@ -25,7 +25,10 @@ def calc_with_tenant(db: None) -> FeeCalculation:
     user = get_user_model().objects.create_user(
         username="owner@example.com", password="pw"
     )
-    flat = Flat.objects.create(owner=user, city="C", street="S", code="X")
+    flat = Flat.objects.create(
+        owner=user, city="C", street="S", code="X",
+        owner_bcc_email="owner@example.com",
+    )
     calc = FeeCalculation.objects.create(
         owner=user,
         flat=flat,
@@ -57,10 +60,24 @@ def test_send_settlement_emails(calc_with_tenant: FeeCalculation) -> None:
     assert sent == 1
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == ["tenant@example.com"]
-    assert mail.outbox[0].cc == ["owner@example.com"]
+    assert mail.outbox[0].cc == []  # owner is no longer a visible CC
+    assert mail.outbox[0].bcc == ["owner@example.com"]  # flat's hidden BCC copy
     assert "Opłaty licznikowe: 50.00 zł" in mail.outbox[0].body  # section subtotal
     assert "Do zapłaty razem: 50.00 zł" in mail.outbox[0].body  # total first
     assert "rozlicz-najem.pl" in mail.outbox[0].body  # marketing footer
+
+
+@pytest.mark.django_db
+def test_settlement_email_logged_against_tenant(calc_with_tenant: FeeCalculation) -> None:
+    from apps.core.models import EmailLog
+
+    tenant = calc_with_tenant.tenants.get()
+    send_settlement_emails(calc_with_tenant)
+    send_settlement_emails(calc_with_tenant)
+    logs = EmailLog.objects.filter(
+        settlement_tenant=tenant, status=EmailLog.Status.SENT
+    )
+    assert logs.count() == 2  # sent twice -> counted twice
 
 
 @pytest.mark.django_db

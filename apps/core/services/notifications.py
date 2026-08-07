@@ -92,46 +92,41 @@ def send_settlement_email_to(
     tenant: FeeCalculationTenant,
     *,
     connection: BaseEmailBackend | None = None,
-    cc: list[str] | None = None,
 ) -> bool:
     """Send the settlement email to a single tenant. Returns False if no address.
 
-    ``connection`` and ``cc`` may be supplied to reuse them across a batch.
+    The landlord's copy is the flat's hidden BCC (never a visible CC), so the
+    tenant never sees the owner's address. ``connection`` may be reused across
+    a batch.
     """
     if not tenant.email:
         return False
-    if cc is None:
-        owner_cc = owner_address(calc.owner)
-        cc = [owner_cc] if owner_cc else []
     subject, body = render_settlement_email(calc, tenant)
     send_owner_email(
         calc.owner,
         subject=subject,
         body=body,
         to=[tenant.email],
-        cc=cc,
         flat=calc.flat,
+        settlement_tenant=tenant,
         connection=connection,
     )
     return True
 
 
 def send_settlement_emails(calc: FeeCalculation) -> int:
-    """Email each tenant their settlement breakdown (owner in CC). Returns count.
+    """Email each tenant their settlement breakdown. Returns the count sent.
 
     Both the subject and the body come from the owner's SETTLEMENT template
     (falling back to the built-in default). The per-tenant fee breakdown and
-    total are injected via the ``{items}`` and ``{total}`` placeholders.
+    total are injected via the ``{items}`` and ``{total}`` placeholders. The
+    landlord's copy is the flat's hidden BCC, not a visible CC.
     """
     owner = calc.owner
-    # Reuse one SMTP connection and the same owner CC across the batch.
     connection, _ = owner_connection(owner)
-    owner_cc = owner_address(owner)
-    cc = [owner_cc] if owner_cc else []
-
     sent = 0
     for tenant in calc.tenants.all():
-        if send_settlement_email_to(calc, tenant, connection=connection, cc=cc):
+        if send_settlement_email_to(calc, tenant, connection=connection):
             sent += 1
     return sent
 

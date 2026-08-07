@@ -47,6 +47,7 @@ class FlatForm(forms.ModelForm):
             "code",
             "room_count",
             "color",
+            "owner_bcc_email",
         ]
         labels = {
             "city": "Miasto",
@@ -57,6 +58,13 @@ class FlatForm(forms.ModelForm):
             "code": "Kod",
             "room_count": "Liczba pokoi",
             "color": "Kolor",
+            "owner_bcc_email": "Kopia maili (BCC właściciela)",
+        }
+        help_texts = {
+            "owner_bcc_email": (
+                "Ukryta kopia (BCC) wszystkich maili o tym mieszkaniu — "
+                "niewidoczna dla najemcy."
+            ),
         }
 
     def __init__(self, *args: Any, user: User | None = None, **kwargs: Any) -> None:
