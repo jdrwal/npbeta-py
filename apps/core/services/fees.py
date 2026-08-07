@@ -272,6 +272,7 @@ def save_settlement(flat: Flat, period_start: date, period_end: date) -> FeeCalc
                 owner=flat.owner,
                 flat=flat,
                 calculation=calc,
+                contract=contract,
                 tenant_name=contract.tenant_name,
                 contract_number=contract.contract_number,
                 email=contract.email,

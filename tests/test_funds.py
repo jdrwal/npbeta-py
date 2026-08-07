@@ -192,6 +192,15 @@ def _settlement_with_fund(user) -> tuple:
 
 
 @pytest.mark.django_db
+def test_save_settlement_sets_contract_fk(owner_client: tuple) -> None:
+    user, _ = owner_client
+    _, _, tenant = _settlement_with_fund(user)
+    # The settlement tenant links to the tenancy by FK, not just the number.
+    assert tenant.contract is not None
+    assert tenant.contract.contract_number == "C1"
+
+
+@pytest.mark.django_db
 def test_confirm_fee_links_entry_and_feeds_fund(owner_client: tuple) -> None:
     user, client = owner_client
     flat, fund, tenant = _settlement_with_fund(user)
@@ -203,6 +212,7 @@ def test_confirm_fee_links_entry_and_feeds_fund(owner_client: tuple) -> None:
     entry = LedgerEntry.objects.get(settlement_tenant=tenant)
     assert entry.kind == LedgerEntry.Kind.FEE
     assert entry.contract is not None
+    assert entry.contract == tenant.contract  # resolved via the FK
     assert entry.contract.contract_number == "C1"
     assert entry.amount_in_taxable == Decimal("25.00")
     assert entry.billing_period == date(2026, 4, 1)

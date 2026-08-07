@@ -425,6 +425,15 @@ class FeeCalculationTenant(models.Model):
     calculation = models.ForeignKey(
         FeeCalculation, on_delete=models.CASCADE, related_name="tenants"
     )
+    # The tenancy this snapshot settles. Match payments by this FK, not by the
+    # ``contract_number`` label (which is not unique across renewals).
+    contract = models.ForeignKey(
+        Contract,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="settlement_tenants",
+    )
     tenant_name = models.CharField(max_length=64, blank=True)
     contract_number = models.CharField(max_length=64, blank=True)
     email = models.EmailField(max_length=64, blank=True)

@@ -830,7 +830,7 @@ def records(request: HttpRequest) -> HttpResponse:
     fee_calcs = (
         FeeCalculation.objects.filter(owner=user)
         .select_related("flat")
-        .prefetch_related("tenants__items")
+        .prefetch_related("tenants__items", "tenants__contract__room")
     )
     if selected_flat_id:
         fee_calcs = fee_calcs.filter(flat_id=selected_flat_id)
@@ -844,7 +844,7 @@ def records(request: HttpRequest) -> HttpResponse:
                 continue
             if tenant.pk in paid_fee_tenant_ids:
                 continue
-            contract = contracts_by_num.get(tenant.contract_number)
+            contract = tenant.contract or contracts_by_num.get(tenant.contract_number)
             fee_rows.append(
                 {
                     "flat": calc.flat,
@@ -907,15 +907,18 @@ def confirm_fee(request: HttpRequest, tenant_pk: int) -> HttpResponse:
     """
     user = cast(User, request.user)
     tenant = get_object_or_404(
-        FeeCalculationTenant.objects.select_related("calculation__flat"),
+        FeeCalculationTenant.objects.select_related(
+            "calculation__flat", "contract__room"
+        ),
         pk=tenant_pk,
         owner=user,
     )
     calc = tenant.calculation
     flat = calc.flat
     amount = sum((it.value for it in tenant.items.all()), Decimal(0))
-    contract = None
-    if tenant.contract_number:
+    # Prefer the direct FK; fall back to the number label for legacy rows.
+    contract = tenant.contract
+    if contract is None and tenant.contract_number:
         contract = (
             Contract.objects.filter(
                 owner=user, flat=flat, contract_number=tenant.contract_number
