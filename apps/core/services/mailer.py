@@ -34,7 +34,7 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
     EmailTemplate.Kind.CONTRACT_RENEWAL: (
         "Propozycja przedłużenia umowy {contract_number}",
         "Dzień dobry,\n\n"
-        "bieżąca umowa najmu {contract_number} wygasa w dniu {contract_end}. "
+        "Bieżąca umowa najmu {contract_number} wygasa w dniu {contract_end}. "
         "Proszę o potwierdzenie przedłużenia najmu do dnia {renew_until}.\n\n"
         "Pozdrawiam,\n{owner_name}",
     ),

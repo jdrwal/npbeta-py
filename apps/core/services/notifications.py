@@ -143,7 +143,7 @@ def _renewal_fallback(contract: Contract, renew_until: str) -> str:
     end = contract.contract_end.isoformat() if contract.contract_end else ""
     return (
         "Dzień dobry,\n\n"
-        f"bieżąca umowa najmu {contract.contract_number} wygasa w dniu {end}. "
+        f"Bieżąca umowa najmu {contract.contract_number} wygasa w dniu {end}. "
         f"Proszę o potwierdzenie przedłużenia najmu do dnia {renew_until}.\n\n"
         f"Pozdrawiam,\n{owner.get_full_name() or owner.get_username()}"
     )
