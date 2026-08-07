@@ -359,7 +359,7 @@
             endForm.action = btn.dataset.endUrl;
             endName.textContent = btn.dataset.name || '';
             endOpen();
-            endDate.value = btn.dataset.end || '';
+            requestAnimationFrame(function () { endDate.value = btn.dataset.end || ''; });
         });
     });
     document.getElementById('end-modal-close').addEventListener('click', endClose);
@@ -390,7 +390,7 @@
                 openRenewalPreview(btn.dataset.previewUrl, btn.dataset.sendUrl, btn.dataset.name, dateStr);
             };
             renewOpen();
-            renewDate.value = btn.dataset.defaultUntil || '';
+            requestAnimationFrame(function () { renewDate.value = btn.dataset.defaultUntil || ''; });
         });
     });
 
@@ -421,7 +421,7 @@
                     .catch(function () { renewAcceptBtn.disabled = false; alert('Błąd połączenia.'); });
             };
             renewOpen();
-            renewDate.value = btn.dataset.defaultUntil || '';
+            requestAnimationFrame(function () { renewDate.value = btn.dataset.defaultUntil || ''; });
         });
     });
 
