@@ -139,16 +139,12 @@ def send_settlement_emails(calc: FeeCalculation) -> int:
 
 def _renewal_fallback(contract: Contract, renew_until: str) -> str:
     """Built-in renewal proposal body, used when the template renders empty."""
-    from apps.core.services.mailer import room_label
-
     owner = contract.owner
-    room = room_label(contract.room)
-    place = f"{contract.flat}, {room}" if room else str(contract.flat)
+    end = contract.contract_end.isoformat() if contract.contract_end else ""
     return (
         "Dzień dobry,\n\n"
-        f"proponujemy przedłużenie umowy najmu {contract.contract_number} "
-        f"dot. {place} do dnia {renew_until}. Prosimy o informację, czy "
-        "akceptują Państwo nowy termin.\n\n"
+        f"bieżąca umowa najmu {contract.contract_number} wygasa w dniu {end}. "
+        f"Proszę o potwierdzenie przedłużenia najmu do dnia {renew_until}.\n\n"
         f"Pozdrawiam,\n{owner.get_full_name() or owner.get_username()}"
     )
 

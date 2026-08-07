@@ -278,7 +278,7 @@ def test_contract_send_renewal(landlord: User) -> None:
     assert prev.status_code == 200
     data = prev.json()
     assert "Z/1" in data["body"]
-    assert "przedłużenie" in data["body"]  # proposal wording
+    assert "przedłużenia najmu" in data["body"]  # proposal wording
     assert len(mail.outbox) == 0
 
     # Send returns JSON and mails the tenant with owner reply-to.
