@@ -16,11 +16,16 @@ from apps.core.models import (
     Fund,
     FundContribution,
     FundExpense,
+    FundRate,
     LedgerEntry,
     Room,
 )
 from apps.core.services.fees import save_settlement
-from apps.core.services.funds import confirmed_payment_count, fund_balance
+from apps.core.services.funds import (
+    confirmed_payment_count,
+    fund_balance,
+    fund_rate_for,
+)
 
 
 @pytest.fixture
@@ -87,6 +92,37 @@ def test_accrual_counts_confirmed_bill_payments(owner_client: tuple) -> None:
     assert bal.count == 3
     assert bal.accrued == Decimal("75.00")
     assert bal.balance == Decimal("75.00")
+
+
+@pytest.mark.django_db
+def test_fund_rate_schedule_tiers_accrual(owner_client: tuple) -> None:
+    """A FundRate change applies the right rate per billing month; without any
+    FundRate the base monthly_amount is used (backward compatible)."""
+    user, _ = owner_client
+    flat = _flat(user)
+    fund = Fund.objects.create(
+        owner=user, flat=flat, name="Sprzątanie",
+        monthly_amount=Decimal("15.00"),  # base rate (from the beginning)
+        start_date=date(2020, 1, 1),
+    )
+    # Rate rises to 25 from Sep 2022.
+    FundRate.objects.create(
+        owner=user, flat=flat, fund=fund,
+        rate_date=date(2022, 9, 1), amount=Decimal("25.00"),
+    )
+    assert fund_rate_for(fund, date(2021, 5, 1)) == Decimal("15.00")
+    assert fund_rate_for(fund, date(2022, 8, 1)) == Decimal("15.00")
+    assert fund_rate_for(fund, date(2022, 9, 1)) == Decimal("25.00")
+    assert fund_rate_for(fund, date(2024, 1, 1)) == Decimal("25.00")
+
+    _fee(user, flat, date(2021, 6, 1))   # 15
+    _fee(user, flat, date(2022, 8, 1))   # 15
+    _fee(user, flat, date(2022, 10, 1))  # 25
+    _fee(user, flat, date(2023, 3, 1))   # 25
+
+    bal = fund_balance(fund, date(2026, 1, 1))
+    assert bal.count == 4
+    assert bal.accrued == Decimal("80.00")  # 15 + 15 + 25 + 25
 
 
 @pytest.mark.django_db

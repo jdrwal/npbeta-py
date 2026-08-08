@@ -146,6 +146,12 @@ urlpatterns = [
         views.fund_delete_expense,
         name="fund_delete_expense",
     ),
+    path("funds/<int:pk>/rate/", views.fund_add_rate, name="fund_add_rate"),
+    path(
+        "funds/rate/<int:pk>/delete/",
+        views.fund_delete_rate,
+        name="fund_delete_rate",
+    ),
     path("tax/", views.tax, name="tax"),
     path(
         "tax/pay/<int:year>/<int:month>/",

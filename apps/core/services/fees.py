@@ -46,6 +46,7 @@ from apps.core.models import (
     MeterReading,
     Room,
 )
+from apps.core.services.funds import fund_rate_for
 
 _NON_LEAP_YEAR = 2001  # any non-leap year: reproduces the legacy "February = 28" quirk
 _CENT = Decimal("0.01")
@@ -231,14 +232,15 @@ def calculate_fees(flat: Flat, period_start: date, period_end: date) -> list[Fee
             )
         for fund in funds:
             # Each tenant pays the fixed contribution once per settlement; the
-            # fund is a flat monthly składka, not prorated day-by-day.
+            # fund is a flat monthly składka (rate effective for the period),
+            # not prorated day-by-day.
             lines.append(
                 FeeLine(
                     contract_id=contract_id,
                     fee_type="Fund",
                     name=fund.name,
                     usage=Decimal(0),
-                    value=_round(fund.monthly_amount, _CENT),
+                    value=_round(fund_rate_for(fund, period_end), _CENT),
                 )
             )
     return lines

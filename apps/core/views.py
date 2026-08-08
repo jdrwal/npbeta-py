@@ -31,6 +31,7 @@ from apps.core.forms import (
     FundDetailsForm,
     FundExpenseForm,
     FundForm,
+    FundRateForm,
     LedgerEntryForm,
     MailSettingsForm,
     MeterDefinitionForm,
@@ -56,6 +57,7 @@ from apps.core.models import (
     Fund,
     FundContribution,
     FundExpense,
+    FundRate,
     LedgerEntry,
     MeterDefinition,
     MeterPrice,
@@ -501,6 +503,7 @@ def funds(request: HttpRequest) -> HttpResponse:
                 {
                     "fund": fund,
                     "balance": bal,
+                    "rates": list(fund.rates.all()),
                     "contributions": list(fund.contributions.all()[:12]),
                     "expenses": list(fund.expenses.all()[:12]),
                 }
@@ -626,6 +629,34 @@ def fund_delete_expense(request: HttpRequest, pk: int) -> HttpResponse:
     expense = get_object_or_404(FundExpense, pk=pk, owner=user)
     expense.delete()
     messages.success(request, "Wydatek usunięty.")
+    return redirect("core:funds")
+
+
+@login_required
+@require_POST
+def fund_add_rate(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    fund = get_object_or_404(Fund, pk=pk, owner=user)
+    form = FundRateForm(request.POST)
+    if form.is_valid():
+        rate = form.save(commit=False)
+        rate.owner = user
+        rate.flat = fund.flat
+        rate.fund = fund
+        rate.save()
+        messages.success(request, "Nowa stawka funduszu zapisana.")
+    else:
+        messages.error(request, "Podaj poprawną stawkę i datę.")
+    return redirect("core:funds")
+
+
+@login_required
+@require_POST
+def fund_delete_rate(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    rate = get_object_or_404(FundRate, pk=pk, owner=user)
+    rate.delete()
+    messages.success(request, "Stawka funduszu usunięta.")
     return redirect("core:funds")
 
 

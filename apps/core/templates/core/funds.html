@@ -39,7 +39,7 @@
                 <form method="post" action="{% url 'core:fund_edit' item.fund.pk %}" class="flex flex-wrap items-end gap-2">
                     {% csrf_token %}
                     <div class="w-44"><label class="text-xs">Nazwa</label><input type="text" name="name" value="{{ item.fund.name }}" placeholder="Nazwa funduszu" aria-label="Nazwa funduszu"></div>
-                    <div class="w-32"><label class="text-xs">Składka (zł/mc)</label><input type="text" inputmode="decimal" name="monthly_amount" value="{{ item.fund.monthly_amount|floatformat:2 }}" class="text-right font-mono" aria-label="Składka miesięczna"></div>
+                    <div class="w-32"><label class="text-xs">Składka bazowa (zł/mc)</label><input type="text" inputmode="decimal" name="monthly_amount" value="{{ item.fund.monthly_amount|floatformat:2 }}" class="text-right font-mono" aria-label="Składka bazowa miesięczna"></div>
                     <div class="w-40"><label class="text-xs">Naliczana od</label><input type="date" name="start_date" value="{{ item.fund.start_date|date:'Y-m-d' }}"></div>
                     <div class="w-40"><label class="text-xs">Do (opcjonalnie)</label><input type="date" name="end_date" value="{{ item.fund.end_date|date:'Y-m-d' }}"></div>
                     <button type="submit" class="btn-ghost">Zapisz</button>
@@ -60,7 +60,7 @@
                     <div class="font-mono text-2xl font-semibold {% if item.balance.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ item.balance.balance|floatformat:2|intcomma }} zł</div>
                 </div>
                 <div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">Ze składek ({{ item.balance.count }} × {{ item.fund.monthly_amount|floatformat:2 }})</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">Ze składek ({{ item.balance.count }} wpłat)</div>
                     <div class="font-mono text-base text-gray-800 dark:text-gray-100">{{ item.balance.accrued|floatformat:2|intcomma }} zł</div>
                 </div>
                 <div>
@@ -71,6 +71,32 @@
                     <div class="text-xs text-gray-400 dark:text-gray-500">Wydano</div>
                     <div class="font-mono text-base text-rose-600 dark:text-rose-400">−{{ item.balance.spent|floatformat:2|intcomma }} zł</div>
                 </div>
+            </div>
+
+            {# Rate schedule (time-versioned składka) #}
+            <div class="border-t border-gray-100 pt-4 dark:border-gray-800">
+                <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Stawki składki (historia)</h3>
+                <p class="mb-2 text-xs text-gray-400 dark:text-gray-500">Bazowa (od początku): <span class="font-mono">{{ item.fund.monthly_amount|floatformat:2 }} zł/mc</span>. Poniżej zmiany obowiązujące od podanej daty.</p>
+                <div class="mb-3 flex flex-wrap gap-2">
+                    {% for r in item.rates %}
+                    <span class="inline-flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-1.5 text-sm dark:bg-indigo-500/10">
+                        <span class="font-mono font-medium text-indigo-700 dark:text-indigo-300">{{ r.amount|floatformat:2 }} zł/mc</span>
+                        <span class="text-gray-400 dark:text-gray-500">od {{ r.rate_date|date:'Y-m-d' }}</span>
+                        <form method="post" action="{% url 'core:fund_delete_rate' r.pk %}" onsubmit="return confirm('Usunąć tę stawkę?');">
+                            {% csrf_token %}
+                            <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń stawkę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                        </form>
+                    </span>
+                    {% empty %}
+                    <span class="text-sm text-gray-400 dark:text-gray-500">Brak zmian stawki — obowiązuje bazowa {{ item.fund.monthly_amount|floatformat:2 }} zł/mc.</span>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'core:fund_add_rate' item.fund.pk %}" class="flex flex-wrap items-end gap-2">
+                    {% csrf_token %}
+                    <div class="w-32"><label class="text-xs text-gray-500 dark:text-gray-400">Nowa stawka (zł/mc)</label><input type="text" inputmode="decimal" name="amount" class="text-right font-mono" aria-label="Nowa stawka"></div>
+                    <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Obowiązuje od</label><input type="date" name="rate_date"></div>
+                    <button type="submit" class="btn-ghost">Dodaj stawkę</button>
+                </form>
             </div>
 
             {# Contributions + expenses #}

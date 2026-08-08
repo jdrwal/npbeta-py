@@ -20,6 +20,7 @@ from apps.core.models import (
     Fund,
     FundContribution,
     FundExpense,
+    FundRate,
     LedgerEntry,
     MeterDefinition,
     MeterPrice,
@@ -554,6 +555,25 @@ class FundExpenseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.initial.get("spent_on"):
             self.fields["spent_on"].initial = timezone.localdate()
+
+
+class FundRateForm(forms.ModelForm):
+    """A fund's monthly contribution rate, effective from a date."""
+
+    class Meta:
+        model = FundRate
+        fields = ["amount", "rate_date"]
+        widgets = {"rate_date": _DATE}
+        labels = {
+            "amount": "Składka (zł / miesiąc)",
+            "rate_date": "Obowiązuje od",
+        }
+
+    def clean_amount(self) -> Any:
+        amount = self.cleaned_data.get("amount")
+        if amount is None:
+            raise forms.ValidationError("Podaj stawkę.")
+        return amount
 
 
 class SecuritySettingsForm(forms.ModelForm):

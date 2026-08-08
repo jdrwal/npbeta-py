@@ -327,6 +327,30 @@ class Fund(models.Model):
         return f"{self.name} @ {self.flat}"
 
 
+class FundRate(models.Model):
+    """A fund's monthly contribution rate, effective from a date.
+
+    Mirrors :class:`MeterPrice`: the rate for a given month is the latest
+    ``FundRate`` whose ``rate_date`` is on/before that month; when none applies
+    the fund's own ``monthly_amount`` is the fallback (the base rate).
+    """
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="fund_rates"
+    )
+    flat = models.ForeignKey(Flat, on_delete=models.CASCADE, related_name="fund_rates")
+    fund = models.ForeignKey(Fund, on_delete=models.CASCADE, related_name="rates")
+    rate_date = models.DateField()  # effective from (first of the month)
+    amount = _money()
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["fund", "rate_date"]
+
+    def __str__(self) -> str:
+        return f"{self.fund.name}: {self.amount} od {self.rate_date}"
+
+
 class FundContribution(models.Model):
     """An ad-hoc contribution paid into a fund (top-up or correction)."""
 

@@ -26,6 +26,36 @@ from apps.core.models import Fund, LedgerEntry
 _CENT = Decimal("0.01")
 
 
+def fund_rate_for(fund: Fund, day: date) -> Decimal:
+    """Contribution rate effective for ``day``.
+
+    Latest :class:`FundRate` whose ``rate_date`` is on/before ``day``; falls
+    back to the fund's ``monthly_amount`` (base rate) when none applies.
+    """
+    rate = (
+        fund.rates.filter(rate_date__lte=day).order_by("-rate_date").first()
+    )
+    return rate.amount if rate is not None else fund.monthly_amount
+
+
+def _billing_months(fund: Fund, as_of: date) -> list[date]:
+    """Billing months of confirmed bill payments feeding the fund up to ``as_of``."""
+    start_month = fund.start_date.replace(day=1)
+    end_cap = as_of
+    if fund.end_date and fund.end_date < end_cap:
+        end_cap = fund.end_date
+    if end_cap < start_month:
+        return []
+    qs = LedgerEntry.objects.filter(
+        flat=fund.flat,
+        kind=LedgerEntry.Kind.FEE,
+        billing_period__isnull=False,
+        billing_period__gte=start_month,
+        billing_period__lte=end_cap,
+    ).values_list("billing_period", flat=True)
+    return [bp for bp in qs if bp is not None]
+
+
 def confirmed_payment_count(fund: Fund, as_of: date) -> int:
     """Number of confirmed bill payments feeding the fund up to ``as_of``.
 
@@ -34,19 +64,7 @@ def confirmed_payment_count(fund: Fund, as_of: date) -> int:
     payments whose billing month falls inside the fund's active window
     (``start_date``..``end_date``/``as_of``) are counted.
     """
-    start_month = fund.start_date.replace(day=1)
-    end_cap = as_of
-    if fund.end_date and fund.end_date < end_cap:
-        end_cap = fund.end_date
-    if end_cap < start_month:
-        return 0
-    return LedgerEntry.objects.filter(
-        flat=fund.flat,
-        kind=LedgerEntry.Kind.FEE,
-        billing_period__isnull=False,
-        billing_period__gte=start_month,
-        billing_period__lte=end_cap,
-    ).count()
+    return len(_billing_months(fund, as_of))
 
 
 @dataclass
@@ -65,8 +83,13 @@ def fund_balance(fund: Fund, as_of: date | None = None) -> FundBalance:
     """Compute a fund's balance as of ``as_of`` (default: today)."""
     if as_of is None:
         as_of = timezone.localdate()
-    count = confirmed_payment_count(fund, as_of)
-    accrued = (fund.monthly_amount * count).quantize(_CENT)
+    months = _billing_months(fund, as_of)
+    count = len(months)
+    # Each confirmed payment accrues the rate effective for its billing month,
+    # so a mid-life rate change (FundRate) is applied automatically.
+    accrued = sum((fund_rate_for(fund, bp) for bp in months), Decimal("0")).quantize(
+        _CENT
+    )
     manual = fund.contributions.filter(contributed_on__lte=as_of).aggregate(
         s=Sum("amount")
     )["s"] or Decimal("0")
