@@ -491,36 +491,47 @@ def delete_fee_price(request: HttpRequest, pk: int, price_id: int) -> HttpRespon
 # --- Contribution funds --------------------------------------------------------
 @login_required
 def funds(request: HttpRequest) -> HttpResponse:
-    """Overview of contribution funds grouped by flat, with running balances."""
+    """List of funds grouped by flat with their individual balances (overview).
+
+    Each fund is fully separate, so no combined total is shown — click a fund
+    to open its detail page.
+    """
     user = cast(User, request.user)
     today = timezone.localdate()
     groups = []
-    grand_balance = Decimal("0")
     for flat in Flat.objects.filter(owner=user):
-        flat_funds = []
-        flat_total = Decimal("0")
-        for fund in Fund.objects.filter(flat=flat).order_by("name", "id"):
-            bal = fund_balance(fund, today)
-            flat_funds.append(
-                {
-                    "fund": fund,
-                    "balance": bal,
-                    "rates": list(fund.rates.all()),
-                    "contributions": list(fund.contributions.all()[:12]),
-                    "expenses": list(fund.expenses.all()[:12]),
-                }
-            )
-            flat_total += bal.balance
+        flat_funds = [
+            {"fund": fund, "balance": fund_balance(fund, today)}
+            for fund in Fund.objects.filter(flat=flat).order_by("name", "id")
+        ]
         if flat_funds:
-            groups.append({"flat": flat, "funds": flat_funds, "balance": flat_total})
-            grand_balance += flat_total
+            groups.append({"flat": flat, "funds": flat_funds})
     return render(
         request,
         "core/funds.html",
         {
             "groups": groups,
             "has_flats": Flat.objects.filter(owner=user).exists(),
-            "grand_balance": grand_balance,
+            "today": today,
+        },
+    )
+
+
+@login_required
+def fund_detail(request: HttpRequest, pk: int) -> HttpResponse:
+    """Detail page for a single fund: balance, rate schedule, contributions, expenses."""
+    user = cast(User, request.user)
+    fund = get_object_or_404(Fund, pk=pk, owner=user)
+    today = timezone.localdate()
+    return render(
+        request,
+        "core/fund_detail.html",
+        {
+            "fund": fund,
+            "balance": fund_balance(fund, today),
+            "rates": list(fund.rates.all()),
+            "contributions": list(fund.contributions.all()),
+            "expenses": list(fund.expenses.all()),
             "today": today,
         },
     )
@@ -565,7 +576,7 @@ def fund_edit(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Fundusz zaktualizowany.")
     else:
         messages.error(request, "Nie udało się zapisać funduszu.")
-    return redirect("core:funds")
+    return redirect("core:fund_detail", pk=fund.pk)
 
 
 @login_required
@@ -593,7 +604,7 @@ def fund_add_contribution(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Wpłata zapisana.")
     else:
         messages.error(request, "Podaj poprawną kwotę i datę.")
-    return redirect("core:funds")
+    return redirect("core:fund_detail", pk=fund.pk)
 
 
 @login_required
@@ -601,9 +612,10 @@ def fund_add_contribution(request: HttpRequest, pk: int) -> HttpResponse:
 def fund_delete_contribution(request: HttpRequest, pk: int) -> HttpResponse:
     user = cast(User, request.user)
     contribution = get_object_or_404(FundContribution, pk=pk, owner=user)
+    fund_pk = contribution.fund_id
     contribution.delete()
     messages.success(request, "Wpłata usunięta.")
-    return redirect("core:funds")
+    return redirect("core:fund_detail", pk=fund_pk)
 
 
 @login_required
@@ -621,7 +633,7 @@ def fund_add_expense(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Wydatek zapisany.")
     else:
         messages.error(request, "Podaj poprawną kwotę, datę i opis.")
-    return redirect("core:funds")
+    return redirect("core:fund_detail", pk=fund.pk)
 
 
 @login_required
@@ -629,9 +641,10 @@ def fund_add_expense(request: HttpRequest, pk: int) -> HttpResponse:
 def fund_delete_expense(request: HttpRequest, pk: int) -> HttpResponse:
     user = cast(User, request.user)
     expense = get_object_or_404(FundExpense, pk=pk, owner=user)
+    fund_pk = expense.fund_id
     expense.delete()
     messages.success(request, "Wydatek usunięty.")
-    return redirect("core:funds")
+    return redirect("core:fund_detail", pk=fund_pk)
 
 
 @login_required
@@ -649,7 +662,7 @@ def fund_add_rate(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Nowa stawka funduszu zapisana.")
     else:
         messages.error(request, "Podaj poprawną stawkę i datę.")
-    return redirect("core:funds")
+    return redirect("core:fund_detail", pk=fund.pk)
 
 
 @login_required
@@ -657,9 +670,10 @@ def fund_add_rate(request: HttpRequest, pk: int) -> HttpResponse:
 def fund_delete_rate(request: HttpRequest, pk: int) -> HttpResponse:
     user = cast(User, request.user)
     rate = get_object_or_404(FundRate, pk=pk, owner=user)
+    fund_pk = rate.fund_id
     rate.delete()
     messages.success(request, "Stawka funduszu usunięta.")
-    return redirect("core:funds")
+    return redirect("core:fund_detail", pk=fund_pk)
 
 
 @login_required

@@ -8,7 +8,7 @@
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3Z"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1.5"/></svg></span>
         <div>
             <h1>Fundusze</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pule składek na mieszkanie (np. na sprzątanie). Każdy lokator dopłaca składkę razem z rachunkami — gdy potwierdzisz zapłatę rachunków, składka trafia do puli. Bilans liczony osobno, nie wlicza się do przychodu ani podatku.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pule składek na mieszkanie (np. na sprzątanie). Każdy fundusz jest osobny — kliknij, aby zobaczyć szczegóły.</p>
         </div>
     </div>
     <a href="{% url 'core:fund_add' %}" class="btn">
@@ -18,148 +18,28 @@
 </div>
 
 {% if groups %}
-<div class="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm dark:border-gray-800 dark:bg-gray-900">
-    <span class="text-gray-500 dark:text-gray-400">Łączny bilans wszystkich funduszy:</span>
-    <span class="font-mono text-lg font-semibold {% if grand_balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ grand_balance|floatformat:2|intcomma }} zł</span>
-</div>
+<div class="mb-4 text-xs text-gray-400 dark:text-gray-500">Bilans każdego funduszu liczony osobno — fundusze nie są sumowane.</div>
 {% endif %}
 
 {% for group in groups %}
 <section class="mb-8">
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ group.flat.street }} {{ group.flat.building_no }}{% if group.flat.flat_no %}/{{ group.flat.flat_no }}{% endif %} · {{ group.flat.code }} {{ group.flat.city }}</h2>
-        <span class="text-sm text-gray-500 dark:text-gray-400">Bilans mieszkania: <span class="font-mono font-semibold {% if group.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-gray-900 dark:text-white{% endif %}">{{ group.balance|floatformat:2|intcomma }} zł</span></span>
-    </div>
-
-    <div class="space-y-4">
+    <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ group.flat.street }} {{ group.flat.building_no }}{% if group.flat.flat_no %}/{{ group.flat.flat_no }}{% endif %} · {{ group.flat.code }} {{ group.flat.city }}</h2>
+    <div class="space-y-2">
         {% for item in group.funds %}
-        <div class="card space-y-4">
-            {# Header: inline edit + delete #}
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <form method="post" action="{% url 'core:fund_edit' item.fund.pk %}" class="flex flex-wrap items-end gap-2">
-                    {% csrf_token %}
-                    <div class="w-44"><label class="text-xs">Nazwa</label><input type="text" name="name" value="{{ item.fund.name }}" placeholder="Nazwa funduszu" aria-label="Nazwa funduszu"></div>
-                    <div class="w-32"><label class="text-xs">Składka bazowa (zł/mc)</label><input type="text" inputmode="decimal" name="monthly_amount" value="{{ item.fund.monthly_amount|floatformat:2 }}" class="text-right font-mono" aria-label="Składka bazowa miesięczna"></div>
-                    <div class="w-40"><label class="text-xs">Naliczana od</label><input type="date" name="start_date" value="{{ item.fund.start_date|date:'Y-m-d' }}"></div>
-                    <div class="w-40"><label class="text-xs">Do (opcjonalnie)</label><input type="date" name="end_date" value="{{ item.fund.end_date|date:'Y-m-d' }}"></div>
-                    <button type="submit" class="btn-ghost">Zapisz</button>
-                </form>
-                <div class="flex items-center gap-3">
+        <a href="{% url 'core:fund_detail' item.fund.pk %}" class="group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-gray-200 bg-white px-4 py-3 !no-underline shadow-sm transition hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-500/50">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                    <span class="truncate font-semibold text-gray-900 dark:text-white">{{ item.fund.name }}</span>
                     {% if not item.balance.is_active %}<span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">zamknięty</span>{% endif %}
-                    <form method="post" action="{% url 'core:fund_delete' item.fund.pk %}" onsubmit="return confirm('Usunąć fundusz „{{ item.fund.name }}” wraz ze wszystkimi wpłatami i wydatkami?');">
-                        {% csrf_token %}
-                        <button type="submit" class="act act-danger !px-1.5 !py-1" title="Usuń fundusz"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                    </form>
                 </div>
+                <div class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Ze składek {{ item.balance.contributed|floatformat:2|intcomma }} zł · Wydano −{{ item.balance.spent|floatformat:2|intcomma }} zł</div>
             </div>
-
-            {# Balance summary #}
-            <div class="grid gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-4 dark:border-gray-800 dark:bg-gray-800/40">
-                <div class="sm:col-span-1">
-                    <div class="text-xs text-gray-400 dark:text-gray-500">Bilans</div>
-                    <div class="font-mono text-2xl font-semibold {% if item.balance.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ item.balance.balance|floatformat:2|intcomma }} zł</div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">Ze składek ({{ item.balance.count }} wpłat)</div>
-                    <div class="font-mono text-base text-gray-800 dark:text-gray-100">{{ item.balance.accrued|floatformat:2|intcomma }} zł</div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">Wpłaty ręczne</div>
-                    <div class="font-mono text-base text-gray-800 dark:text-gray-100">{{ item.balance.manual|floatformat:2|intcomma }} zł</div>
-                </div>
-                <div>
-                    <div class="text-xs text-gray-400 dark:text-gray-500">Wydano</div>
-                    <div class="font-mono text-base text-rose-600 dark:text-rose-400">−{{ item.balance.spent|floatformat:2|intcomma }} zł</div>
-                </div>
+            <div class="text-right">
+                <div class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Bilans</div>
+                <div class="font-mono text-xl font-bold {% if item.balance.balance < 0 %}text-rose-600 dark:text-rose-400{% else %}text-emerald-600 dark:text-emerald-400{% endif %}">{{ item.balance.balance|floatformat:2|intcomma }} zł</div>
             </div>
-
-            {# Rate schedule (time-versioned składka) #}
-            <div class="border-t border-gray-100 pt-4 dark:border-gray-800">
-                <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Stawki składki (historia)</h3>
-                <p class="mb-2 text-xs text-gray-400 dark:text-gray-500">Bazowa (od początku): <span class="font-mono">{{ item.fund.monthly_amount|floatformat:2 }} zł/mc</span>. Poniżej zmiany obowiązujące od podanej daty.</p>
-                <div class="mb-3 flex flex-wrap gap-2">
-                    {% for r in item.rates %}
-                    <span class="inline-flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-1.5 text-sm dark:bg-indigo-500/10">
-                        <span class="font-mono font-medium text-indigo-700 dark:text-indigo-300">{{ r.amount|floatformat:2 }} zł/mc</span>
-                        <span class="text-gray-400 dark:text-gray-500">od {{ r.rate_date|date:'Y-m-d' }}</span>
-                        <form method="post" action="{% url 'core:fund_delete_rate' r.pk %}" onsubmit="return confirm('Usunąć tę stawkę?');">
-                            {% csrf_token %}
-                            <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń stawkę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                        </form>
-                    </span>
-                    {% empty %}
-                    <span class="text-sm text-gray-400 dark:text-gray-500">Brak zmian stawki — obowiązuje bazowa {{ item.fund.monthly_amount|floatformat:2 }} zł/mc.</span>
-                    {% endfor %}
-                </div>
-                <form method="post" action="{% url 'core:fund_add_rate' item.fund.pk %}" class="flex flex-wrap items-end gap-2">
-                    {% csrf_token %}
-                    <div class="w-32"><label class="text-xs text-gray-500 dark:text-gray-400">Nowa stawka (zł/mc)</label><input type="text" inputmode="decimal" name="amount" class="text-right font-mono" aria-label="Nowa stawka"></div>
-                    <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Obowiązuje od</label><input type="date" name="rate_date"></div>
-                    <button type="submit" class="btn-ghost">Dodaj stawkę</button>
-                </form>
-            </div>
-
-            {# Contributions + expenses #}
-            <div class="grid gap-4 border-t border-gray-100 pt-4 md:grid-cols-2 dark:border-gray-800">
-                {# Contributions #}
-                <div>
-                    <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wpłaty ręczne</h3>
-                    <div class="mb-3 space-y-1">
-                        {% for c in item.contributions %}
-                        <div class="flex items-center justify-between gap-2 rounded-lg bg-emerald-50/60 px-3 py-1.5 text-sm dark:bg-emerald-500/10">
-                            <div class="min-w-0">
-                                <span class="font-mono font-medium text-emerald-700 dark:text-emerald-300">+{{ c.amount|floatformat:2|intcomma }} zł</span>
-                                <span class="text-gray-400 dark:text-gray-500"> · {{ c.contributed_on|date:'Y-m-d' }}</span>
-                                {% if c.note %}<span class="text-gray-500 dark:text-gray-400"> · {{ c.note }}</span>{% endif %}
-                            </div>
-                            <form method="post" action="{% url 'core:fund_delete_contribution' c.pk %}" onsubmit="return confirm('Usunąć tę wpłatę?');">
-                                {% csrf_token %}
-                                <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń wpłatę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                            </form>
-                        </div>
-                        {% empty %}
-                        <p class="text-sm text-gray-400 dark:text-gray-500">Brak ręcznych wpłat.</p>
-                        {% endfor %}
-                    </div>
-                    <form method="post" action="{% url 'core:fund_add_contribution' item.fund.pk %}" class="flex flex-wrap items-end gap-2">
-                        {% csrf_token %}
-                        <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
-                        <div class="w-36"><label class="text-xs">Data</label><input type="date" name="contributed_on" value="{{ today|date:'Y-m-d' }}"></div>
-                        <div class="min-w-[7rem] flex-1"><label class="text-xs">Opis</label><input type="text" name="note" placeholder="opcjonalnie"></div>
-                        <button type="submit" class="btn-ghost">Dodaj wpłatę</button>
-                    </form>
-                </div>
-
-                {# Expenses #}
-                <div class="md:border-l md:border-gray-100 md:pl-4 dark:md:border-gray-800">
-                    <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wydatki</h3>
-                    <div class="mb-3 space-y-1">
-                        {% for e in item.expenses %}
-                        <div class="flex items-center justify-between gap-2 rounded-lg bg-rose-50/60 px-3 py-1.5 text-sm dark:bg-rose-500/10">
-                            <div class="min-w-0">
-                                <span class="font-mono font-medium text-rose-700 dark:text-rose-300">−{{ e.amount|floatformat:2|intcomma }} zł</span>
-                                <span class="text-gray-400 dark:text-gray-500"> · {{ e.spent_on|date:'Y-m-d' }}</span>
-                                <span class="text-gray-500 dark:text-gray-400"> · {{ e.description }}</span>
-                            </div>
-                            <form method="post" action="{% url 'core:fund_delete_expense' e.pk %}" onsubmit="return confirm('Usunąć ten wydatek?');">
-                                {% csrf_token %}
-                                <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń wydatek"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                            </form>
-                        </div>
-                        {% empty %}
-                        <p class="text-sm text-gray-400 dark:text-gray-500">Brak wydatków.</p>
-                        {% endfor %}
-                    </div>
-                    <form method="post" action="{% url 'core:fund_add_expense' item.fund.pk %}" class="flex flex-wrap items-end gap-2">
-                        {% csrf_token %}
-                        <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
-                        <div class="w-36"><label class="text-xs">Data</label><input type="date" name="spent_on" value="{{ today|date:'Y-m-d' }}"></div>
-                        <div class="min-w-[7rem] flex-1"><label class="text-xs">Na co</label><input type="text" name="description" placeholder="np. środki czystości"></div>
-                        <button type="submit" class="btn-ghost">Dodaj wydatek</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+            <svg class="h-5 w-5 shrink-0 text-gray-300 group-hover:text-indigo-500 dark:text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
         {% endfor %}
     </div>
 </section>

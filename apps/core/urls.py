@@ -128,6 +128,7 @@ urlpatterns = [
     path("counters/<int:pk>/readings/", views.meter_readings, name="meter_readings"),
     path("funds/", views.funds, name="funds"),
     path("funds/add/", views.fund_add, name="fund_add"),
+    path("funds/<int:pk>/", views.fund_detail, name="fund_detail"),
     path("funds/<int:pk>/edit/", views.fund_edit, name="fund_edit"),
     path("funds/<int:pk>/delete/", views.fund_delete, name="fund_delete"),
     path(
