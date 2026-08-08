@@ -86,6 +86,23 @@
     </tbody>
 </table>
 {% endfor %}
+{% if row.payments %}
+<details class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 px-4 py-2 text-sm dark:border-emerald-500/30 dark:bg-emerald-500/10">
+    <summary class="cursor-pointer font-medium text-emerald-800 dark:text-emerald-300">Zapłacone pozycje ({{ row.payments|length }}){% if row.paid_on %} · {{ row.paid_on|date:"Y-m-d" }}{% endif %}</summary>
+    <table class="mt-2">
+        <thead><tr><th>Pozycja</th><th>Typ</th><th>Kwota</th></tr></thead>
+        <tbody>
+            {% for p in row.payments %}
+            <tr>
+                <td>{{ p.name }}</td>
+                <td class="text-gray-500 dark:text-gray-400">{{ p.fee_type }}</td>
+                <td>{{ p.amount }} zł</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</details>
+{% endif %}
 {% endfor %}
 
 <div id="mail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">

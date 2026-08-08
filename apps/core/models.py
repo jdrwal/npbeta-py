@@ -472,6 +472,47 @@ class FeeCalculationTenant(models.Model):
         return self.tenant_name
 
 
+class FeeItemPayment(models.Model):
+    """One settlement position recorded as paid (per-item audit trail).
+
+    When a tenant's settlement is confirmed paid, every charged
+    :class:`FeeCalculationItem` (each meter, each admin fee, each fund
+    contribution) is stored here separately with its own amount, so the full
+    breakdown of what was paid can be retrieved at any time.
+    """
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="fee_item_payments",
+    )
+    flat = models.ForeignKey(
+        Flat, on_delete=models.CASCADE, related_name="fee_item_payments"
+    )
+    settlement_tenant = models.ForeignKey(
+        "FeeCalculationTenant",
+        on_delete=models.CASCADE,
+        related_name="item_payments",
+    )
+    item = models.ForeignKey(
+        "FeeCalculationItem",
+        on_delete=models.CASCADE,
+        related_name="payments",
+    )
+    fee_type = models.CharField(max_length=8)  # Counter / Admin / Fund
+    name = models.CharField(max_length=64)
+    amount = _money()
+    record_date = models.DateTimeField(null=True, blank=True)
+    billing_period = models.DateField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-billing_period", "fee_type", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.name}: {self.amount} ({self.billing_period})"
+
+
 # --- Finance -------------------------------------------------------------------
 class LedgerEntry(models.Model):
     """Income/expense record (legacy `records`)."""

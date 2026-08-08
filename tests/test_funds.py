@@ -12,6 +12,7 @@ from django.utils import timezone
 from apps.core.models import (
     Contract,
     FeeCalculationItem,
+    FeeItemPayment,
     Flat,
     Fund,
     FundContribution,
@@ -254,6 +255,14 @@ def test_confirm_fee_links_entry_and_feeds_fund(owner_client: tuple) -> None:
     assert entry.billing_period == date(2026, 4, 1)
     # The confirmed payment credits the fund (25 × 1 payment).
     assert fund_balance(fund).accrued == Decimal("25.00")
+    # Each charged position is also stored separately (per-item audit trail).
+    payments = FeeItemPayment.objects.filter(settlement_tenant=tenant)
+    assert payments.count() == tenant.items.count()
+    fund_pay = payments.get(fee_type="Fund")
+    assert fund_pay.amount == Decimal("25.00")
+    assert fund_pay.name == "Sprzątanie"
+    assert fund_pay.billing_period == date(2026, 4, 1)
+    assert fund_pay.record_date is not None
 
 
 @pytest.mark.django_db
@@ -264,6 +273,8 @@ def test_confirm_fee_is_idempotent(owner_client: tuple) -> None:
     client.post(url, {"record_date": "2026-04-05", "billing_period": "2026-04"})
     client.post(url, {"record_date": "2026-04-06", "billing_period": "2026-04"})
     assert LedgerEntry.objects.filter(settlement_tenant=tenant).count() == 1
+    # No duplicate per-item payments on a repeat confirm.
+    assert FeeItemPayment.objects.filter(settlement_tenant=tenant).count() == 1
 
 
 @pytest.mark.django_db

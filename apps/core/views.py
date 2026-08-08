@@ -8,6 +8,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Count, F, Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -53,6 +54,7 @@ from apps.core.models import (
     EmailTemplate,
     FeeCalculation,
     FeeCalculationTenant,
+    FeeItemPayment,
     Flat,
     Fund,
     FundContribution,
@@ -1002,18 +1004,35 @@ def confirm_fee(request: HttpRequest, tenant_pk: int) -> HttpResponse:
         billing = _parse_month(request.POST.get("billing_period")) or (
             timezone.localdate().replace(day=1)
         )
-        LedgerEntry.objects.create(
-            owner=user,
-            flat=flat,
-            room=room,
-            contract=contract,
-            settlement_tenant=tenant,
-            kind=LedgerEntry.Kind.FEE,
-            short_desc="Pozostałe opłaty",
-            amount_in_taxable=amount,
-            record_date=timezone.make_aware(datetime.combine(rec_date, time.min)),
-            billing_period=billing,
-        )
+        record_dt = timezone.make_aware(datetime.combine(rec_date, time.min))
+        with transaction.atomic():
+            LedgerEntry.objects.create(
+                owner=user,
+                flat=flat,
+                room=room,
+                contract=contract,
+                settlement_tenant=tenant,
+                kind=LedgerEntry.Kind.FEE,
+                short_desc="Pozostałe opłaty",
+                amount_in_taxable=amount,
+                record_date=record_dt,
+                billing_period=billing,
+            )
+            # Store every charged position separately (per-item audit trail).
+            FeeItemPayment.objects.bulk_create(
+                FeeItemPayment(
+                    owner=user,
+                    flat=flat,
+                    settlement_tenant=tenant,
+                    item=it,
+                    fee_type=it.fee_type,
+                    name=it.name,
+                    amount=it.value,
+                    record_date=record_dt,
+                    billing_period=billing,
+                )
+                for it in tenant.items.all()
+            )
         messages.success(request, "Opłata zatwierdzona.")
         return _back()
 
@@ -1127,12 +1146,15 @@ def calculation_detail(request: HttpRequest, pk: int) -> HttpResponse:
             )
             if by_type.get(key)
         ]
+        payments = list(tenant.item_payments.all())
         tenants.append(
             {
                 "tenant": tenant,
                 "sections": sections,
                 "total": sum((i.value for i in items), start=Decimal(0)),
                 "sent_count": sent_counts.get(tenant.pk, 0),
+                "payments": payments,
+                "paid_on": payments[0].record_date if payments else None,
             }
         )
     return render(
