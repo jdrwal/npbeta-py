@@ -16,12 +16,13 @@
     {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700">{{ form.non_field_errors }}</div>{% endif %}
 
     <section class="card space-y-4">
-        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Mieszkanie</h2>
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Lokal</h2>
         {% include "core/_field.html" with field=form.flat %}
     </section>
 
     <section class="card space-y-4">
-        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Pokój</h2>
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Jednostka najmu</h2>
+        {% include "core/_field.html" with field=form.unit_type %}
         <div class="grid gap-4 sm:grid-cols-2">
             {% include "core/_field.html" with field=form.room_no %}
             {% include "core/_field.html" with field=form.name %}

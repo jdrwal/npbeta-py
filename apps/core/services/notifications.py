@@ -205,3 +205,70 @@ def send_renewal_email(
     )
     return True
 
+
+def _payment_reminder_fallback(contract: Contract) -> str:
+    """Built-in payment-reminder body, used when the template renders empty."""
+    owner = contract.owner
+    day = str(contract.payment_day or "")
+    return (
+        "Witam,\n\n"
+        "Płatność za bieżący okres do tej pory do mnie nie dotarła, proszę o "
+        "weryfikację jeśli przelew został zlecony.\n"
+        "W przeciwnym wypadku zachęcam do skorzystania z rabatu za terminową "
+        f"płatność — dla przypomnienia przelew powinien dotrzeć najpóźniej do "
+        f"{day} dnia miesiąca.\n\n"
+        "---\n\n"
+        "Hello,\n\n"
+        "I have not received payment for current month yet. Please verify your "
+        "bank transfer status if it has been already ordered.\n"
+        "Otherwise I encourage you to benefit from on-time payment discount — in "
+        f"order to be eligible your transfer needs to be delivered to my bank "
+        f"account until {day}th day of the month.\n\n"
+        f"pozdrawiam / best regards,\n{owner.get_full_name() or owner.get_username()}"
+    )
+
+
+def render_payment_reminder(contract: Contract) -> tuple[str, str]:
+    """Rendered (subject, body) of the late-payment reminder for a tenant.
+
+    The body excludes the marketing footer (added by the send path).
+    """
+    from apps.core.models import EmailTemplate
+    from apps.core.services.mailer import get_template, room_label
+
+    subject_tpl, body_tpl = get_template(
+        contract.owner, EmailTemplate.Kind.PAYMENT_REMINDER
+    )
+    owner = contract.owner
+    context = {
+        "tenant_name": contract.tenant_name or "",
+        "contract_number": contract.contract_number or "",
+        "flat": str(contract.flat),
+        "room": room_label(contract.room),
+        "payment_day": str(contract.payment_day or ""),
+        "owner_name": owner.get_full_name() or owner.get_username(),
+    }
+    subject = render_text(
+        subject_tpl or "Rabat za terminową płatność / On-time payment discount",
+        context,
+    )
+    body = render_text(body_tpl or "", context).strip()
+    if not body:
+        body = _payment_reminder_fallback(contract)
+    return subject, body
+
+
+def send_payment_reminder(contract: Contract) -> bool:
+    """Send the late-payment reminder to the tenant (owner as hidden BCC). False if no address."""
+    if not contract.email:
+        return False
+    subject, body = render_payment_reminder(contract)
+    send_owner_email(
+        contract.owner,
+        subject=subject,
+        body=body,
+        to=[contract.email],
+        flat=contract.flat,
+    )
+    return True
+

@@ -7,7 +7,7 @@
     </span>
     <div>
         <h1>{{ title }}</h1>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Wybierz mieszkanie i zakończony okres rozliczeniowy</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Wybierz lokal i zakończony okres rozliczeniowy</p>
     </div>
 </div>
 
@@ -16,7 +16,7 @@
     {% if form.non_field_errors %}<div class="msg border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{{ form.non_field_errors }}</div>{% endif %}
 
     <section class="card space-y-3">
-        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Mieszkanie</h2>
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Lokal</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {% for f in form.flat.field.queryset %}
             <label class="relative flex cursor-pointer flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-gray-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 has-[:checked]:ring-2 has-[:checked]:ring-indigo-200 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-600 dark:has-[:checked]:border-indigo-500/60 dark:has-[:checked]:bg-indigo-500/15 dark:has-[:checked]:ring-indigo-500/30">

@@ -54,7 +54,7 @@ class FlatForm(forms.ModelForm):
             "city": "Miasto",
             "street": "Ulica",
             "building_no": "Nr budynku",
-            "flat_no": "Nr mieszkania",
+            "flat_no": "Nr lokalu",
             "flat_size": "Powierzchnia (m²)",
             "code": "Kod",
             "room_count": "Liczba pokoi",
@@ -63,7 +63,7 @@ class FlatForm(forms.ModelForm):
         }
         help_texts = {
             "owner_bcc_email": (
-                "Ukryta kopia (BCC) wszystkich maili o tym mieszkaniu — "
+                "Ukryta kopia (BCC) wszystkich maili o tym lokalu — "
                 "niewidoczna dla najemcy."
             ),
         }
@@ -75,9 +75,10 @@ class FlatForm(forms.ModelForm):
 class RoomForm(forms.ModelForm):
     class Meta:
         model = Room
-        fields = ["flat", "room_no", "name", "size", "beds", "fee", "deposit"]
+        fields = ["flat", "unit_type", "room_no", "name", "size", "beds", "fee", "deposit"]
         labels = {
-            "flat": "Mieszkanie",
+            "flat": "Lokal",
+            "unit_type": "Jednostka najmu",
             "room_no": "Nr pokoju",
             "name": "Nazwa",
             "size": "Powierzchnia (m²)",
@@ -115,7 +116,7 @@ class ContractForm(forms.ModelForm):
             "contract_end": _DATE,
         }
         labels = {
-            "flat": "Mieszkanie",
+            "flat": "Lokal",
             "room": "Pokój",
             "contract_number": "Numer umowy",
             "tenant_name": "Najemca",
@@ -177,7 +178,7 @@ class LedgerEntryForm(forms.ModelForm):
             "contract": FlatScopedSelect,
         }
         labels = {
-            "flat": "Mieszkanie",
+            "flat": "Lokal",
             "room": "Pokój",
             "contract": "Umowa",
             "kind": "Rodzaj",
@@ -239,7 +240,7 @@ class MeterDefinitionForm(forms.ModelForm):
         model = MeterDefinition
         fields = ["flat", "name", "unit"]
         labels = {
-            "flat": "Mieszkanie",
+            "flat": "Lokal",
             "name": "Nazwa",
             "unit": "Jednostka",
         }
@@ -251,7 +252,7 @@ class MeterDefinitionForm(forms.ModelForm):
 
 
 class SettlementForm(forms.Form):
-    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Mieszkanie")
+    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Lokal")
     period_start = forms.DateField(
         widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         input_formats=["%Y-%m-%d"],
@@ -447,7 +448,7 @@ class FeeCreateForm(forms.Form):
         ("m³", "Licznik — gaz / woda (m³)"),
     ]
 
-    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Mieszkanie")
+    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Lokal")
     kind = forms.ChoiceField(choices=KIND_CHOICES, label="Rodzaj")
     title = forms.CharField(max_length=32, label="Opis / nazwa")
     amount = forms.DecimalField(
@@ -479,7 +480,7 @@ class FundForm(forms.ModelForm):
         fields = ["flat", "name", "monthly_amount", "start_date", "end_date"]
         widgets = {"start_date": _DATE, "end_date": _DATE}
         labels = {
-            "flat": "Mieszkanie",
+            "flat": "Lokal",
             "name": "Nazwa funduszu",
             "monthly_amount": "Składka (zł / miesiąc)",
             "start_date": "Naliczana od",
@@ -654,7 +655,7 @@ class EmailTemplateForm(forms.ModelForm):
 class AdHocEmailForm(forms.Form):
     """Compose an ad-hoc notification to all active tenants of a flat."""
 
-    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Mieszkanie")
+    flat = forms.ModelChoiceField(queryset=Flat.objects.none(), label="Lokal")
     template = forms.ModelChoiceField(
         queryset=EmailTemplate.objects.none(),
         required=False,

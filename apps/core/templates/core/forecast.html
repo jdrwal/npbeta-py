@@ -6,7 +6,7 @@
 <h2 style="font-size:1.1rem;">Oczekiwany przychód z czynszu</h2>
 <table>
     <thead>
-        <tr><th>Mieszkanie</th><th>Prognozowany przychód</th></tr>
+        <tr><th>Lokal</th><th>Prognozowany przychód</th></tr>
     </thead>
     <tbody>
         {% for row in rows %}
@@ -15,7 +15,7 @@
             <td>{{ row.income }} zł</td>
         </tr>
         {% empty %}
-        <tr><td colspan="2">Brak mieszkań.</td></tr>
+        <tr><td colspan="2">Brak lokali.</td></tr>
         {% endfor %}
     </tbody>
     <tfoot>
@@ -27,7 +27,7 @@
 <table>
     <thead>
         <tr>
-            <th>Mieszkanie</th>
+            <th>Lokal</th>
             <th>Miesiąc</th>
             <th>Rata</th>
             <th>Odsetki</th>

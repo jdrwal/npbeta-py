@@ -67,6 +67,16 @@ urlpatterns = [
         name="contract_confirm_renewal",
     ),
     path(
+        "contracts/<int:pk>/reminder/",
+        views.contract_send_payment_reminder,
+        name="contract_send_payment_reminder",
+    ),
+    path(
+        "contracts/<int:pk>/reminder/preview/",
+        views.contract_payment_reminder_preview,
+        name="contract_payment_reminder_preview",
+    ),
+    path(
         "contracts/<int:pk>/end/",
         views.contract_hard_stop,
         name="contract_hard_stop",

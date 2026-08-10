@@ -41,8 +41,8 @@ class FlatAdmin(admin.ModelAdmin):
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ("id", "flat", "room_no", "name", "beds", "fee", "is_deleted")
-    list_filter = ("is_deleted", "flat")
+    list_display = ("id", "flat", "unit_type", "room_no", "name", "beds", "fee", "is_deleted")
+    list_filter = ("is_deleted", "unit_type", "flat")
 
 
 @admin.register(Contract)

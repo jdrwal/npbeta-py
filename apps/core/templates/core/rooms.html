@@ -7,7 +7,7 @@
         <div>
             <h1>Pokoje</h1>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {% if single %}pokoje jednego mieszkania{% else %}wszystkie pokoje w portfelu{% endif %}
+                {% if single %}pokoje jednego lokalu{% else %}wszystkie pokoje w portfelu{% endif %}
             </p>
         </div>
     </div>
@@ -62,7 +62,7 @@
             </div>
         </div>
         {% empty %}
-        <p class="text-sm text-gray-400 dark:text-gray-500">Brak pokoi w tym mieszkaniu.</p>
+        <p class="text-sm text-gray-400 dark:text-gray-500">Brak pokoi w tym lokalu.</p>
         {% endfor %}
     </div>
 </section>

@@ -44,7 +44,7 @@ def test_room_create(setup: tuple) -> None:
     user, client, flat, _ = setup
     response = client.post(
         reverse("core:add_room"),
-        {"flat": flat.pk, "room_no": 2, "beds": 1, "fee": "400"},
+        {"flat": flat.pk, "unit_type": "whole", "room_no": 2, "beds": 1, "fee": "400"},
     )
     assert response.status_code == 302
     assert Room.objects.filter(owner=user, room_no=2).exists()

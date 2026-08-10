@@ -7,7 +7,7 @@
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14 8 10"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/><circle cx="12" cy="14" r="1.5"/></svg></span>
         <div>
             <h1>Liczniki</h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Odczyty, zużycie i koszty mediów w podziale na mieszkania</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Odczyty, zużycie i koszty mediów w podziale na lokale</p>
         </div>
     </div>
     <div class="flex gap-2">
@@ -83,7 +83,7 @@
                     {% endfor %}
                 </tr>
                 {% empty %}
-                <tr><td colspan="99" class="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Brak odczytów dla tego mieszkania.</td></tr>
+                <tr><td colspan="99" class="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Brak odczytów dla tego lokalu.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -111,7 +111,7 @@
 </script>
 {% else %}
 <div class="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
-    <p class="text-gray-500 dark:text-gray-400">Brak liczników. Dodaj mieszkanie i licznik, aby rozpocząć.</p>
+    <p class="text-gray-500 dark:text-gray-400">Brak liczników. Dodaj lokal i licznik, aby rozpocząć.</p>
     <a href="{% url 'core:add_meter' %}" class="btn mt-4">Dodaj licznik</a>
 </div>
 {% endif %}

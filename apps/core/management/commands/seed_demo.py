@@ -190,8 +190,9 @@ class Command(BaseCommand):
                     Room.objects.create(
                         owner=landlord,
                         flat=flat,
+                        unit_type=Room.UnitType.WHOLE,
                         room_no=1,
-                        name="Całe mieszkanie",
+                        name="Cały lokal",
                         size=size,
                         beds=rng.randint(1, 3),
                         fee=Decimal(rng.choice([1800, 2200, 2600, 3000, 3400])),
@@ -204,6 +205,7 @@ class Command(BaseCommand):
                     Room.objects.create(
                         owner=landlord,
                         flat=flat,
+                        unit_type=Room.UnitType.ROOM,
                         room_no=k,
                         name=f"Pokój {k}",
                         size=per_room,

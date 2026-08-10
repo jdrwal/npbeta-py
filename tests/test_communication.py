@@ -123,10 +123,11 @@ def test_communication_seeds_default_templates(landlord: User) -> None:
         EmailTemplate.objects.filter(owner=landlord).values_list("kind", flat=True)
     )
     assert EmailTemplate.Kind.CONTRACT_RENEWAL in kinds
+    assert EmailTemplate.Kind.PAYMENT_REMINDER in kinds
     assert EmailTemplate.Kind.SETTLEMENT in kinds
     # Idempotent: a second visit does not duplicate them.
     client.get(reverse("core:communication"))
-    assert EmailTemplate.objects.filter(owner=landlord).count() == 2
+    assert EmailTemplate.objects.filter(owner=landlord).count() == 3
 
 
 @pytest.mark.django_db
@@ -289,6 +290,44 @@ def test_contract_send_renewal(landlord: User) -> None:
     assert mail.outbox[0].to == ["t@example.com"]
     assert mail.outbox[0].reply_to == ["owner@example.com"]
     assert "Z/1" in mail.outbox[0].body
+
+
+@pytest.mark.django_db
+def test_contract_send_payment_reminder(landlord: User) -> None:
+    flat = Flat.objects.create(owner=landlord, city="C", street="S", code="ZR")
+    room = Room.objects.create(owner=landlord, flat=flat, room_no=1, beds=1)
+    today = timezone.now().date()
+    contract = Contract.objects.create(
+        owner=landlord, flat=flat, room=room, tenant_name="T",
+        email="t@example.com", contract_number="ZR/1", payment_day=10,
+        contract_start=today - timedelta(days=100),
+    )
+    client = Client()
+    client.force_login(landlord)
+
+    # Preview must not send; body carries the bilingual reminder + deadline day.
+    prev = client.get(
+        reverse("core:contract_payment_reminder_preview", args=[contract.pk])
+    )
+    assert prev.status_code == 200
+    data = prev.json()
+    assert "terminową płatność" in data["body"]
+    assert "on-time payment discount" in data["body"]
+    assert "10 dnia miesiąca" in data["body"]
+    assert data["bcc"] == ["owner@example.com"]
+    assert len(mail.outbox) == 0
+
+    # Send: mails the tenant, owner is a hidden BCC, owner reply-to.
+    resp = client.post(
+        reverse("core:contract_send_payment_reminder", args=[contract.pk])
+    )
+    assert resp.status_code == 200
+    assert resp.json()["sent"] is True
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == ["t@example.com"]
+    assert mail.outbox[0].bcc == ["owner@example.com"]
+    assert mail.outbox[0].cc == []
+    assert mail.outbox[0].reply_to == ["owner@example.com"]
 
 
 @pytest.mark.django_db

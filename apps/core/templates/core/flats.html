@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Mieszkania — Rozlicz Najem{% endblock %}
+{% block title %}Lokale — Rozlicz Najem{% endblock %}
 {% block content %}
 <div class="mb-6 flex items-center justify-between">
     <div class="flex items-center gap-3">
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4h3a2 2 0 0 1 2 2v14"/><path d="M2 20h3"/><path d="M13 20h9"/><path d="M10 12v.01"/><path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5 20V5.562a2 2 0 0 1 1.515-1.94l4-1A2 2 0 0 1 13 4.561Z"/></svg></span>
         <div>
-            <h1>Mieszkania</h1>
+            <h1>Lokale</h1>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ rows|length }} nieruchomo{{ rows|length|pluralize:"ść,ści,ści" }}</p>
         </div>
     </div>
     <a href="{% url 'core:add_flat' %}" class="btn">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
-        Dodaj mieszkanie
+        Dodaj lokal
     </a>
 </div>
 
@@ -94,7 +94,7 @@
     {% empty %}
     <div class="col-span-full rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
         <p class="text-gray-500 dark:text-gray-400">Brak mieszkań.</p>
-        <a href="{% url 'core:add_flat' %}" class="btn mt-4">Dodaj pierwsze mieszkanie</a>
+        <a href="{% url 'core:add_flat' %}" class="btn mt-4">Dodaj pierwszy lokal</a>
     </div>
     {% endfor %}
 </div>

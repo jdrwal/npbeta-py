@@ -38,6 +38,22 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
         "Proszę o potwierdzenie przedłużenia najmu do dnia {renew_until}.\n\n"
         "Pozdrawiam,\n{owner_name}",
     ),
+    EmailTemplate.Kind.PAYMENT_REMINDER: (
+        "Rabat za terminową płatność / On-time payment discount",
+        "Witam,\n\n"
+        "Płatność za bieżący okres do tej pory do mnie nie dotarła, proszę o weryfikację "
+        "jeśli przelew został zlecony.\n"
+        "W przeciwnym wypadku zachęcam do skorzystania z rabatu za terminową płatność — "
+        "dla przypomnienia przelew powinien dotrzeć najpóźniej do {payment_day} dnia miesiąca.\n\n"
+        "---\n\n"
+        "Hello,\n\n"
+        "I have not received payment for current month yet. Please verify your bank transfer "
+        "status if it has been already ordered.\n"
+        "Otherwise I encourage you to benefit from on-time payment discount — in order to be "
+        "eligible your transfer needs to be delivered to my bank account until {payment_day}th day "
+        "of the month.\n\n"
+        "pozdrawiam / best regards,\n{owner_name}",
+    ),
     EmailTemplate.Kind.SETTLEMENT: (
         "Rozliczenie mediów — {flat} ({period})",
         "Dzień dobry,\n\n"
@@ -52,7 +68,7 @@ DEFAULT_TEMPLATES: dict[str, tuple[str, str]] = {
 # used for the live preview. ``{owner_name}`` sample is filled per request.
 TEMPLATE_TAGS: list[tuple[str, str, str]] = [
     ("{tenant_name}", "Imię i nazwisko najemcy (mianownik, bez odmiany)", "Jan Kowalski"),
-    ("{flat}", "Adres mieszkania / obiektu", "ul. Przykładowa 1/2, Warszawa"),
+    ("{flat}", "Adres lokalu / obiektu", "ul. Przykładowa 1/2, Warszawa"),
     ("{room}", "Pokój", "Pokój 1"),
     ("{contract_number}", "Numer umowy", "L123/2026/01"),
     ("{contract_end}", "Data zakończenia umowy", "2026-12-31"),
@@ -187,6 +203,7 @@ def get_template(owner: User, kind: str) -> tuple[str, str]:
 # Human-readable names for the seeded standard templates.
 _DEFAULT_TEMPLATE_NAMES: dict[str, str] = {
     EmailTemplate.Kind.CONTRACT_RENEWAL: "Przedłużenie umowy",
+    EmailTemplate.Kind.PAYMENT_REMINDER: "Ponaglenie o płatność",
     EmailTemplate.Kind.SETTLEMENT: "Rozliczenie / rachunek",
 }
 

@@ -154,6 +154,14 @@
                                class="act !px-1.5 !py-1" title="Zatwierdź płatność — uzupełnij wpis">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
                             </a>
+                            <button type="button"
+                                    class="reminder-btn act !px-1.5 !py-1 !text-amber-600 dark:!text-amber-400"
+                                    title="Wyślij ponaglenie o płatność"
+                                    data-preview-url="{% url 'core:contract_payment_reminder_preview' f.contract.pk %}"
+                                    data-send-url="{% url 'core:contract_send_payment_reminder' f.contract.pk %}"
+                                    data-name="{{ f.contract.tenant_name }}">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                            </button>
                             {% if f.status == "EXC" %}
                             <span title="Dług — po zakończeniu okresu"><svg class="h-4 w-4 text-rose-600 dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span>
                             {% elif f.status == "RED" %}
@@ -255,4 +263,140 @@
         </table>
     </div>
 </section>
+
+<div id="mail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-2xl rounded-xl bg-white shadow-xl dark:bg-gray-900">
+        <div class="flex items-start justify-between gap-3 border-b border-gray-200 px-5 py-3 dark:border-gray-800">
+            <div class="min-w-0">
+                <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">Ponaglenie o płatność</div>
+                <div id="mail-modal-to" class="truncate text-xs text-gray-500 dark:text-gray-400"></div>
+            </div>
+            <button type="button" id="mail-modal-close" class="act !px-2 !py-1" aria-label="Zamknij">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="px-5 py-4">
+            <div class="mb-4 space-y-1 rounded-lg bg-gray-50 px-3 py-2 text-xs dark:bg-gray-800/60">
+                <div class="flex gap-2"><span class="w-16 shrink-0 font-semibold text-gray-500 dark:text-gray-400">Do:</span><span id="mail-modal-to-addr" class="break-all text-gray-800 dark:text-gray-200"></span></div>
+                <div class="flex gap-2"><span class="w-16 shrink-0 font-semibold text-gray-500 dark:text-gray-400">BCC:</span><span id="mail-modal-bcc-addr" class="break-all text-gray-800 dark:text-gray-200"></span></div>
+                <div class="flex gap-2"><span class="w-16 shrink-0 font-semibold text-gray-500 dark:text-gray-400">Reply-To:</span><span id="mail-modal-reply-addr" class="break-all text-gray-800 dark:text-gray-200"></span></div>
+            </div>
+            <div class="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Temat</div>
+            <div id="mail-modal-subject" class="mb-4 text-sm font-medium text-gray-900 dark:text-white"></div>
+            <div class="mb-1 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">Treść</div>
+            <pre id="mail-modal-body" class="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-4 font-sans text-sm leading-relaxed text-gray-700 dark:bg-gray-800 dark:text-gray-300"></pre>
+        </div>
+        <div class="flex items-center justify-between gap-3 border-t border-gray-200 px-5 py-3 dark:border-gray-800">
+            <span id="mail-modal-status" class="min-w-0 flex-1 break-words text-xs text-gray-500 dark:text-gray-400"></span>
+            <button type="button" id="mail-modal-send" class="btn shrink-0">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg>
+                Wyślij ponaglenie
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const csrf = "{{ csrf_token }}";
+    const modal = document.getElementById('mail-modal');
+    const to = document.getElementById('mail-modal-to');
+    const toAddr = document.getElementById('mail-modal-to-addr');
+    const bccAddr = document.getElementById('mail-modal-bcc-addr');
+    const replyAddr = document.getElementById('mail-modal-reply-addr');
+    const subj = document.getElementById('mail-modal-subject');
+    const body = document.getElementById('mail-modal-body');
+    const status = document.getElementById('mail-modal-status');
+    const sendBtn = document.getElementById('mail-modal-send');
+    let sendUrl = null;
+    const SEND_IDLE = sendBtn.innerHTML;
+    const SEND_CLS = sendBtn.className;
+    const SEND_SPIN = '<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path></svg> Wysyłanie…';
+    const SEND_CLOSE = '<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg> Zamknij';
+    let sent = false;
+
+    function open() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    function close() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    function setStatus(text, tone) {
+        status.textContent = text || '';
+        status.className = 'min-w-0 flex-1 break-words text-xs ' + (
+            tone === 'ok' ? 'text-emerald-600 dark:text-emerald-400'
+            : tone === 'err' ? 'text-rose-600 dark:text-rose-400'
+            : 'text-gray-500 dark:text-gray-400'
+        );
+    }
+
+    function openPreview(previewUrl, sUrl, name) {
+        sendUrl = sUrl || null;
+        subj.textContent = 'Ładowanie…';
+        body.textContent = '';
+        to.textContent = name || '';
+        toAddr.textContent = bccAddr.textContent = replyAddr.textContent = '';
+        setStatus('', '');
+        sent = false;
+        sendBtn.className = SEND_CLS;
+        sendBtn.innerHTML = SEND_IDLE;
+        sendBtn.disabled = true;
+        open();
+        fetch(previewUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                subj.textContent = d.subject || '';
+                body.textContent = d.body || '';
+                to.textContent = (d.tenant_name || '') + (d.email ? ' · ' + d.email : ' · (brak adresu e-mail)');
+                toAddr.textContent = (d.to || []).join(', ') || '(brak)';
+                bccAddr.textContent = (d.bcc || []).join(', ') || '(brak)';
+                replyAddr.textContent = (d.reply_to || []).join(', ') || '(brak)';
+                if (d.email) {
+                    sendBtn.disabled = false;
+                } else {
+                    sendBtn.disabled = true;
+                    setStatus('Brak adresu e-mail — nie można wysłać.', 'err');
+                }
+            })
+            .catch(function () { subj.textContent = 'Nie udało się załadować podglądu.'; });
+    }
+
+    sendBtn.addEventListener('click', function () {
+        if (!sendUrl) { return; }
+        if (sent) { close(); return; }
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = SEND_SPIN;
+        setStatus('Wysyłanie…', '');
+        fetch(sendUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrf,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: '',
+        })
+            .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+            .then(function (res) {
+                if (res.ok && res.d.sent) {
+                    setStatus(res.d.message || 'E-mail wysłany.', 'ok');
+                    sent = true;
+                    sendBtn.className = SEND_CLS + ' !bg-emerald-600 hover:!bg-emerald-700 !text-white';
+                    sendBtn.innerHTML = SEND_CLOSE;
+                    sendBtn.disabled = false;
+                } else {
+                    setStatus(res.d.message || 'Nie udało się wysłać.', 'err');
+                    sendBtn.innerHTML = SEND_IDLE;
+                    sendBtn.disabled = false;
+                }
+            })
+            .catch(function () { setStatus('Błąd połączenia.', 'err'); sendBtn.innerHTML = SEND_IDLE; sendBtn.disabled = false; });
+    });
+
+    document.getElementById('mail-modal-close').addEventListener('click', close);
+    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    document.querySelectorAll('.reminder-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openPreview(btn.dataset.previewUrl, btn.dataset.sendUrl, btn.dataset.name);
+        });
+    });
+})();
+</script>
 {% endblock %}

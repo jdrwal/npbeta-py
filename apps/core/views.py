@@ -560,7 +560,7 @@ def fund_add(request: HttpRequest) -> HttpResponse:
         {
             "form": form,
             "title": "Dodaj fundusz",
-            "subtitle": "Pula składek na mieszkanie (np. na sprzątanie)",
+            "subtitle": "Pula składek na lokal (np. na sprzątanie)",
         },
     )
 
@@ -1303,6 +1303,53 @@ def contract_send_renewal(request: HttpRequest, pk: int) -> JsonResponse:
 
 
 @login_required
+def contract_payment_reminder_preview(request: HttpRequest, pk: int) -> JsonResponse:
+    """Preview the late-payment reminder email for one contract."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    from apps.core.services.mailer import owner_address, owner_reply_to, with_footer
+    from apps.core.services.notifications import render_payment_reminder
+
+    subject, body = render_payment_reminder(contract)
+    bcc = (contract.flat.owner_bcc_email if contract.flat else "") or owner_address(user)
+    return JsonResponse(
+        {
+            "tenant_name": contract.tenant_name,
+            "email": contract.email,
+            "to": [contract.email] if contract.email else [],
+            "bcc": [bcc] if bcc else [],
+            "reply_to": owner_reply_to(user),
+            "subject": subject,
+            "body": with_footer(body),
+        }
+    )
+
+
+@login_required
+@require_POST
+def contract_send_payment_reminder(request: HttpRequest, pk: int) -> JsonResponse:
+    """E-mail the tenant a late-payment reminder (owner as hidden BCC)."""
+    user = cast(User, request.user)
+    contract = get_object_or_404(Contract, pk=pk, owner=user)
+    if not contract.email:
+        return JsonResponse(
+            {"sent": False, "message": "Ta umowa nie ma adresu e-mail najemcy."},
+            status=400,
+        )
+    from apps.core.services.notifications import send_payment_reminder
+
+    try:
+        send_payment_reminder(contract)
+    except Exception as exc:  # noqa: BLE001 - surface the send failure to the UI
+        return JsonResponse(
+            {"sent": False, "message": f"Nie udało się wysłać: {exc}"}, status=502
+        )
+    return JsonResponse(
+        {"sent": True, "message": _sent_message(user, contract.email)}
+    )
+
+
+@login_required
 @require_POST
 def contract_confirm_renewal(request: HttpRequest, pk: int) -> JsonResponse:
     """Confirm a proposed renewal: extend the contract end and clear the pending flag."""
@@ -1448,7 +1495,7 @@ def add_flat(request: HttpRequest) -> HttpResponse:
             flat = form.save(commit=False)
             flat.owner = user
             flat.save()
-            messages.success(request, "Mieszkanie dodane.")
+            messages.success(request, "Lokal dodany.")
             return redirect("core:flats")
     else:
         form = FlatForm()
@@ -1457,8 +1504,8 @@ def add_flat(request: HttpRequest) -> HttpResponse:
         "core/flat_form.html",
         {
             "form": form,
-            "title": "Dodaj mieszkanie",
-            "subtitle": "Dane nowego mieszkania",
+            "title": "Dodaj lokal",
+            "subtitle": "Dane nowego lokalu",
         },
     )
 
@@ -1504,7 +1551,7 @@ def add_reading(request: HttpRequest) -> HttpResponse:
         read_date = parse_date(post.get("read_date", "") or "")
         errors: list[str] = []
         if flat is None:
-            errors.append("Wybierz mieszkanie.")
+            errors.append("Wybierz lokal.")
         if read_date is None:
             errors.append("Podaj poprawną datę odczytu.")
 
@@ -2082,8 +2129,8 @@ class FlatUpdate(_OwnerUpdate):
     template_name = "core/flat_form.html"
     success_url = reverse_lazy("core:flats")
     extra_context = {
-        "title": "Edytuj mieszkanie",
-        "subtitle": "Dane mieszkania i zarządzanie opłatami",
+        "title": "Edytuj lokal",
+        "subtitle": "Dane lokalu i zarządzanie opłatami",
     }
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
@@ -2098,7 +2145,7 @@ class FlatUpdate(_OwnerUpdate):
 class FlatDelete(_OwnerSoftDelete):
     model = Flat
     success_url = reverse_lazy("core:flats")
-    extra_context = {"title": "Usuń mieszkanie"}
+    extra_context = {"title": "Usuń lokal"}
 
 
 class RoomCreate(_OwnerCreate):
@@ -2108,7 +2155,7 @@ class RoomCreate(_OwnerCreate):
     success_url = reverse_lazy("core:rooms")
     extra_context = {
         "title": "Dodaj pokój",
-        "subtitle": "Nowy pokój w mieszkaniu",
+        "subtitle": "Nowy pokój w lokalu",
     }
 
 

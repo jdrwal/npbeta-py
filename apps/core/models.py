@@ -101,12 +101,23 @@ class Flat(SoftDeleteModel):
 
 
 class Room(SoftDeleteModel):
-    """A rentable room inside a flat (legacy `rooms`)."""
+    """A rentable unit inside a premise (legacy `rooms`).
+
+    A unit is either the whole premise let as one (``UnitType.WHOLE``) or a
+    single room within a shared premise (``UnitType.ROOM``).
+    """
+
+    class UnitType(models.TextChoices):
+        WHOLE = "whole", "Cały lokal"
+        ROOM = "room", "Pokój w lokalu"
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="rooms"
     )
     flat = models.ForeignKey(Flat, on_delete=models.CASCADE, related_name="rooms")
+    unit_type = models.CharField(
+        max_length=8, choices=UnitType.choices, default=UnitType.WHOLE
+    )
     room_no = models.PositiveIntegerField(null=True, blank=True)
     name = models.CharField(max_length=32, blank=True)
     size = models.PositiveIntegerField(null=True, blank=True, help_text="m²")
@@ -700,6 +711,7 @@ class EmailTemplate(models.Model):
 
     class Kind(models.TextChoices):
         CONTRACT_RENEWAL = "contract_renewal", "Przedłużenie umowy"
+        PAYMENT_REMINDER = "payment_reminder", "Ponaglenie o płatność"
         SETTLEMENT = "settlement", "Rozliczenie / rachunek"
         CUSTOM = "custom", "Własny"
 
