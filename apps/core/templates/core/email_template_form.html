@@ -37,7 +37,7 @@
             {{ form.is_active }} {{ form.is_active.label }}
         </label>
         <div class="flex flex-wrap items-center gap-3 pt-2">
-            <button type="submit">Zapisz</button>
+            <button type="submit" class="btn">Zapisz</button>
             {% if can_restore %}
             <button type="submit" formaction="{% url 'core:email_template_restore' template.pk %}" formnovalidate
                     class="btn-ghost" onclick="return confirm('Przywrócić domyślną treść tego szablonu? Bieżące zmiany w temacie i treści zostaną nadpisane.');">

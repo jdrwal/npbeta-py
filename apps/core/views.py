@@ -522,19 +522,30 @@ def fund_detail(request: HttpRequest, pk: int) -> HttpResponse:
     """Detail page for a single fund: balance, rate schedule, contributions, expenses."""
     user = cast(User, request.user)
     fund = get_object_or_404(Fund, pk=pk, owner=user)
+    return _render_fund_detail(request, fund)
+
+
+def _fund_error_list(form: Any) -> list[str]:
+    """Flatten a form's field + non-field errors into a list of messages."""
+    return [str(err) for errs in form.errors.values() for err in errs]
+
+
+def _render_fund_detail(
+    request: HttpRequest, fund: Fund, **overrides: Any
+) -> HttpResponse:
+    """Render the fund detail page; overrides carry back an invalid add-form."""
     today = timezone.localdate()
-    return render(
-        request,
-        "core/fund_detail.html",
-        {
-            "fund": fund,
-            "balance": fund_balance(fund, today),
-            "rates": list(fund.rates.all()),
-            "contributions": list(fund.contributions.all()),
-            "expenses": list(fund.expenses.all()),
-            "today": today,
-        },
-    )
+    context: dict[str, Any] = {
+        "fund": fund,
+        "balance": fund_balance(fund, today),
+        "rates": list(fund.rates.all()),
+        "contributions": list(fund.contributions.all()),
+        "expenses": list(fund.expenses.all()),
+        "today": today,
+    }
+    context.update(overrides)
+    return render(request, "core/fund_detail.html", context)
+
 
 
 @login_required
@@ -602,9 +613,14 @@ def fund_add_contribution(request: HttpRequest, pk: int) -> HttpResponse:
         contribution.fund = fund
         contribution.save()
         messages.success(request, "Wpłata zapisana.")
-    else:
-        messages.error(request, "Podaj poprawną kwotę i datę.")
-    return redirect("core:fund_detail", pk=fund.pk)
+        return redirect("core:fund_detail", pk=fund.pk)
+    return _render_fund_detail(
+        request,
+        fund,
+        contribution_post=request.POST,
+        contribution_errors=list(form.errors.keys()),
+        contribution_error_list=_fund_error_list(form),
+    )
 
 
 @login_required
@@ -631,9 +647,14 @@ def fund_add_expense(request: HttpRequest, pk: int) -> HttpResponse:
         expense.fund = fund
         expense.save()
         messages.success(request, "Wydatek zapisany.")
-    else:
-        messages.error(request, "Podaj poprawną kwotę, datę i opis.")
-    return redirect("core:fund_detail", pk=fund.pk)
+        return redirect("core:fund_detail", pk=fund.pk)
+    return _render_fund_detail(
+        request,
+        fund,
+        expense_post=request.POST,
+        expense_errors=list(form.errors.keys()),
+        expense_error_list=_fund_error_list(form),
+    )
 
 
 @login_required
@@ -660,9 +681,14 @@ def fund_add_rate(request: HttpRequest, pk: int) -> HttpResponse:
         rate.fund = fund
         rate.save()
         messages.success(request, "Nowa stawka funduszu zapisana.")
-    else:
-        messages.error(request, "Podaj poprawną stawkę i datę.")
-    return redirect("core:fund_detail", pk=fund.pk)
+        return redirect("core:fund_detail", pk=fund.pk)
+    return _render_fund_detail(
+        request,
+        fund,
+        rate_post=request.POST,
+        rate_errors=list(form.errors.keys()),
+        rate_error_list=_fund_error_list(form),
+    )
 
 
 @login_required

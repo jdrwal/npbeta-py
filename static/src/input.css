@@ -79,7 +79,7 @@
     filter: invert(0.85);
   }
   button {
-    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700;
+    @apply cursor-pointer;
   }
 }
 
@@ -113,6 +113,15 @@
   }
   .msg {
     @apply mb-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-200;
+  }
+  .msg-error {
+    @apply border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200;
+  }
+  .msg-success {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-200;
+  }
+  .msg-warning {
+    @apply border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200;
   }
   .btn-danger {
     @apply bg-rose-600 hover:bg-rose-700;

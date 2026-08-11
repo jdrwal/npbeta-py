@@ -11,7 +11,7 @@
     <form method="post" class="space-y-4">
         {% csrf_token %}
         {% include "core/_field.html" with field=form.email %}
-        <button type="submit" class="w-full justify-center">Wyślij link aktywacyjny</button>
+        <button type="submit" class="btn w-full justify-center">Wyślij link aktywacyjny</button>
     </form>
     <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
         <a href="{% url 'login' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">← Powrót do logowania</a>

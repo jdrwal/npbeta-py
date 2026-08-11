@@ -78,10 +78,15 @@
         </div>
         <form method="post" action="{% url 'core:fund_add_rate' fund.pk %}" class="flex flex-wrap items-end gap-2">
             {% csrf_token %}
-            <div class="w-32"><label class="text-xs text-gray-500 dark:text-gray-400">Nowa stawka (zł/mc)</label><input type="text" inputmode="decimal" name="amount" class="text-right font-mono" aria-label="Nowa stawka"></div>
-            <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Obowiązuje od</label><input type="date" name="rate_date"></div>
+            <div class="w-32"><label class="text-xs text-gray-500 dark:text-gray-400">Nowa stawka (zł/mc)</label><input type="text" inputmode="decimal" name="amount" value="{{ rate_post.amount|default:'' }}" class="text-right font-mono{% if 'amount' in rate_errors %} !border-rose-500 focus:!border-rose-500{% endif %}" aria-label="Nowa stawka"></div>
+            <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Obowiązuje od</label><input type="date" name="rate_date" value="{% if rate_post %}{{ rate_post.rate_date }}{% endif %}" class="{% if 'rate_date' in rate_errors %}!border-rose-500 focus:!border-rose-500{% endif %}"></div>
             <button type="submit" class="btn"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Dodaj stawkę</button>
         </form>
+        {% if rate_error_list %}
+        <div class="mt-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200">
+            {% for e in rate_error_list %}<div>{{ e }}</div>{% endfor %}
+        </div>
+        {% endif %}
     </div>
 
     {# Contributions + expenses #}
@@ -91,30 +96,40 @@
             <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wpłaty ręczne</h3>
             <form method="post" action="{% url 'core:fund_add_contribution' fund.pk %}" class="flex flex-wrap items-end gap-2">
                 {% csrf_token %}
-                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
-                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="contributed_on" value="{{ today|date:'Y-m-d' }}"></div>
-                <div class="min-w-[7rem] flex-1"><label class="text-xs">Opis</label><input type="text" name="note" placeholder="opcjonalnie"></div>
+                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" value="{{ contribution_post.amount|default:'' }}" placeholder="0,00" class="text-right font-mono{% if 'amount' in contribution_errors %} !border-rose-500 focus:!border-rose-500{% endif %}"></div>
+                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="contributed_on" value="{% if contribution_post %}{{ contribution_post.contributed_on }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" class="{% if 'contributed_on' in contribution_errors %}!border-rose-500 focus:!border-rose-500{% endif %}"></div>
+                <div class="min-w-[7rem] flex-1"><label class="text-xs">Opis</label><input type="text" name="note" value="{{ contribution_post.note|default:'' }}" placeholder="opcjonalnie" class="{% if 'note' in contribution_errors %}!border-rose-500 focus:!border-rose-500{% endif %}"></div>
                 <button type="submit" class="btn"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Dodaj wpłatę</button>
             </form>
-            <div id="contrib-list" class="mt-3 space-y-1">
-                {% for c in contributions %}
-                <div class="flex items-center justify-between gap-2 rounded-lg bg-emerald-50/60 px-3 py-1.5 text-sm dark:bg-emerald-500/10{% if forloop.counter > 15 %} fund-extra hidden{% endif %}">
-                    <div class="min-w-0">
-                        <span class="font-mono font-medium text-emerald-700 dark:text-emerald-300">+{{ c.amount|floatformat:2|intcomma }} zł</span>
-                        <span class="text-gray-400 dark:text-gray-500"> · {{ c.contributed_on|date:'Y-m-d' }}</span>
-                        {% if c.note %}<span class="text-gray-500 dark:text-gray-400"> · {{ c.note }}</span>{% endif %}
-                    </div>
-                    <form method="post" action="{% url 'core:fund_delete_contribution' c.pk %}" onsubmit="return confirm('Usunąć tę wpłatę?');">
-                        {% csrf_token %}
-                        <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń wpłatę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                    </form>
+            {% if contribution_error_list %}
+            <div class="mt-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200">
+                {% for e in contribution_error_list %}<div>{{ e }}</div>{% endfor %}
+            </div>
+            {% endif %}
+            <div id="contrib-list" class="mt-3">
+                {% if contributions %}
+                <div class="grid grid-cols-[7rem_6.5rem_1fr_1.75rem] gap-3 px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    <span class="text-right">Kwota</span><span>Data</span><span>Opis</span><span></span>
                 </div>
-                {% empty %}
-                <p class="text-sm text-gray-400 dark:text-gray-500">Brak ręcznych wpłat.</p>
-                {% endfor %}
+                {% endif %}
+                <div class="space-y-1">
+                    {% for c in contributions %}
+                    <div class="grid grid-cols-[7rem_6.5rem_1fr_1.75rem] items-center gap-3 rounded-lg bg-emerald-50/60 px-3 py-1.5 text-sm dark:bg-emerald-500/10{% if forloop.counter > 15 %} fund-extra hidden{% endif %}">
+                        <span class="text-right font-mono font-medium text-emerald-700 dark:text-emerald-300">+{{ c.amount|floatformat:2|intcomma }} zł</span>
+                        <span class="text-gray-500 dark:text-gray-400">{{ c.contributed_on|date:'Y-m-d' }}</span>
+                        <span class="truncate text-gray-600 dark:text-gray-300">{{ c.note|default:'—' }}</span>
+                        <form method="post" action="{% url 'core:fund_delete_contribution' c.pk %}" onsubmit="return confirm('Usunąć tę wpłatę?');" class="justify-self-end">
+                            {% csrf_token %}
+                            <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń wpłatę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                        </form>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-400 dark:text-gray-500">Brak ręcznych wpłat.</p>
+                    {% endfor %}
+                </div>
             </div>
             {% if contributions|length > 15 %}
-            <button type="button" class="fund-toggle mt-2 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400" data-fund-target="contrib-list" data-show="Pokaż wszystkie ({{ contributions|length }})" data-hide="Pokaż mniej" aria-expanded="false">Pokaż wszystkie ({{ contributions|length }})</button>
+            <button type="button" class="fund-toggle btn-ghost mt-2 w-full justify-center !py-1.5 !text-xs" data-fund-target="contrib-list" data-show="Pokaż wszystkie ({{ contributions|length }})" data-hide="Pokaż mniej" aria-expanded="false">Pokaż wszystkie ({{ contributions|length }})</button>
             {% endif %}
         </div>
 
@@ -123,30 +138,40 @@
             <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wydatki</h3>
             <form method="post" action="{% url 'core:fund_add_expense' fund.pk %}" class="flex flex-wrap items-end gap-2">
                 {% csrf_token %}
-                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
-                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="spent_on" value="{{ today|date:'Y-m-d' }}"></div>
-                <div class="min-w-[7rem] flex-1"><label class="text-xs">Na co</label><input type="text" name="description" placeholder="np. środki czystości"></div>
+                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" value="{{ expense_post.amount|default:'' }}" placeholder="0,00" class="text-right font-mono{% if 'amount' in expense_errors %} !border-rose-500 focus:!border-rose-500{% endif %}"></div>
+                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="spent_on" value="{% if expense_post %}{{ expense_post.spent_on }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" class="{% if 'spent_on' in expense_errors %}!border-rose-500 focus:!border-rose-500{% endif %}"></div>
+                <div class="min-w-[7rem] flex-1"><label class="text-xs">Na co</label><input type="text" name="description" value="{{ expense_post.description|default:'' }}" placeholder="np. środki czystości" class="{% if 'description' in expense_errors %}!border-rose-500 focus:!border-rose-500{% endif %}"></div>
                 <button type="submit" class="btn"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Dodaj wydatek</button>
             </form>
-            <div id="expense-list" class="mt-3 space-y-1">
-                {% for e in expenses %}
-                <div class="flex items-center justify-between gap-2 rounded-lg bg-rose-50/60 px-3 py-1.5 text-sm dark:bg-rose-500/10{% if forloop.counter > 15 %} fund-extra hidden{% endif %}">
-                    <div class="min-w-0">
-                        <span class="font-mono font-medium text-rose-700 dark:text-rose-300">−{{ e.amount|floatformat:2|intcomma }} zł</span>
-                        <span class="text-gray-400 dark:text-gray-500"> · {{ e.spent_on|date:'Y-m-d' }}</span>
-                        <span class="text-gray-500 dark:text-gray-400"> · {{ e.description }}</span>
-                    </div>
-                    <form method="post" action="{% url 'core:fund_delete_expense' e.pk %}" onsubmit="return confirm('Usunąć ten wydatek?');">
-                        {% csrf_token %}
-                        <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń wydatek"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                    </form>
+            {% if expense_error_list %}
+            <div class="mt-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-200">
+                {% for e in expense_error_list %}<div>{{ e }}</div>{% endfor %}
+            </div>
+            {% endif %}
+            <div id="expense-list" class="mt-3">
+                {% if expenses %}
+                <div class="grid grid-cols-[7rem_6.5rem_1fr_1.75rem] gap-3 px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    <span class="text-right">Kwota</span><span>Data</span><span>Na co</span><span></span>
                 </div>
-                {% empty %}
-                <p class="text-sm text-gray-400 dark:text-gray-500">Brak wydatków.</p>
-                {% endfor %}
+                {% endif %}
+                <div class="space-y-1">
+                    {% for e in expenses %}
+                    <div class="grid grid-cols-[7rem_6.5rem_1fr_1.75rem] items-center gap-3 rounded-lg bg-rose-50/60 px-3 py-1.5 text-sm dark:bg-rose-500/10{% if forloop.counter > 15 %} fund-extra hidden{% endif %}">
+                        <span class="text-right font-mono font-medium text-rose-700 dark:text-rose-300">−{{ e.amount|floatformat:2|intcomma }} zł</span>
+                        <span class="text-gray-500 dark:text-gray-400">{{ e.spent_on|date:'Y-m-d' }}</span>
+                        <span class="truncate text-gray-600 dark:text-gray-300">{{ e.description|default:'—' }}</span>
+                        <form method="post" action="{% url 'core:fund_delete_expense' e.pk %}" onsubmit="return confirm('Usunąć ten wydatek?');" class="justify-self-end">
+                            {% csrf_token %}
+                            <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń wydatek"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                        </form>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-400 dark:text-gray-500">Brak wydatków.</p>
+                    {% endfor %}
+                </div>
             </div>
             {% if expenses|length > 15 %}
-            <button type="button" class="fund-toggle mt-2 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400" data-fund-target="expense-list" data-show="Pokaż wszystkie ({{ expenses|length }})" data-hide="Pokaż mniej" aria-expanded="false">Pokaż wszystkie ({{ expenses|length }})</button>
+            <button type="button" class="fund-toggle btn-ghost mt-2 w-full justify-center !py-1.5 !text-xs" data-fund-target="expense-list" data-show="Pokaż wszystkie ({{ expenses|length }})" data-hide="Pokaż mniej" aria-expanded="false">Pokaż wszystkie ({{ expenses|length }})</button>
             {% endif %}
         </div>
     </div>

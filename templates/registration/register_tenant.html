@@ -16,7 +16,7 @@
         {% include "core/_field.html" with field=form.email %}
         {% include "core/_password_field.html" with field=form.password1 %}
         {% include "core/_password_field.html" with field=form.password2 %}
-        <button type="submit" class="w-full justify-center">Załóż konto</button>
+        <button type="submit" class="btn w-full justify-center">Załóż konto</button>
     </form>
     <p class="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
         Masz już konto? <a href="{% url 'login' %}" class="font-medium text-indigo-600 hover:underline dark:text-indigo-400">Zaloguj się</a>

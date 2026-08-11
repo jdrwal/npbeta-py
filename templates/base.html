@@ -152,7 +152,7 @@
             {% block banner %}{% endblock %}
             <div class="{% if user.is_authenticated %}mx-auto max-w-6xl px-6 py-8{% else %}relative z-10 w-full max-w-md px-4 py-10{% endif %}">
                 {% if messages %}
-                    {% for message in messages %}<div class="msg">{{ message }}</div>{% endfor %}
+                    {% for message in messages %}<div class="msg{% if message.tags %} msg-{{ message.tags }}{% endif %}">{{ message }}</div>{% endfor %}
                 {% endif %}
                 {% block content %}{% endblock %}
             </div>

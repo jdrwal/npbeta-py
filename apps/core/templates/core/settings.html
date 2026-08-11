@@ -20,7 +20,7 @@
             {% include "core/_password_field.html" with field=pwd_form.old_password %}
             {% include "core/_password_field.html" with field=pwd_form.new_password1 %}
             {% include "core/_password_field.html" with field=pwd_form.new_password2 %}
-            <button type="submit" name="save_password" value="1">Zmień hasło</button>
+            <button type="submit" class="btn" name="save_password" value="1">Zmień hasło</button>
         </form>
     </section>
 
@@ -42,7 +42,7 @@
                 <p class="mt-2 text-xs text-gray-500">Po tym czasie bezczynności nastąpi automatyczne wylogowanie.</p>
                 {% if sec_form.session_timeout_minutes.errors %}<span class="mt-1 block text-sm text-rose-600">{{ sec_form.session_timeout_minutes.errors|striptags }}</span>{% endif %}
             </div>
-            <button type="submit" name="save_security" value="1">Zapisz ustawienia bezpieczeństwa</button>
+            <button type="submit" class="btn" name="save_security" value="1">Zapisz ustawienia bezpieczeństwa</button>
         </form>
     </section>
 
@@ -90,7 +90,7 @@
                 {% include "core/_field.html" with field=mail_form.reply_to %}
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Puste pole = odpowiedzi trafią na <span class="font-medium text-gray-700 dark:text-gray-200">{{ owner_email }}</span>.</p>
             </div>
-            <button type="submit" name="save_mail" value="1">Zapisz ustawienia poczty</button>
+            <button type="submit" class="btn" name="save_mail" value="1">Zapisz ustawienia poczty</button>
         </form>
     </section>
 </div>

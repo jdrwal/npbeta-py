@@ -21,7 +21,7 @@
     </div>
     {% endfor %}
     <div class="flex items-center gap-3 pt-2">
-        <button type="submit">Zapisz</button>
+        <button type="submit" class="btn">Zapisz</button>
         <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Anuluj</a>
         {% if secondary_link %}<a href="{{ secondary_link }}" class="ml-auto text-sm font-medium text-indigo-600 hover:underline">{{ secondary_label }}</a>{% endif %}
     </div>

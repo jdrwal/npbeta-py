@@ -52,7 +52,7 @@
             <input type="month" name="billing_period" id="billing_period" value="{{ billing_ym }}">
         </div>
         <div class="flex items-center gap-3 pt-2">
-            <button type="submit" {% if already %}disabled class="opacity-50"{% endif %}>Zatwierdź opłatę</button>
+            <button type="submit" class="btn{% if already %} opacity-50{% endif %}"{% if already %} disabled{% endif %}>Zatwierdź opłatę</button>
             <a href="{% url 'core:records' %}?year={{ request.GET.year }}&month={{ request.GET.month }}" class="text-sm">Anuluj</a>
         </div>
     </form>
