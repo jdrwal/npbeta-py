@@ -80,7 +80,7 @@
             {% csrf_token %}
             <div class="w-32"><label class="text-xs text-gray-500 dark:text-gray-400">Nowa stawka (zł/mc)</label><input type="text" inputmode="decimal" name="amount" class="text-right font-mono" aria-label="Nowa stawka"></div>
             <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Obowiązuje od</label><input type="date" name="rate_date"></div>
-            <button type="submit" class="btn-ghost">Dodaj stawkę</button>
+            <button type="submit" class="btn"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Dodaj stawkę</button>
         </form>
     </div>
 
@@ -89,9 +89,16 @@
         {# Contributions #}
         <div>
             <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wpłaty ręczne</h3>
-            <div class="mb-3 space-y-1">
+            <form method="post" action="{% url 'core:fund_add_contribution' fund.pk %}" class="flex flex-wrap items-end gap-2">
+                {% csrf_token %}
+                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
+                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="contributed_on" value="{{ today|date:'Y-m-d' }}"></div>
+                <div class="min-w-[7rem] flex-1"><label class="text-xs">Opis</label><input type="text" name="note" placeholder="opcjonalnie"></div>
+                <button type="submit" class="btn"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Dodaj wpłatę</button>
+            </form>
+            <div id="contrib-list" class="mt-3 space-y-1">
                 {% for c in contributions %}
-                <div class="flex items-center justify-between gap-2 rounded-lg bg-emerald-50/60 px-3 py-1.5 text-sm dark:bg-emerald-500/10">
+                <div class="flex items-center justify-between gap-2 rounded-lg bg-emerald-50/60 px-3 py-1.5 text-sm dark:bg-emerald-500/10{% if forloop.counter > 15 %} fund-extra hidden{% endif %}">
                     <div class="min-w-0">
                         <span class="font-mono font-medium text-emerald-700 dark:text-emerald-300">+{{ c.amount|floatformat:2|intcomma }} zł</span>
                         <span class="text-gray-400 dark:text-gray-500"> · {{ c.contributed_on|date:'Y-m-d' }}</span>
@@ -106,21 +113,24 @@
                 <p class="text-sm text-gray-400 dark:text-gray-500">Brak ręcznych wpłat.</p>
                 {% endfor %}
             </div>
-            <form method="post" action="{% url 'core:fund_add_contribution' fund.pk %}" class="flex flex-wrap items-end gap-2">
-                {% csrf_token %}
-                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
-                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="contributed_on" value="{{ today|date:'Y-m-d' }}"></div>
-                <div class="min-w-[7rem] flex-1"><label class="text-xs">Opis</label><input type="text" name="note" placeholder="opcjonalnie"></div>
-                <button type="submit" class="btn-ghost">Dodaj wpłatę</button>
-            </form>
+            {% if contributions|length > 15 %}
+            <button type="button" class="fund-toggle mt-2 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400" data-fund-target="contrib-list" data-show="Pokaż wszystkie ({{ contributions|length }})" data-hide="Pokaż mniej" aria-expanded="false">Pokaż wszystkie ({{ contributions|length }})</button>
+            {% endif %}
         </div>
 
         {# Expenses #}
         <div class="md:border-l md:border-gray-100 md:pl-4 dark:md:border-gray-800">
             <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Wydatki</h3>
-            <div class="mb-3 space-y-1">
+            <form method="post" action="{% url 'core:fund_add_expense' fund.pk %}" class="flex flex-wrap items-end gap-2">
+                {% csrf_token %}
+                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
+                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="spent_on" value="{{ today|date:'Y-m-d' }}"></div>
+                <div class="min-w-[7rem] flex-1"><label class="text-xs">Na co</label><input type="text" name="description" placeholder="np. środki czystości"></div>
+                <button type="submit" class="btn"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>Dodaj wydatek</button>
+            </form>
+            <div id="expense-list" class="mt-3 space-y-1">
                 {% for e in expenses %}
-                <div class="flex items-center justify-between gap-2 rounded-lg bg-rose-50/60 px-3 py-1.5 text-sm dark:bg-rose-500/10">
+                <div class="flex items-center justify-between gap-2 rounded-lg bg-rose-50/60 px-3 py-1.5 text-sm dark:bg-rose-500/10{% if forloop.counter > 15 %} fund-extra hidden{% endif %}">
                     <div class="min-w-0">
                         <span class="font-mono font-medium text-rose-700 dark:text-rose-300">−{{ e.amount|floatformat:2|intcomma }} zł</span>
                         <span class="text-gray-400 dark:text-gray-500"> · {{ e.spent_on|date:'Y-m-d' }}</span>
@@ -135,14 +145,27 @@
                 <p class="text-sm text-gray-400 dark:text-gray-500">Brak wydatków.</p>
                 {% endfor %}
             </div>
-            <form method="post" action="{% url 'core:fund_add_expense' fund.pk %}" class="flex flex-wrap items-end gap-2">
-                {% csrf_token %}
-                <div class="w-28"><label class="text-xs">Kwota (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
-                <div class="w-36"><label class="text-xs">Data</label><input type="date" name="spent_on" value="{{ today|date:'Y-m-d' }}"></div>
-                <div class="min-w-[7rem] flex-1"><label class="text-xs">Na co</label><input type="text" name="description" placeholder="np. środki czystości"></div>
-                <button type="submit" class="btn-ghost">Dodaj wydatek</button>
-            </form>
+            {% if expenses|length > 15 %}
+            <button type="button" class="fund-toggle mt-2 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400" data-fund-target="expense-list" data-show="Pokaż wszystkie ({{ expenses|length }})" data-hide="Pokaż mniej" aria-expanded="false">Pokaż wszystkie ({{ expenses|length }})</button>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    document.querySelectorAll('.fund-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var list = document.getElementById(btn.dataset.fundTarget);
+            if (!list) { return; }
+            var expanded = btn.getAttribute('aria-expanded') === 'true';
+            list.querySelectorAll('.fund-extra').forEach(function (el) {
+                el.classList.toggle('hidden', expanded);
+            });
+            btn.setAttribute('aria-expanded', String(!expanded));
+            btn.textContent = expanded ? btn.dataset.show : btn.dataset.hide;
+        });
+    });
+})();
+</script>
 {% endblock %}

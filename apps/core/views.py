@@ -1070,6 +1070,87 @@ def confirm_fee(request: HttpRequest, tenant_pk: int) -> HttpResponse:
     )
 
 
+@login_required
+def confirm_rent(request: HttpRequest, contract_pk: int) -> HttpResponse:
+    """Confirm expected rent as paid for one contract in a billing month.
+
+    Mirrors ``confirm_fee``: the flat/room/contract and the prorated amount are
+    fixed by the contract and the selected billing month; the user only picks
+    the payment date. The rent ledger entry is deduped on contract + billing
+    month so an expected rent is never confirmed twice.
+    """
+    user = cast(User, request.user)
+    contract = get_object_or_404(
+        Contract.objects.select_related("flat", "room"),
+        pk=contract_pk,
+        owner=user,
+    )
+    flat = contract.flat
+    room = contract.room
+
+    # Billing month drives the prorated amount and the dedup key.
+    billing = _parse_month(request.GET.get("billing")) or timezone.localdate().replace(
+        day=1
+    )
+    amount = Decimal(0)
+    if contract.price is not None:
+        amount = (
+            contract.price * contract_ratio(contract, billing.year, billing.month)
+        ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    existing = (
+        LedgerEntry.objects.filter(
+            owner=user, contract=contract, billing_period=billing
+        )
+        .exclude(kind=LedgerEntry.Kind.FEE)
+        .first()
+    )
+
+    def _back() -> HttpResponse:
+        params = {
+            k: request.GET[k] for k in ("year", "month", "flat") if request.GET.get(k)
+        }
+        url = reverse("core:records")
+        if params:
+            url += "?" + urlencode(params)
+        return redirect(url)
+
+    if request.method == "POST":
+        if existing:
+            messages.info(request, "Ta opłata została już zatwierdzona.")
+            return _back()
+        rec_date = parse_date(request.POST.get("record_date") or "") or timezone.localdate()
+        billing_post = _parse_month(request.POST.get("billing_period")) or billing
+        record_dt = timezone.make_aware(datetime.combine(rec_date, time.min))
+        LedgerEntry.objects.create(
+            owner=user,
+            flat=flat,
+            room=room,
+            contract=contract,
+            kind=LedgerEntry.Kind.RENT,
+            short_desc="Czynsz Najmu",
+            amount_in_taxable=amount,
+            record_date=record_dt,
+            billing_period=billing_post,
+        )
+        messages.success(request, "Opłata zatwierdzona.")
+        return _back()
+
+    return render(
+        request,
+        "core/confirm_rent.html",
+        {
+            "contract": contract,
+            "flat": flat,
+            "room": room,
+            "amount": amount,
+            "record_date": timezone.localdate().strftime("%Y-%m-%d"),
+            "billing_ym": billing.strftime("%Y-%m"),
+            "already": existing,
+        },
+    )
+
+
 _PL_MONTHS = [
     "Styczeń",
     "Luty",

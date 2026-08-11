@@ -93,6 +93,11 @@ urlpatterns = [
         views.confirm_fee,
         name="confirm_fee",
     ),
+    path(
+        "records/rent/<int:contract_pk>/confirm/",
+        views.confirm_rent,
+        name="confirm_rent",
+    ),
     path("records/<int:pk>/edit/", views.RecordUpdate.as_view(), name="edit_record"),
     path("records/<int:pk>/delete/", views.RecordDelete.as_view(), name="delete_record"),
     path("calculations/", views.calculations, name="calculations"),
