@@ -32,6 +32,7 @@ from apps.core.forms import (
     FundDetailsForm,
     FundExpenseForm,
     FundForm,
+    FundNameForm,
     FundRateForm,
     LedgerEntryForm,
     MailSettingsForm,
@@ -535,10 +536,25 @@ def _render_fund_detail(
 ) -> HttpResponse:
     """Render the fund detail page; overrides carry back an invalid add-form."""
     today = timezone.localdate()
+    # The base rate (monthly_amount from start_date) is just the first entry in
+    # the rate schedule; later FundRate rows are changes on top of it.
+    rate_rows: list[dict[str, Any]] = [
+        {
+            "amount": fund.monthly_amount,
+            "rate_date": fund.start_date,
+            "base": True,
+            "pk": None,
+        }
+    ]
+    rate_rows += [
+        {"amount": r.amount, "rate_date": r.rate_date, "base": False, "pk": r.pk}
+        for r in fund.rates.all()
+    ]
+    rate_rows.sort(key=lambda row: row["rate_date"])
     context: dict[str, Any] = {
         "fund": fund,
         "balance": fund_balance(fund, today),
-        "rates": list(fund.rates.all()),
+        "rate_rows": rate_rows,
         "contributions": list(fund.contributions.all()),
         "expenses": list(fund.expenses.all()),
         "today": today,
@@ -587,6 +603,20 @@ def fund_edit(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, "Fundusz zaktualizowany.")
     else:
         messages.error(request, "Nie udało się zapisać funduszu.")
+    return redirect("core:fund_detail", pk=fund.pk)
+
+
+@login_required
+@require_POST
+def fund_rename(request: HttpRequest, pk: int) -> HttpResponse:
+    user = cast(User, request.user)
+    fund = get_object_or_404(Fund, pk=pk, owner=user)
+    form = FundNameForm(request.POST, instance=fund)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Nazwa funduszu zmieniona.")
+    else:
+        messages.error(request, "Podaj nazwę funduszu.")
     return redirect("core:fund_detail", pk=fund.pk)
 
 

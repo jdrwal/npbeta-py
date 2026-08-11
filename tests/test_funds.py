@@ -352,10 +352,14 @@ def test_fund_edit_and_delete(owner_client: tuple) -> None:
         owner=user, flat=flat, name="Sprzątanie",
         monthly_amount=Decimal("25.00"), start_date=_months_ago(0),
     )
+    # Name is renamed via its own endpoint; the base rate via fund_edit.
+    client.post(
+        reverse("core:fund_rename", args=[fund.pk]),
+        {"name": "Sprzątanie klatki"},
+    )
     client.post(
         reverse("core:fund_edit", args=[fund.pk]),
-        {"name": "Sprzątanie klatki", "monthly_amount": "30.00",
-         "start_date": fund.start_date.isoformat()},
+        {"monthly_amount": "30.00", "start_date": fund.start_date.isoformat()},
     )
     fund.refresh_from_db()
     assert fund.name == "Sprzątanie klatki"

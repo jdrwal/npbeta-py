@@ -504,12 +504,22 @@ class FundForm(forms.ModelForm):
 
 
 class FundDetailsForm(forms.ModelForm):
-    """Inline edit of a fund's own fields (flat is fixed)."""
+    """Inline edit of a fund's schedule dates and its first (base) rate.
+
+    The name is edited separately (:class:`FundNameForm`); the fund itself is
+    identified only by its name — the monthly amount is just the first entry in
+    the rate schedule.
+    """
 
     class Meta:
         model = Fund
-        fields = ["name", "monthly_amount", "start_date", "end_date"]
+        fields = ["monthly_amount", "start_date", "end_date"]
         widgets = {"start_date": _DATE, "end_date": _DATE}
+        labels = {
+            "monthly_amount": "Stawka (zł / miesiąc)",
+            "start_date": "Obowiązuje od",
+            "end_date": "Naliczanie do (opcjonalnie)",
+        }
 
     def clean(self) -> dict[str, Any]:
         cleaned = super().clean() or {}
@@ -518,6 +528,16 @@ class FundDetailsForm(forms.ModelForm):
         if start and end and end < start:
             self.add_error("end_date", "Data końca nie może być wcześniejsza niż początek.")
         return cleaned
+
+
+class FundNameForm(forms.ModelForm):
+    """Rename a fund (the only fund-level attribute that matters)."""
+
+    class Meta:
+        model = Fund
+        fields = ["name"]
+        labels = {"name": "Nazwa funduszu"}
+
 
 
 class FundContributionForm(forms.ModelForm):

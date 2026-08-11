@@ -145,6 +145,7 @@ urlpatterns = [
     path("funds/add/", views.fund_add, name="fund_add"),
     path("funds/<int:pk>/", views.fund_detail, name="fund_detail"),
     path("funds/<int:pk>/edit/", views.fund_edit, name="fund_edit"),
+    path("funds/<int:pk>/rename/", views.fund_rename, name="fund_rename"),
     path("funds/<int:pk>/delete/", views.fund_delete, name="fund_delete"),
     path(
         "funds/<int:pk>/contribution/",

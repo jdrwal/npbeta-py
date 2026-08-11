@@ -14,7 +14,16 @@
     <div class="flex items-center gap-3">
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3Z"/><path d="M2 10h20"/><circle cx="17" cy="14" r="1.5"/></svg></span>
         <div>
-            <h1>{{ fund.name }}</h1>
+            <div class="flex items-center gap-2">
+                <h1>{{ fund.name }}</h1>
+                <button type="button" id="fund-rename-toggle" class="act !px-1.5 !py-1" title="Zmień nazwę" aria-label="Zmień nazwę"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            </div>
+            <form id="fund-rename-form" method="post" action="{% url 'core:fund_rename' fund.pk %}" class="mt-2 hidden flex-wrap items-center gap-2">
+                {% csrf_token %}
+                <input type="text" name="name" value="{{ fund.name }}" class="w-56" aria-label="Nazwa funduszu" required>
+                <button type="submit" class="btn !py-1.5">Zapisz</button>
+                <button type="button" id="fund-rename-cancel" class="btn-ghost !py-1.5">Anuluj</button>
+            </form>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ fund.flat.street }} {{ fund.flat.building_no }}{% if fund.flat.flat_no %}/{{ fund.flat.flat_no }}{% endif %} · {{ fund.flat.code }} {{ fund.flat.city }}</p>
         </div>
     </div>
@@ -28,16 +37,6 @@
 </div>
 
 <div class="card space-y-4">
-    {# Inline edit #}
-    <form method="post" action="{% url 'core:fund_edit' fund.pk %}" class="flex flex-wrap items-end gap-2">
-        {% csrf_token %}
-        <div class="w-44"><label class="text-xs">Nazwa</label><input type="text" name="name" value="{{ fund.name }}" placeholder="Nazwa funduszu" aria-label="Nazwa funduszu"></div>
-        <div class="w-32"><label class="text-xs">Składka bazowa (zł/mc)</label><input type="text" inputmode="decimal" name="monthly_amount" value="{{ fund.monthly_amount|floatformat:2 }}" class="text-right font-mono" aria-label="Składka bazowa miesięczna"></div>
-        <div class="w-40"><label class="text-xs">Naliczana od</label><input type="date" name="start_date" value="{{ fund.start_date|date:'Y-m-d' }}"></div>
-        <div class="w-40"><label class="text-xs">Do (opcjonalnie)</label><input type="date" name="end_date" value="{{ fund.end_date|date:'Y-m-d' }}"></div>
-        <button type="submit" class="btn-ghost">Zapisz</button>
-    </form>
-
     {# Balance summary #}
     <div class="grid gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-4 dark:border-gray-800 dark:bg-gray-800/40">
         <div class="sm:col-span-1">
@@ -58,25 +57,43 @@
         </div>
     </div>
 
-    {# Rate schedule (time-versioned składka) #}
+    {# Rate schedule — the first row is the base rate; later rows are changes #}
     <div class="border-t border-gray-100 pt-4 dark:border-gray-800">
-        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Stawki składki (historia)</h3>
-        <p class="mb-2 text-xs text-gray-400 dark:text-gray-500">Bazowa (od początku): <span class="font-mono">{{ fund.monthly_amount|floatformat:2 }} zł/mc</span>. Poniżej zmiany obowiązujące od podanej daty.</p>
-        <div class="mb-3 flex flex-wrap gap-2">
-            {% for r in rates %}
-            <span class="inline-flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-1.5 text-sm dark:bg-indigo-500/10">
-                <span class="font-mono font-medium text-indigo-700 dark:text-indigo-300">{{ r.amount|floatformat:2 }} zł/mc</span>
-                <span class="text-gray-400 dark:text-gray-500">od {{ r.rate_date|date:'Y-m-d' }}</span>
-                <form method="post" action="{% url 'core:fund_delete_rate' r.pk %}" onsubmit="return confirm('Usunąć tę stawkę?');">
-                    {% csrf_token %}
-                    <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń stawkę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
-                </form>
-            </span>
-            {% empty %}
-            <span class="text-sm text-gray-400 dark:text-gray-500">Brak zmian stawki — obowiązuje bazowa {{ fund.monthly_amount|floatformat:2 }} zł/mc.</span>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Obowiązujące stawki</h3>
+        <div class="grid grid-cols-[9rem_1fr_1.75rem] gap-3 px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+            <span>Stawka</span><span>Obowiązuje od</span><span></span>
+        </div>
+        <div class="space-y-1">
+            {% for r in rate_rows %}
+            <div class="grid grid-cols-[9rem_1fr_1.75rem] items-center gap-3 rounded-lg bg-indigo-50/60 px-3 py-1.5 text-sm dark:bg-indigo-500/10">
+                <span class="font-mono font-medium text-indigo-700 dark:text-indigo-300">{{ r.amount|floatformat:2|intcomma }} zł/mc</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ r.rate_date|date:'Y-m-d' }}{% if r.base %} <span class="text-gray-400 dark:text-gray-500">· pierwsza</span>{% endif %}</span>
+                <div class="justify-self-end">
+                    {% if r.base %}
+                    <button type="button" id="fund-base-edit" class="act !px-1 !py-0.5" title="Edytuj pierwszą stawkę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+                    {% else %}
+                    <form method="post" action="{% url 'core:fund_delete_rate' r.pk %}" onsubmit="return confirm('Usunąć tę stawkę?');">
+                        {% csrf_token %}
+                        <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń stawkę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
             {% endfor %}
         </div>
-        <form method="post" action="{% url 'core:fund_add_rate' fund.pk %}" class="flex flex-wrap items-end gap-2">
+
+        {# Inline edit of the first (base) rate + optional close date #}
+        <form id="fund-base-form" method="post" action="{% url 'core:fund_edit' fund.pk %}" class="mt-2 hidden flex-wrap items-end gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-800/40">
+            {% csrf_token %}
+            <div class="w-32"><label class="text-xs text-gray-500 dark:text-gray-400">Pierwsza stawka (zł/mc)</label><input type="text" inputmode="decimal" name="monthly_amount" value="{{ fund.monthly_amount|floatformat:2 }}" class="text-right font-mono" aria-label="Pierwsza stawka miesięczna"></div>
+            <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Obowiązuje od</label><input type="date" name="start_date" value="{{ fund.start_date|date:'Y-m-d' }}"></div>
+            <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Naliczanie do (opcj.)</label><input type="date" name="end_date" value="{{ fund.end_date|date:'Y-m-d' }}"></div>
+            <button type="submit" class="btn !py-1.5">Zapisz</button>
+            <button type="button" id="fund-base-cancel" class="btn-ghost !py-1.5">Anuluj</button>
+        </form>
+
+        {# Add a rate change #}
+        <form method="post" action="{% url 'core:fund_add_rate' fund.pk %}" class="mt-3 flex flex-wrap items-end gap-2">
             {% csrf_token %}
             <div class="w-32"><label class="text-xs text-gray-500 dark:text-gray-400">Nowa stawka (zł/mc)</label><input type="text" inputmode="decimal" name="amount" value="{{ rate_post.amount|default:'' }}" class="text-right font-mono{% if 'amount' in rate_errors %} !border-rose-500 focus:!border-rose-500{% endif %}" aria-label="Nowa stawka"></div>
             <div class="w-40"><label class="text-xs text-gray-500 dark:text-gray-400">Obowiązuje od</label><input type="date" name="rate_date" value="{% if rate_post %}{{ rate_post.rate_date }}{% endif %}" class="{% if 'rate_date' in rate_errors %}!border-rose-500 focus:!border-rose-500{% endif %}"></div>
@@ -191,6 +208,27 @@
             btn.textContent = expanded ? btn.dataset.show : btn.dataset.hide;
         });
     });
+
+    function bindReveal(toggleId, formId, cancelId) {
+        var toggle = document.getElementById(toggleId);
+        var form = document.getElementById(formId);
+        if (!toggle || !form) { return; }
+        toggle.addEventListener('click', function () {
+            form.classList.remove('hidden');
+            form.classList.add('flex');
+            var first = form.querySelector('input');
+            if (first) { first.focus(); }
+        });
+        var cancel = document.getElementById(cancelId);
+        if (cancel) {
+            cancel.addEventListener('click', function () {
+                form.classList.add('hidden');
+                form.classList.remove('flex');
+            });
+        }
+    }
+    bindReveal('fund-rename-toggle', 'fund-rename-form', 'fund-rename-cancel');
+    bindReveal('fund-base-edit', 'fund-base-form', 'fund-base-cancel');
 })();
 </script>
 {% endblock %}
