@@ -929,6 +929,12 @@ def records(request: HttpRequest) -> HttpResponse:
     zero = Decimal(0)
     per_flat: dict[int, dict[str, Any]] = {}
     tot_income = zero
+    # Seed every (filtered) flat so the summary table is identical across months —
+    # a month with no payments still lists each flat with 0 income.
+    for f in flats:
+        if selected_flat_id and f.pk != selected_flat_id:
+            continue
+        per_flat[f.pk] = {"flat": f, "income": zero}
     for e in rent_entries:
         row = per_flat.setdefault(
             e.flat_id,
