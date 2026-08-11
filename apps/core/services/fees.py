@@ -34,6 +34,7 @@ from django.utils import timezone
 
 from apps.core.models import (
     AdminFee,
+    AdminFeeInvoice,
     AdminFeePrice,
     Contract,
     FeeCalculation,
@@ -111,6 +112,14 @@ def _admin_price(admin_fee: AdminFee, day: date) -> Decimal | None:
     return dated.price if dated else None
 
 
+def _invoice_amount(admin_fee: AdminFee, day: date) -> Decimal | None:
+    """Invoiced amount recorded for the calendar month containing ``day``."""
+    row = AdminFeeInvoice.objects.filter(
+        admin_fee=admin_fee, period__year=day.year, period__month=day.month
+    ).first()
+    return row.amount if row is not None else None
+
+
 def _daily_counter(
     meter: MeterDefinition, day: date, tenants: int
 ) -> tuple[Decimal, Decimal] | None:
@@ -143,6 +152,17 @@ def _daily_admin(
     admin_fee: AdminFee, day: date, tenants: int, capacity: int
 ) -> tuple[Decimal, Decimal] | None:
     """Return (usage_share, cost_per_tenant) for ``admin_fee`` on ``day``."""
+    # Invoice fees carry a per-month amount (from the received invoice) split
+    # equally among the active tenants, like a metered utility whose total we
+    # simply know instead of reading. Uses the real month length, not the
+    # legacy February=28 quirk.
+    if admin_fee.is_invoice:
+        amount = _invoice_amount(admin_fee, day)
+        if amount is None:
+            return None
+        period_length = calendar.monthrange(day.year, day.month)[1]
+        daily_cost = amount / period_length
+        return Decimal(1) / tenants / period_length, daily_cost / tenants
     price = _admin_price(admin_fee, day)
     if price is None:
         return None

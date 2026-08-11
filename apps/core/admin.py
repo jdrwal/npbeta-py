@@ -9,6 +9,7 @@ from apps.accounts.models import User
 
 from .models import (
     AdminFee,
+    AdminFeeInvoice,
     AdminFeePrice,
     Contract,
     EmailLog,
@@ -82,14 +83,20 @@ class MeterPriceAdmin(admin.ModelAdmin):
 
 @admin.register(AdminFee)
 class AdminFeeAdmin(admin.ModelAdmin):
-    list_display = ("id", "flat", "title", "is_individual")
-    list_filter = ("flat", "is_individual")
+    list_display = ("id", "flat", "title", "is_individual", "is_invoice")
+    list_filter = ("flat", "is_individual", "is_invoice")
 
 
 @admin.register(AdminFeePrice)
 class AdminFeePriceAdmin(admin.ModelAdmin):
     list_display = ("id", "admin_fee", "price_date", "price")
     list_filter = ("admin_fee",)
+
+
+@admin.register(AdminFeeInvoice)
+class AdminFeeInvoiceAdmin(admin.ModelAdmin):
+    list_display = ("id", "admin_fee", "period", "amount")
+    list_filter = ("flat", "admin_fee")
 
 
 class FundContributionInline(admin.TabularInline):

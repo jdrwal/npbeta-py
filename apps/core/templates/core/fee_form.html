@@ -32,9 +32,10 @@
         <div class="grid gap-4 sm:grid-cols-2">
             {% include "core/_field.html" with field=form.kind %}
             {% include "core/_field.html" with field=form.title %}
-            {% include "core/_field.html" with field=form.amount %}
-            {% include "core/_field.html" with field=form.price_date %}
+            <div class="rate-only">{% include "core/_field.html" with field=form.amount %}</div>
+            <div class="rate-only">{% include "core/_field.html" with field=form.price_date %}</div>
         </div>
+        <p class="invoice-only hidden text-sm text-gray-500 dark:text-gray-400">Kwotę z faktury podasz co miesiąc na stronie opłat lokalu — tu wystarczy nazwa.</p>
         <label class="admin-only flex cursor-pointer items-center gap-2 !mb-0 text-sm font-medium text-gray-700">
             {{ form.is_individual }}
             {{ form.is_individual.label }}
@@ -51,8 +52,13 @@
     (function () {
         const kind = document.getElementById('id_kind');
         const adminOnly = document.querySelector('.admin-only');
+        const invoiceOnly = document.querySelector('.invoice-only');
+        const rateOnly = document.querySelectorAll('.rate-only');
         function refresh() {
-            if (adminOnly) adminOnly.classList.toggle('hidden', kind.value !== 'admin');
+            const k = kind.value;
+            if (adminOnly) adminOnly.classList.toggle('hidden', k !== 'admin');
+            if (invoiceOnly) invoiceOnly.classList.toggle('hidden', k !== 'invoice');
+            rateOnly.forEach(function (el) { el.classList.toggle('hidden', k === 'invoice'); });
         }
         if (kind) { kind.addEventListener('change', refresh); refresh(); }
     })();

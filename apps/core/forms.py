@@ -13,6 +13,7 @@ from django.utils import timezone
 from apps.accounts.models import MailSettings, User
 from apps.core.models import (
     AdminFee,
+    AdminFeeInvoice,
     AdminFeePrice,
     Contract,
     EmailTemplate,
@@ -444,6 +445,7 @@ class FeeCreateForm(forms.Form):
 
     KIND_CHOICES = [
         ("admin", "Opłata stała (administracyjna)"),
+        ("invoice", "Opłata wg faktury (co miesiąc inna kwota)"),
         ("kWh", "Licznik — energia elektryczna (kWh)"),
         ("m³", "Licznik — gaz / woda (m³)"),
     ]
@@ -452,7 +454,11 @@ class FeeCreateForm(forms.Form):
     kind = forms.ChoiceField(choices=KIND_CHOICES, label="Rodzaj")
     title = forms.CharField(max_length=32, label="Opis / nazwa")
     amount = forms.DecimalField(
-        max_digits=12, decimal_places=4, min_value=Decimal(0), label="Wysokość (stawka)"
+        max_digits=12,
+        decimal_places=4,
+        min_value=Decimal(0),
+        required=False,
+        label="Wysokość (stawka)",
     )
     is_individual = forms.BooleanField(
         required=False, label="Naliczana indywidualnie (na osobę)"
@@ -470,6 +476,39 @@ class FeeCreateForm(forms.Form):
             cast(forms.ModelChoiceField, self.fields["flat"]).queryset = (
                 Flat.objects.filter(owner=user)
             )
+
+    def clean(self) -> dict[str, Any]:
+        cleaned = super().clean() or {}
+        # Invoice fees have no fixed rate — the amount is entered per month
+        # afterwards; every other kind needs an amount up front.
+        if cleaned.get("kind") != "invoice" and cleaned.get("amount") is None:
+            self.add_error("amount", "Podaj kwotę / stawkę.")
+        return cleaned
+
+
+class AdminFeeInvoiceForm(forms.ModelForm):
+    """Record one month's invoiced amount for an invoice-type admin fee."""
+
+    period = forms.DateField(
+        label="Miesiąc",
+        widget=forms.DateInput(attrs={"type": "month"}, format="%Y-%m"),
+        input_formats=["%Y-%m", "%Y-%m-%d"],
+    )
+
+    class Meta:
+        model = AdminFeeInvoice
+        fields = ["period", "amount"]
+        labels = {"amount": "Kwota z faktury (zł)"}
+
+    def clean_period(self) -> Any:
+        value = self.cleaned_data.get("period")
+        return value.replace(day=1) if value else value
+
+    def clean_amount(self) -> Any:
+        amount = self.cleaned_data.get("amount")
+        if amount is None:
+            raise forms.ValidationError("Podaj kwotę.")
+        return amount
 
 
 class FundForm(forms.ModelForm):

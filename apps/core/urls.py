@@ -25,6 +25,16 @@ urlpatterns = [
         name="delete_fee_price",
     ),
     path(
+        "flats/<int:pk>/fees/<int:fee_id>/invoice/",
+        views.add_invoice_amount,
+        name="add_invoice_amount",
+    ),
+    path(
+        "flats/<int:pk>/fees/invoice/<int:invoice_id>/delete/",
+        views.delete_invoice_amount,
+        name="delete_invoice_amount",
+    ),
+    path(
         "flats/<int:pk>/meters/<int:meter_id>/edit/",
         views.flat_meter_edit,
         name="flat_meter_edit",

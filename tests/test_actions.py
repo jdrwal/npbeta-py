@@ -1,6 +1,7 @@
 """Tests for create/action views and the save_settlement service."""
 
-from datetime import timedelta
+from datetime import date, timedelta
+from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -10,7 +11,15 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.core.forms import SettlementForm
-from apps.core.models import FeeCalculation, FeeCalculationItem, Flat
+from apps.core.models import (
+    AdminFee,
+    AdminFeeInvoice,
+    Contract,
+    FeeCalculation,
+    FeeCalculationItem,
+    Flat,
+    Room,
+)
 from apps.core.services.fees import calculate_fees, save_settlement
 
 
@@ -91,6 +100,88 @@ def test_save_settlement_matches_calculate_fees() -> None:
 
     assert items.count() == len(lines)
     assert sum(i.value for i in items) == sum(line.value for line in lines)
+
+
+@pytest.mark.django_db
+def test_invoice_fee_included_in_settlement(owner_client: tuple) -> None:
+    """An invoice-type fee is billed at its recorded monthly amount, split among
+    the active tenants (a full month with one tenant = the full amount)."""
+    user, _ = owner_client
+    flat = Flat.objects.create(
+        owner=user, city="Wroclaw", street="Testowa", building_no="1", code="ABC"
+    )
+    room = Room.objects.create(owner=user, flat=flat, room_no="1", beds=1)
+    Contract.objects.create(
+        owner=user, flat=flat, room=room, contract_number="C1", tenant_name="Jan",
+        contract_start=date(2026, 1, 1), contract_end=date(2026, 12, 31),
+    )
+    fee = AdminFee.objects.create(
+        owner=user, flat=flat, title="Prąd (faktura)", is_invoice=True
+    )
+    AdminFeeInvoice.objects.create(
+        owner=user, flat=flat, admin_fee=fee,
+        period=date(2026, 3, 1), amount=Decimal("300.00"),
+    )
+    lines = calculate_fees(flat, date(2026, 3, 1), date(2026, 3, 31))
+    billed = [line for line in lines if line.name == "Prąd (faktura)"]
+    assert len(billed) == 1
+    assert billed[0].fee_type == "Admin"
+    assert billed[0].value == Decimal("300.00")
+
+
+@pytest.mark.django_db
+def test_invoice_fee_split_between_two_tenants(owner_client: tuple) -> None:
+    """Two active tenants split the invoiced amount equally over a full month."""
+    user, _ = owner_client
+    flat = Flat.objects.create(
+        owner=user, city="Wroclaw", street="Testowa", building_no="1", code="ABC"
+    )
+    r1 = Room.objects.create(owner=user, flat=flat, room_no="1", beds=1)
+    r2 = Room.objects.create(owner=user, flat=flat, room_no="2", beds=1)
+    for i, room in enumerate((r1, r2), start=1):
+        Contract.objects.create(
+            owner=user, flat=flat, room=room, contract_number=f"C{i}",
+            tenant_name=f"Najemca {i}",
+            contract_start=date(2026, 1, 1), contract_end=date(2026, 12, 31),
+        )
+    fee = AdminFee.objects.create(
+        owner=user, flat=flat, title="Prąd (faktura)", is_invoice=True
+    )
+    AdminFeeInvoice.objects.create(
+        owner=user, flat=flat, admin_fee=fee,
+        period=date(2026, 3, 1), amount=Decimal("300.00"),
+    )
+    lines = calculate_fees(flat, date(2026, 3, 1), date(2026, 3, 31))
+    billed = [line for line in lines if line.name == "Prąd (faktura)"]
+    assert len(billed) == 2
+    assert all(line.value == Decimal("150.00") for line in billed)
+
+
+@pytest.mark.django_db
+def test_add_invoice_fee_and_amount_views(owner_client: tuple) -> None:
+    """The 'invoice' kind creates an invoice fee; its monthly amount upserts."""
+    user, client = owner_client
+    flat = Flat.objects.create(
+        owner=user, city="Wroclaw", street="Testowa", building_no="1", code="ABC"
+    )
+    client.post(
+        reverse("core:fee_add"),
+        {"flat": flat.pk, "kind": "invoice", "title": "Prąd (faktura)"},
+    )
+    fee = AdminFee.objects.get(flat=flat, title="Prąd (faktura)")
+    assert fee.is_invoice
+
+    url = reverse("core:add_invoice_amount", args=[flat.pk, fee.pk])
+    client.post(url, {"period": "2026-03", "amount": "300.00"})
+    inv = AdminFeeInvoice.objects.get(admin_fee=fee)
+    assert inv.period == date(2026, 3, 1)
+    assert inv.amount == Decimal("300.00")
+
+    # Re-posting the same month updates in place (no duplicate).
+    client.post(url, {"period": "2026-03", "amount": "320.00"})
+    assert AdminFeeInvoice.objects.filter(admin_fee=fee).count() == 1
+    inv.refresh_from_db()
+    assert inv.amount == Decimal("320.00")
 
 
 @pytest.mark.django_db

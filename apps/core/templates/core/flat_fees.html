@@ -57,6 +57,60 @@
     </div>
 </section>
 
+<section class="mb-8">
+    <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Opłaty wg faktury (co miesiąc inna kwota)</h2>
+    <div class="space-y-4">
+        {% for item in invoice_fees %}
+        <div class="card space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <form method="post" action="{% url 'core:edit_fee' flat.pk item.fee.pk %}" class="flex flex-wrap items-center gap-2">
+                    {% csrf_token %}
+                    <div class="w-52"><input type="text" name="title" value="{{ item.fee.title }}" placeholder="Nazwa opłaty" aria-label="Nazwa opłaty"></div>
+                    <button type="submit" class="btn-ghost">Zapisz</button>
+                </form>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs text-gray-400 dark:text-gray-500">Ostatnia kwota</div>
+                        <div class="font-mono text-lg font-semibold text-gray-900 dark:text-white">{% if item.current %}{{ item.current.amount|floatformat:2|intcomma }} zł <span class="text-sm text-gray-400 dark:text-gray-500">· {{ item.current.period|date:'Y-m' }}</span>{% else %}<span class="text-gray-300 dark:text-gray-600">— brak —</span>{% endif %}</div>
+                    </div>
+                    <form method="post" action="{% url 'core:delete_fee' flat.pk item.fee.pk %}" onsubmit="return confirm('Usunąć opłatę „{{ item.fee.title }}” wraz z historią kwot?');">
+                        {% csrf_token %}
+                        <button type="submit" class="act act-danger !px-1.5 !py-1" title="Usuń opłatę"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                    </form>
+                </div>
+            </div>
+            <form method="post" action="{% url 'core:add_invoice_amount' flat.pk item.fee.pk %}" class="flex flex-wrap items-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+                {% csrf_token %}
+                <div class="w-40"><label class="text-xs">Kwota z faktury (zł)</label><input type="text" inputmode="decimal" name="amount" placeholder="0,00" class="text-right font-mono"></div>
+                <div class="w-40"><label class="text-xs">Miesiąc</label><input type="month" name="period" value="{{ this_month }}"></div>
+                <button type="submit" class="btn-ghost">Zapisz kwotę</button>
+            </form>
+            {% if item.invoices %}
+            <div class="border-t border-gray-100 pt-3 dark:border-gray-800">
+                <div class="grid grid-cols-[7rem_1fr_1.75rem] gap-3 px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500"><span class="text-right">Kwota</span><span>Miesiąc</span><span></span></div>
+                <div class="space-y-1">
+                    {% for inv in item.invoices %}
+                    <div class="grid grid-cols-[7rem_1fr_1.75rem] items-center gap-3 rounded-lg bg-gray-50 px-3 py-1.5 text-sm dark:bg-gray-800/50">
+                        <span class="text-right font-mono font-medium text-gray-800 dark:text-gray-100">{{ inv.amount|floatformat:2|intcomma }} zł</span>
+                        <span class="text-gray-500 dark:text-gray-400">{{ inv.period|date:'Y-m' }}</span>
+                        <form method="post" action="{% url 'core:delete_invoice_amount' flat.pk inv.pk %}" onsubmit="return confirm('Usunąć tę kwotę?');" class="justify-self-end">
+                            {% csrf_token %}
+                            <button type="submit" class="act act-danger !px-1 !py-0.5" title="Usuń kwotę"><svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-400 dark:text-gray-500">Brak zapisanych kwot — dodaj kwotę z faktury dla wybranego miesiąca.</p>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">Brak opłat rozliczanych wg faktury. Użyj „Dodaj opłatę" i wybierz „Opłata wg faktury".</div>
+        {% endfor %}
+    </div>
+</section>
+
 <section>
     <h2 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Liczniki (rozliczane wg zużycia)</h2>
     <div class="space-y-4">

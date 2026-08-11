@@ -277,6 +277,10 @@ class AdminFee(models.Model):
     flat = models.ForeignKey(Flat, on_delete=models.CASCADE, related_name="admin_fees")
     title = models.CharField(max_length=32, blank=True)
     is_individual = models.BooleanField(default=False)
+    # When True the fee has no fixed price schedule; its amount is entered per
+    # month from the received invoice (e.g. electricity billed directly) and
+    # split among the active tenants of that month.
+    is_invoice = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.title
@@ -302,6 +306,41 @@ class AdminFeePrice(models.Model):
 
     def __str__(self) -> str:
         return f"{self.admin_fee} from {self.price_date}: {self.price}"
+
+
+class AdminFeeInvoice(models.Model):
+    """A per-month invoiced amount for an invoice-type admin fee.
+
+    Used when a recurring cost (e.g. electricity billed directly) has a
+    different amount each month that the landlord learns from the invoice,
+    rather than computing it from a meter reading or a fixed price.
+    """
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="admin_fee_invoices",
+    )
+    flat = models.ForeignKey(
+        Flat, on_delete=models.CASCADE, related_name="admin_fee_invoices"
+    )
+    admin_fee = models.ForeignKey(
+        AdminFee, on_delete=models.CASCADE, related_name="invoices"
+    )
+    # First day of the billed month.
+    period = models.DateField()
+    amount = _money()
+
+    class Meta:
+        ordering = ["-period"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["admin_fee", "period"], name="uniq_adminfee_invoice_period"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.admin_fee} {self.period:%Y-%m}: {self.amount}"
 
 
 # --- Contribution funds --------------------------------------------------------

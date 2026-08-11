@@ -23,6 +23,7 @@ from apps.accounts.models import MailSettings, User
 from apps.core.forms import (
     AdHocEmailForm,
     AdminFeeForm,
+    AdminFeeInvoiceForm,
     AdminFeePriceForm,
     ContractForm,
     EmailTemplateForm,
@@ -48,6 +49,7 @@ from apps.core.forms import (
 )
 from apps.core.models import (
     AdminFee,
+    AdminFeeInvoice,
     AdminFeePrice,
     Contract,
     ContractInvite,
@@ -348,10 +350,17 @@ def flat_fees(request: HttpRequest, pk: int) -> HttpResponse:
     flat = get_object_or_404(Flat, pk=pk, owner=user)
 
     fees = []
-    for fee in AdminFee.objects.filter(flat=flat).order_by("id"):
+    for fee in AdminFee.objects.filter(flat=flat, is_invoice=False).order_by("id"):
         prices = list(fee.prices.order_by(F("price_date").desc(nulls_last=True), "-id"))
         fees.append(
             {"fee": fee, "current": prices[0] if prices else None, "prices": prices}
+        )
+
+    invoice_fees = []
+    for fee in AdminFee.objects.filter(flat=flat, is_invoice=True).order_by("id"):
+        invoices = list(fee.invoices.order_by("-period"))
+        invoice_fees.append(
+            {"fee": fee, "current": invoices[0] if invoices else None, "invoices": invoices}
         )
 
     meters = []
@@ -373,8 +382,10 @@ def flat_fees(request: HttpRequest, pk: int) -> HttpResponse:
         {
             "flat": flat,
             "fees": fees,
+            "invoice_fees": invoice_fees,
             "meters": meters,
             "units": MeterDefinition.Unit.choices,
+            "this_month": timezone.localdate().replace(day=1).strftime("%Y-%m"),
         },
     )
 
@@ -409,6 +420,14 @@ def fee_add(request: HttpRequest) -> HttpResponse:
                     admin_fee=fee,
                     price=amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
                     price_date=admin_dt,
+                )
+            elif kind == "invoice":
+                # No fixed rate — the amount is entered per month from the invoice.
+                AdminFee.objects.create(
+                    owner=user,
+                    flat=flat,
+                    title=data["title"],
+                    is_invoice=True,
                 )
             else:
                 meter = MeterDefinition.objects.create(
@@ -487,6 +506,44 @@ def delete_fee_price(request: HttpRequest, pk: int, price_id: int) -> HttpRespon
     price.delete()
     messages.success(request, "Stawka usunięta.")
     return redirect("core:flat_fees", pk=pk)
+
+
+@login_required
+@require_POST
+def add_invoice_amount(request: HttpRequest, pk: int, fee_id: int) -> HttpResponse:
+    """Record one month's invoiced amount for an invoice-type fee."""
+    user = cast(User, request.user)
+    fee = get_object_or_404(
+        AdminFee, pk=fee_id, owner=user, flat_id=pk, is_invoice=True
+    )
+    form = AdminFeeInvoiceForm(request.POST)
+    if form.is_valid():
+        period = form.cleaned_data["period"]
+        # One amount per month: update in place if this month was already entered.
+        AdminFeeInvoice.objects.update_or_create(
+            admin_fee=fee,
+            period=period,
+            defaults={
+                "owner": user,
+                "flat": fee.flat,
+                "amount": form.cleaned_data["amount"],
+            },
+        )
+        messages.success(request, "Kwota z faktury zapisana.")
+    else:
+        messages.error(request, "Podaj poprawny miesiąc i kwotę.")
+    return redirect("core:flat_fees", pk=pk)
+
+
+@login_required
+@require_POST
+def delete_invoice_amount(request: HttpRequest, pk: int, invoice_id: int) -> HttpResponse:
+    user = cast(User, request.user)
+    invoice = get_object_or_404(AdminFeeInvoice, pk=invoice_id, owner=user, flat_id=pk)
+    invoice.delete()
+    messages.success(request, "Kwota z faktury usunięta.")
+    return redirect("core:flat_fees", pk=pk)
+
 
 
 # --- Contribution funds --------------------------------------------------------
