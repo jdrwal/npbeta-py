@@ -39,7 +39,7 @@
 
     <form method="post" class="flex items-center gap-3">
         {% csrf_token %}
-        <button type="submit" class="btn-danger">Usuń</button>
+        <button type="submit" class="btn btn-danger">Usuń</button>
         <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Anuluj</a>
     </form>
 </div>
