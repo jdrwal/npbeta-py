@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ title }} — Rozlicz Najem{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ title }}</h1>
+<div class="card max-w-lg">
+    <p class="mb-4">Czy na pewno chcesz usunąć poniższą wpłatę?</p>
+
+    <dl class="mb-5 divide-y divide-gray-100 rounded-xl border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+        <div class="flex items-start justify-between gap-3 px-4 py-2.5">
+            <dt class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Lokator</dt>
+            <dd class="text-right">
+                {% if object.contract %}
+                <span class="font-medium text-gray-800 dark:text-gray-100">{{ object.contract.tenant_name|default:"—" }}</span>
+                {% if object.contract.contract_number %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ object.contract.contract_number }}</span>{% endif %}
+                {% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
+            </dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 px-4 py-2.5">
+            <dt class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Obiekt</dt>
+            <dd class="text-right">
+                <span class="text-gray-700 dark:text-gray-300">{{ object.flat }}</span>
+                {% if object.room %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ object.room.name|default:object.room.room_no }}</span>{% endif %}
+            </dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 px-4 py-2.5">
+            <dt class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Opis</dt>
+            <dd class="text-right text-gray-700 dark:text-gray-300">{{ object.short_desc|default:"—" }}</dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 px-4 py-2.5">
+            <dt class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Data wpłaty</dt>
+            <dd class="text-right font-medium text-gray-800 dark:text-gray-100">{{ object.record_date|date:"Y-m-d"|default:"—" }}</dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 px-4 py-2.5">
+            <dt class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">Kwota</dt>
+            <dd class="text-right font-mono font-medium text-gray-900 dark:text-white">{{ object.amount_in_taxable|default_if_none:0|floatformat:2|intcomma }} zł</dd>
+        </div>
+    </dl>
+
+    <form method="post" class="flex items-center gap-3">
+        {% csrf_token %}
+        <button type="submit" class="btn-danger">Usuń</button>
+        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="text-sm">Anuluj</a>
+    </form>
+</div>
+{% endblock %}

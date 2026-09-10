@@ -2437,8 +2437,9 @@ class RecordUpdate(_OwnerUpdate):
 
 class RecordDelete(_OwnerHardDelete):
     model = LedgerEntry
+    template_name = "core/confirm_delete_record.html"
     success_url = reverse_lazy("core:records")
-    extra_context = {"title": "Usuń wpis"}
+    extra_context = {"title": "Usuń wpłatę"}
 
 
 class MeterCreate(_OwnerCreate):

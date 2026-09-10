@@ -100,7 +100,7 @@
                 <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                     <th class="px-3 py-2 text-left">Data wpłaty</th>
                     <th class="px-3 py-2 text-left">Opis</th>
-                    <th class="px-3 py-2 text-left">Numer umowy</th>
+                    <th class="px-3 py-2 text-left">Lokator</th>
                     <th class="px-3 py-2 text-left">Obiekt</th>
                     <th class="px-3 py-2">Przychód</th>
                     <th class="px-2 py-2"></th>
@@ -113,8 +113,8 @@
                     <td class="px-3 py-2 text-left">{{ e.short_desc }}{% if e.is_mortgage %} <span class="pill bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300">kredyt</span>{% endif %}</td>
                     <td class="px-3 py-2 text-left">
                         {% if e.contract %}
-                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ e.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.contract.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ e.contract.tenant_name|default:"—" }}</span>
+                        {% if e.contract.contract_number %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.contract.contract_number }}</span>{% endif %}
                         {% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     <td class="px-3 py-2 text-left">
@@ -140,8 +140,8 @@
                     <td class="whitespace-nowrap px-3 py-2 text-left text-gray-300 dark:text-gray-600">—</td>
                     <td class="px-3 py-2 text-left">Czynsz Najmu <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">oczekiwane</span></td>
                     <td class="px-3 py-2 text-left">
-                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ f.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ f.contract.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ f.contract.tenant_name|default:"—" }}</span>
+                        {% if f.contract.contract_number %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ f.contract.contract_number }}</span>{% endif %}
                     </td>
                     <td class="px-3 py-2 text-left">
                         <span class="text-gray-700 dark:text-gray-300">{{ f.contract.flat }}</span>
@@ -192,7 +192,7 @@
                 <tr class="bg-gray-100 text-xs uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
                     <th class="px-3 py-2 text-left">Data wpłaty</th>
                     <th class="px-3 py-2 text-left">Opis</th>
-                    <th class="px-3 py-2 text-left">Numer umowy</th>
+                    <th class="px-3 py-2 text-left">Lokator</th>
                     <th class="px-3 py-2 text-left">Obiekt</th>
                     <th class="px-3 py-2">Kwota</th>
                     <th class="px-2 py-2"></th>
@@ -205,8 +205,8 @@
                     <td class="px-3 py-2 text-left">{{ e.short_desc }}</td>
                     <td class="px-3 py-2 text-left">
                         {% if e.contract %}
-                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ e.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.contract.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ e.contract.tenant_name|default:"—" }}</span>
+                        {% if e.contract.contract_number %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ e.contract.contract_number }}</span>{% endif %}
                         {% else %}<span class="text-gray-300 dark:text-gray-600">—</span>{% endif %}
                     </td>
                     <td class="px-3 py-2 text-left">
@@ -233,11 +233,11 @@
                     <td class="px-3 py-2 text-left">Pozostałe opłaty <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">do zatwierdzenia</span></td>
                     <td class="px-3 py-2 text-left">
                         {% if r.contract %}
-                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ r.contract.contract_number }}</span>
-                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ r.contract.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ r.contract.tenant_name|default:"—" }}</span>
+                        {% if r.contract.contract_number %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ r.contract.contract_number }}</span>{% endif %}
                         {% else %}
-                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ r.tenant.contract_number|default:'—' }}</span>
-                        <span class="block text-xs text-gray-400 dark:text-gray-500">{{ r.tenant.tenant_name }}</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">{{ r.tenant.tenant_name|default:'—' }}</span>
+                        {% if r.tenant.contract_number %}<span class="block text-xs text-gray-400 dark:text-gray-500">{{ r.tenant.contract_number }}</span>{% endif %}
                         {% endif %}
                     </td>
                     <td class="px-3 py-2 text-left">
