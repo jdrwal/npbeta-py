@@ -64,6 +64,7 @@ class FeeLine:
     name: str
     usage: Decimal
     value: Decimal
+    bill_in_advance: bool = False
 
 
 def _round(value: Decimal, quantum: Decimal) -> Decimal:
@@ -192,6 +193,7 @@ def calculate_fees(flat: Flat, period_start: date, period_end: date) -> list[Fee
     dues: dict[int, dict[tuple[str, int], list[Decimal]]] = {}
     counter_names = {m.id: m.name for m in meters}
     admin_titles = {a.id: a.title for a in admin_fees}
+    admin_advance = {a.id: a.bill_in_advance for a in admin_fees}
 
     day = period_start
     while day <= period_end:
@@ -248,6 +250,7 @@ def calculate_fees(flat: Flat, period_start: date, period_end: date) -> list[Fee
                     name=admin_titles[admin_fee.id],
                     usage=_round(usage, _TEN_THOUSANDTH),
                     value=_round(value, _CENT),
+                    bill_in_advance=admin_advance[admin_fee.id],
                 )
             )
         for fund in funds:
@@ -309,6 +312,7 @@ def save_settlement(flat: Flat, period_start: date, period_end: date) -> FeeCalc
             name=line.name,
             usage=line.usage,
             value=line.value,
+            bill_in_advance=line.bill_in_advance,
         )
         for line in lines
     )

@@ -83,8 +83,8 @@ class MeterPriceAdmin(admin.ModelAdmin):
 
 @admin.register(AdminFee)
 class AdminFeeAdmin(admin.ModelAdmin):
-    list_display = ("id", "flat", "title", "is_individual", "is_invoice")
-    list_filter = ("flat", "is_individual", "is_invoice")
+    list_display = ("id", "flat", "title", "is_individual", "is_invoice", "bill_in_advance")
+    list_filter = ("flat", "is_individual", "is_invoice", "bill_in_advance")
 
 
 @admin.register(AdminFeePrice)

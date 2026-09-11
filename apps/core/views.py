@@ -408,6 +408,7 @@ def fee_add(request: HttpRequest) -> HttpResponse:
                     flat=flat,
                     title=data["title"],
                     is_individual=data.get("is_individual", False),
+                    bill_in_advance=data.get("bill_in_advance", False),
                 )
                 admin_dt = (
                     timezone.make_aware(datetime(pdate.year, pdate.month, pdate.day))
@@ -428,6 +429,7 @@ def fee_add(request: HttpRequest) -> HttpResponse:
                     flat=flat,
                     title=data["title"],
                     is_invoice=True,
+                    bill_in_advance=data.get("bill_in_advance", False),
                 )
             else:
                 meter = MeterDefinition.objects.create(
@@ -999,8 +1001,8 @@ def records(request: HttpRequest) -> HttpResponse:
         )
 
     # --- Pozostałe opłaty: fees from saved settlements ------------------------
-    # Fees are billed in arrears: in month M the tenant pays for month M-1
-    # (rent, by contrast, is billed in advance for the current month).
+    # Fees default to arrears (month M shows the settlement for M-1); a fee
+    # flagged "z góry" (bill_in_advance) shows in the month it covers instead.
     fee_year = year - 1 if month == 1 else year
     fee_month = 12 if month == 1 else month - 1
     fee_contracts = Contract.objects.filter(owner=user)
@@ -1024,11 +1026,22 @@ def records(request: HttpRequest) -> HttpResponse:
         fee_calcs = fee_calcs.filter(flat_id=selected_flat_id)
     for calc in fee_calcs:
         midpoint = calc.period_start + (calc.period_end - calc.period_start) / 2
-        if (midpoint.year, midpoint.month) != (fee_year, fee_month):
-            continue
+        p_year, p_month = midpoint.year, midpoint.month
         for tenant in calc.tenants.all():
-            total = sum((it.value for it in tenant.items.all()), Decimal(0))
+            items = list(tenant.items.all())
+            total = sum((it.value for it in items), Decimal(0))
             if total <= 0:
+                continue
+            # Advance fees are billed in the covered month; everything else the
+            # following month. A tenant's settlement is treated as one bucket.
+            advance = bool(items) and all(it.bill_in_advance for it in items)
+            if advance:
+                disp_year, disp_month = p_year, p_month
+            elif p_month == 12:
+                disp_year, disp_month = p_year + 1, 1
+            else:
+                disp_year, disp_month = p_year, p_month + 1
+            if (disp_year, disp_month) != (year, month):
                 continue
             if tenant.pk in paid_fee_tenant_ids:
                 continue
@@ -1039,6 +1052,8 @@ def records(request: HttpRequest) -> HttpResponse:
                     "tenant": tenant,
                     "contract": contract,
                     "amount": total,
+                    "advance": advance,
+                    "period_label": f"{_PL_MONTHS[p_month - 1]} {p_year}",
                 }
             )
 

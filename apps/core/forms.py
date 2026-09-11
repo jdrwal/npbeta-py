@@ -389,10 +389,11 @@ class MailSettingsForm(forms.ModelForm):
 class AdminFeeForm(forms.ModelForm):
     class Meta:
         model = AdminFee
-        fields = ["title", "is_individual"]
+        fields = ["title", "is_individual", "bill_in_advance"]
         labels = {
             "title": "Nazwa opłaty",
             "is_individual": "Naliczana indywidualnie (na osobę)",
+            "bill_in_advance": "Naliczana z góry (w miesiącu, którego dotyczy)",
         }
 
 
@@ -461,6 +462,9 @@ class FeeCreateForm(forms.Form):
     )
     is_individual = forms.BooleanField(
         required=False, label="Naliczana indywidualnie (na osobę)"
+    )
+    bill_in_advance = forms.BooleanField(
+        required=False, label="Naliczana z góry (w miesiącu, którego dotyczy)"
     )
     price_date = forms.DateField(
         required=False,

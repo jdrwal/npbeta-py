@@ -14,6 +14,7 @@ from apps.core.forms import SettlementForm
 from apps.core.models import (
     AdminFee,
     AdminFeeInvoice,
+    AdminFeePrice,
     Contract,
     FeeCalculation,
     FeeCalculationItem,
@@ -182,6 +183,66 @@ def test_add_invoice_fee_and_amount_views(owner_client: tuple) -> None:
     assert AdminFeeInvoice.objects.filter(admin_fee=fee).count() == 1
     inv.refresh_from_db()
     assert inv.amount == Decimal("320.00")
+
+
+@pytest.mark.django_db
+def test_advance_fee_shows_in_covered_month(owner_client: tuple) -> None:
+    """An 'advance' (z góry) admin fee is snapshotted on the settlement item and
+    its settlement appears in the covered month's Wpłaty view, not the next."""
+    user, client = owner_client
+    flat = Flat.objects.create(
+        owner=user, city="Wroclaw", street="Testowa", building_no="1", code="ABC"
+    )
+    room = Room.objects.create(owner=user, flat=flat, room_no="1", beds=1)
+    Contract.objects.create(
+        owner=user, flat=flat, room=room, contract_number="C1", tenant_name="Jan",
+        contract_start=date(2026, 1, 1), contract_end=date(2026, 12, 31),
+    )
+    fee = AdminFee.objects.create(
+        owner=user, flat=flat, title="Media z góry", bill_in_advance=True
+    )
+    AdminFeePrice.objects.create(
+        owner=user, flat=flat, admin_fee=fee, price=Decimal("100.00"), price_date=None
+    )
+    calc = save_settlement(flat, date(2026, 3, 1), date(2026, 3, 31))
+    item = FeeCalculationItem.objects.filter(
+        tenant__calculation=calc, name="Media z góry"
+    ).first()
+    assert item is not None
+    assert item.bill_in_advance is True
+
+    base = reverse("core:records")
+    march = client.get(f"{base}?year=2026&month=3&flat={flat.pk}")
+    april = client.get(f"{base}?year=2026&month=4&flat={flat.pk}")
+    assert march.context["fee_rows"]
+    assert all(r["advance"] for r in march.context["fee_rows"])
+    assert not april.context["fee_rows"]
+
+
+@pytest.mark.django_db
+def test_arrears_fee_shows_in_next_month(owner_client: tuple) -> None:
+    """A default (arrears) admin fee shows one month after the covered period."""
+    user, client = owner_client
+    flat = Flat.objects.create(
+        owner=user, city="Wroclaw", street="Testowa", building_no="1", code="ABC"
+    )
+    room = Room.objects.create(owner=user, flat=flat, room_no="1", beds=1)
+    Contract.objects.create(
+        owner=user, flat=flat, room=room, contract_number="C1", tenant_name="Jan",
+        contract_start=date(2026, 1, 1), contract_end=date(2026, 12, 31),
+    )
+    fee = AdminFee.objects.create(owner=user, flat=flat, title="Media z dołu")
+    AdminFeePrice.objects.create(
+        owner=user, flat=flat, admin_fee=fee, price=Decimal("100.00"), price_date=None
+    )
+    save_settlement(flat, date(2026, 3, 1), date(2026, 3, 31))
+
+    base = reverse("core:records")
+    march = client.get(f"{base}?year=2026&month=3&flat={flat.pk}")
+    april = client.get(f"{base}?year=2026&month=4&flat={flat.pk}")
+    assert not march.context["fee_rows"]
+    assert april.context["fee_rows"]
+    assert all(not r["advance"] for r in april.context["fee_rows"])
 
 
 @pytest.mark.django_db

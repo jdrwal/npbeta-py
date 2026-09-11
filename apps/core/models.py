@@ -281,6 +281,9 @@ class AdminFee(models.Model):
     # month from the received invoice (e.g. electricity billed directly) and
     # split among the active tenants of that month.
     is_invoice = models.BooleanField(default=False)
+    # Billed in advance (paid in the month it covers) vs in arrears (paid the
+    # following month, the default for utility settlements).
+    bill_in_advance = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.title
@@ -490,6 +493,9 @@ class FeeCalculationItem(models.Model):
     name = models.CharField(max_length=64)
     usage = _usage(null=True, blank=True)
     value = _money()
+    # Snapshot of the fee's billing mode at settlement time: advance (paid in
+    # the covered month) vs arrears (paid the following month).
+    bill_in_advance = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.name}: {self.value}"

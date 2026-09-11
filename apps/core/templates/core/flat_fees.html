@@ -30,6 +30,9 @@
                     <label class="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
                         <input type="checkbox" name="is_individual" class="!w-auto" {% if item.fee.is_individual %}checked{% endif %}> na osobę
                     </label>
+                    <label class="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                        <input type="checkbox" name="bill_in_advance" class="!w-auto" {% if item.fee.bill_in_advance %}checked{% endif %}> z góry
+                    </label>
                     <button type="submit" class="btn-ghost">Zapisz</button>
                 </form>
                 <div class="flex items-center gap-3">
@@ -66,6 +69,9 @@
                 <form method="post" action="{% url 'core:edit_fee' flat.pk item.fee.pk %}" class="flex flex-wrap items-center gap-2">
                     {% csrf_token %}
                     <div class="w-52"><input type="text" name="title" value="{{ item.fee.title }}" placeholder="Nazwa opłaty" aria-label="Nazwa opłaty"></div>
+                    <label class="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300">
+                        <input type="checkbox" name="bill_in_advance" class="!w-auto" {% if item.fee.bill_in_advance %}checked{% endif %}> z góry
+                    </label>
                     <button type="submit" class="btn-ghost">Zapisz</button>
                 </form>
                 <div class="flex items-center gap-3">

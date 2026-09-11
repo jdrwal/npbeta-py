@@ -196,13 +196,20 @@ def unconfirmed_fees(user: User) -> list[FeeArrear]:
     for calc in calcs:
         midpoint = calc.period_start + (calc.period_end - calc.period_start) / 2
         p_year, p_month = midpoint.year, midpoint.month
-        bill_year, bill_month = _next_month(p_year, p_month)
         for tenant in calc.tenants.all():
-            total = sum((it.value for it in tenant.items.all()), Decimal(0))
+            tenant_items = list(tenant.items.all())
+            total = sum((it.value for it in tenant_items), Decimal(0))
             if total <= 0:
                 continue
             if tenant.pk in confirmed_tenant_ids:
                 continue
+            # Advance fees are due in the covered month; others the next month.
+            advance = bool(tenant_items) and all(
+                it.bill_in_advance for it in tenant_items
+            )
+            bill_year, bill_month = (
+                (p_year, p_month) if advance else _next_month(p_year, p_month)
+            )
             items.append(
                 FeeArrear(
                     flat=calc.flat,

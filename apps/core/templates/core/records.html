@@ -230,7 +230,7 @@
                 {% for r in fee_rows %}
                 <tr class="border-t border-gray-100 bg-amber-50/50 dark:border-gray-800 dark:bg-amber-500/10">
                     <td class="whitespace-nowrap px-3 py-2 text-left text-gray-300 dark:text-gray-600">—</td>
-                    <td class="px-3 py-2 text-left">Pozostałe opłaty <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">do zatwierdzenia</span></td>
+                    <td class="px-3 py-2 text-left">Pozostałe opłaty <span class="pill bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">do zatwierdzenia</span>{% if r.advance %} <span class="pill bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">z góry</span>{% endif %}<span class="block text-xs text-gray-400 dark:text-gray-500">za {{ r.period_label }}</span></td>
                     <td class="px-3 py-2 text-left">
                         {% if r.contract %}
                         <span class="font-medium text-gray-800 dark:text-gray-100">{{ r.contract.tenant_name|default:"—" }}</span>
