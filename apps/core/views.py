@@ -2396,6 +2396,17 @@ class ContractDelete(_OwnerSoftDelete):
     extra_context = {"title": "Usuń umowę"}
 
 
+def _records_back_url(request: HttpRequest) -> str:
+    """Records URL preserving the viewed month/flat so edits return in place."""
+    params = {
+        k: request.GET[k] for k in ("year", "month", "flat") if request.GET.get(k)
+    }
+    url = reverse("core:records")
+    if params:
+        url += "?" + urlencode(params)
+    return url
+
+
 class RecordCreate(_OwnerCreate):
     model = LedgerEntry
     form_class = LedgerEntryForm
@@ -2405,6 +2416,11 @@ class RecordCreate(_OwnerCreate):
         "title": "Dodaj wpis",
         "subtitle": "Nowy wpis do ewidencji — przychód z najmu",
     }
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)  # type: ignore[misc]
+        ctx["cancel_url"] = _records_back_url(self.request)
+        return ctx
 
     def get_initial(self) -> dict[str, Any]:
         """Pre-fill fields from query params (e.g. confirming an expected rent)."""
@@ -2428,18 +2444,27 @@ class RecordUpdate(_OwnerUpdate):
     model = LedgerEntry
     form_class = LedgerEntryForm
     template_name = "core/record_form.html"
-    success_url = reverse_lazy("core:records")
     extra_context = {
         "title": "Edytuj wpis",
         "subtitle": "Zmień dane wpisu w ewidencji",
     }
 
+    def get_success_url(self) -> str:
+        return _records_back_url(self.request)
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        ctx = super().get_context_data(**kwargs)  # type: ignore[misc]
+        ctx["cancel_url"] = _records_back_url(self.request)
+        return ctx
+
 
 class RecordDelete(_OwnerHardDelete):
     model = LedgerEntry
     template_name = "core/confirm_delete_record.html"
-    success_url = reverse_lazy("core:records")
     extra_context = {"title": "Usuń wpłatę"}
+
+    def get_success_url(self) -> str:
+        return _records_back_url(self.request)
 
 
 class MeterCreate(_OwnerCreate):

@@ -124,10 +124,10 @@
                     <td class="whitespace-nowrap px-3 py-2 font-mono">{{ e.amount_in_taxable|default_if_none:0|floatformat:2|intcomma }} zł</td>
                     <td class="whitespace-nowrap px-2 py-2 text-center">
                         <div class="inline-flex items-center justify-center gap-1.5">
-                            <a href="{% url 'core:edit_record' e.pk %}" class="act !px-1.5 !py-1" title="Edytuj">
+                            <a href="{% url 'core:edit_record' e.pk %}?year={{ year }}&month={{ month }}{% if selected_flat_id %}&flat={{ selected_flat_id }}{% endif %}" class="act !px-1.5 !py-1" title="Edytuj">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                             </a>
-                            <a href="{% url 'core:delete_record' e.pk %}" class="act act-danger !px-1.5 !py-1" title="Usuń">
+                            <a href="{% url 'core:delete_record' e.pk %}?year={{ year }}&month={{ month }}{% if selected_flat_id %}&flat={{ selected_flat_id }}{% endif %}" class="act act-danger !px-1.5 !py-1" title="Usuń">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                             </a>
                         </div>
@@ -216,10 +216,10 @@
                     <td class="whitespace-nowrap px-3 py-2 font-mono">{{ e.amount_in_taxable|default_if_none:0|floatformat:2|intcomma }} zł</td>
                     <td class="whitespace-nowrap px-2 py-2 text-center">
                         <div class="inline-flex items-center justify-center gap-1.5">
-                            <a href="{% url 'core:edit_record' e.pk %}" class="act !px-1.5 !py-1" title="Edytuj">
+                            <a href="{% url 'core:edit_record' e.pk %}?year={{ year }}&month={{ month }}{% if selected_flat_id %}&flat={{ selected_flat_id }}{% endif %}" class="act !px-1.5 !py-1" title="Edytuj">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                             </a>
-                            <a href="{% url 'core:delete_record' e.pk %}" class="act act-danger !px-1.5 !py-1" title="Usuń">
+                            <a href="{% url 'core:delete_record' e.pk %}?year={{ year }}&month={{ month }}{% if selected_flat_id %}&flat={{ selected_flat_id }}{% endif %}" class="act act-danger !px-1.5 !py-1" title="Usuń">
                                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                             </a>
                         </div>

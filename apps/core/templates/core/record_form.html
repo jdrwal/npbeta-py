@@ -59,7 +59,7 @@
 
     <div class="flex items-center gap-3">
         <button type="submit" class="btn">Zapisz</button>
-        <a href="{% url 'core:records' %}" class="text-sm">Anuluj</a>
+        <a href="{{ cancel_url|default:'/records/' }}" class="text-sm">Anuluj</a>
     </div>
 </form>
 

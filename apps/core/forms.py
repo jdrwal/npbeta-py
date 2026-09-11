@@ -198,14 +198,13 @@ class LedgerEntryForm(forms.ModelForm):
         if user is not None:
             _scope(self, "flat", Flat.objects.filter(owner=user))
             _scope(self, "room", Room.objects.filter(owner=user))
-            # Only contracts that have not ended yet (active / indefinite).
-            _scope(
-                self,
-                "contract",
-                Contract.objects.filter(owner=user).filter(
-                    Q(contract_end__gte=today) | Q(contract_end__isnull=True)
-                ),
-            )
+            # Only contracts that have not ended yet (active / indefinite), plus
+            # the entry's own contract when editing — it may already have ended
+            # but must stay selectable so a saved edit does not drop it.
+            active = Q(contract_end__gte=today) | Q(contract_end__isnull=True)
+            if self.instance and self.instance.pk and self.instance.contract_id:
+                active |= Q(pk=self.instance.contract_id)
+            _scope(self, "contract", Contract.objects.filter(owner=user).filter(active))
 
     def clean_billing_period(self) -> Any:
         value = self.cleaned_data.get("billing_period")
