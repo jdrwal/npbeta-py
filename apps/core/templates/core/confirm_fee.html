@@ -29,10 +29,10 @@
             <dd class="text-right text-sm font-medium text-gray-900 dark:text-white">{% if room %}{{ room.name|default:room.room_no }}{% else %}<span class="text-gray-400 dark:text-gray-500">cały lokal</span>{% endif %}</dd>
         </div>
         <div class="flex justify-between gap-4 py-2">
-            <dt class="text-sm text-gray-500 dark:text-gray-400">Umowa / najemca</dt>
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Najemca</dt>
             <dd class="text-right text-sm font-medium text-gray-900 dark:text-white">
-                {{ tenant.contract_number|default:"—" }}
-                <span class="block text-xs font-normal text-gray-400 dark:text-gray-500">{{ tenant.tenant_name }}</span>
+                {{ tenant.tenant_name|default:"—" }}
+                {% if tenant.contract_number %}<span class="block text-xs font-normal text-gray-400 dark:text-gray-500">{{ tenant.contract_number }}</span>{% endif %}
             </dd>
         </div>
         <div class="flex justify-between gap-4 py-2">
