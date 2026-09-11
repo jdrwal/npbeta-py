@@ -35,14 +35,14 @@
                 {% if tenant.contract_number %}<span class="block text-xs font-normal text-gray-400 dark:text-gray-500">{{ tenant.contract_number }}</span>{% endif %}
             </dd>
         </div>
-        <div class="flex justify-between gap-4 py-2">
-            <dt class="text-sm text-gray-500 dark:text-gray-400">Kwota</dt>
-            <dd class="text-right font-mono text-lg font-semibold text-gray-900 dark:text-white">{{ amount|floatformat:2|intcomma }} zł</dd>
-        </div>
     </dl>
 
     <form method="post" class="space-y-4 border-t border-gray-100 pt-4 dark:border-gray-800">
         {% csrf_token %}
+        <div>
+            <label for="amount">Kwota</label>
+            <input type="number" step="0.01" min="0" name="amount" id="amount" value="{{ amount|stringformat:'.2f' }}">
+        </div>
         <div>
             <label for="record_date">Data wpłaty</label>
             <input type="date" name="record_date" id="record_date" value="{{ record_date }}">

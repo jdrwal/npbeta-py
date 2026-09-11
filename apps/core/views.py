@@ -1084,6 +1084,17 @@ def _parse_month(raw: str | None) -> date | None:
         return None
 
 
+def _posted_amount(raw: str | None, default: Decimal) -> Decimal:
+    """Parse a user-entered amount, falling back to the computed default."""
+    text = (raw or "").replace(",", ".").strip()
+    if not text:
+        return default
+    try:
+        return Decimal(text).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError):
+        return default
+
+
 @login_required
 def confirm_fee(request: HttpRequest, tenant_pk: int) -> HttpResponse:
     """Confirm a settlement's fees as paid for one tenant.
@@ -1137,6 +1148,7 @@ def confirm_fee(request: HttpRequest, tenant_pk: int) -> HttpResponse:
         billing = _parse_month(request.POST.get("billing_period")) or (
             timezone.localdate().replace(day=1)
         )
+        paid_amount = _posted_amount(request.POST.get("amount"), amount)
         record_dt = timezone.make_aware(datetime.combine(rec_date, time.min))
         with transaction.atomic():
             LedgerEntry.objects.create(
@@ -1147,7 +1159,7 @@ def confirm_fee(request: HttpRequest, tenant_pk: int) -> HttpResponse:
                 settlement_tenant=tenant,
                 kind=LedgerEntry.Kind.FEE,
                 short_desc="Pozostałe opłaty",
-                amount_in_taxable=amount,
+                amount_in_taxable=paid_amount,
                 record_date=record_dt,
                 billing_period=billing,
             )
@@ -1240,6 +1252,7 @@ def confirm_rent(request: HttpRequest, contract_pk: int) -> HttpResponse:
             return _back()
         rec_date = parse_date(request.POST.get("record_date") or "") or timezone.localdate()
         billing_post = _parse_month(request.POST.get("billing_period")) or billing
+        paid_amount = _posted_amount(request.POST.get("amount"), amount)
         record_dt = timezone.make_aware(datetime.combine(rec_date, time.min))
         LedgerEntry.objects.create(
             owner=user,
@@ -1248,7 +1261,7 @@ def confirm_rent(request: HttpRequest, contract_pk: int) -> HttpResponse:
             contract=contract,
             kind=LedgerEntry.Kind.RENT,
             short_desc="Czynsz Najmu",
-            amount_in_taxable=amount,
+            amount_in_taxable=paid_amount,
             record_date=record_dt,
             billing_period=billing_post,
         )
